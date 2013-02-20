@@ -4,6 +4,7 @@ import (
     "fmt"
     "time"
     "github.com/carbocation/forum.git/forum"
+    "math/rand"
 )
 
 var N int = 10
@@ -17,12 +18,14 @@ func closureTable() {
     // Create the closure table with a single progenitor
     ct := forum.ClosureTable{forum.Relationship{Ancestor: 0, Descendant: 0, Depth: 0}}
     
-    //err := ct.AddChild(forum.Child{})
-    err := ct.AddChild(forum.Child{Parent: 0, Child: 1})
-    if err != nil {
-        fmt.Println(err)
+    for i := 1; i < N; i++ {
+        // Create a place for entry #i, making it the child of a random entry j<i
+        err := ct.AddChild(forum.Child{Parent: rand.Int63n(int64(i)), Child: int64(i)})
+        if err != nil {
+            fmt.Println(err)
 
-        return
+            return
+        }
     }
 
     fmt.Printf("%#v\n", ct)
