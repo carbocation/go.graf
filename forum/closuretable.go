@@ -50,11 +50,11 @@ func (ct *ClosureTable) AddChild(new Child) error {
         return EntityExistsError()
     }
     
-    // It checks out, create the direct relationship, and all derived relationships:
+    // It checks out, create all of the consequent ancestral relationships:
     // Self
     *ct = append(*ct, Relationship{Ancestor: new.Child, Descendant: new.Child, Depth: 0})
-    // Direct relationship
-    //*ct = append(*ct, Relationship{Ancestor: new.Parent, Descendant: new.Child, Depth: 1})
+
+    // All derived relationships, including the direct parent<->child relationship
     for _, rel := range ct.GetAncestralRelationships(new.Parent) {
         *ct = append(*ct, Relationship{Ancestor: rel.Ancestor, Descendant: new.Child, Depth: rel.Depth+1})
     }
