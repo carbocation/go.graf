@@ -92,6 +92,7 @@ func (ct *ClosureTable) EntityExists(id int64) bool {
 func (ct *ClosureTable) RootNodeId() (int64, error) {
     m := map[int64]int{}
     for _, rel := range *ct {
+        //In go, it's valid to increment an integer in a map without first zeroing it
         m[rel.Descendant]++
     }
 
