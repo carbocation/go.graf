@@ -6,13 +6,31 @@ import (
     "github.com/carbocation/forum.git/forum"
 )
 
+var N int = 10
+
 func main() {
     makeEntries()
+    closureTable()
+}
+
+func closureTable() {
+    // Create the closure table with a single progenitor
+    ct := forum.ClosureTable{forum.Relationship{Ancestor: 0, Descendant: 0, Depth: 0}}
+    
+    //err := ct.AddChild(forum.Child{})
+    err := ct.AddChild(forum.Child{Parent: 0, Child: 1})
+    if err != nil {
+        fmt.Println(err)
+
+        return
+    }
+
+    fmt.Printf("%#v\n", ct)
+    fmt.Println("Success")
 }
 
 func makeEntries() {
     // Make 10 entries based on a skeleton; the Id's will be appropriately distinct.
-    N := 10
     skeleton := forum.Entry{ Id: 1, Title: "Hello, world", Body: "This is a body.", Created: time.Now(), AuthorId: 1}
     var entries = make([]forum.Entry,N)
     for i := 0; i < N; i++ {
