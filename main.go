@@ -7,6 +7,10 @@ import (
 )
 
 func main() {
+    makeEntries()
+}
+
+func makeEntries() {
     // Make 10 entries based on a skeleton; the Id's will be appropriately distinct.
     N := 10
     skeleton := forum.Entry{ Id: 1, Title: "Hello, world", Body: "This is a body.", Created: time.Now(), AuthorId: 1}
