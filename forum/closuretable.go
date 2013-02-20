@@ -86,3 +86,31 @@ func (ct *ClosureTable) EntityExists(id int64) bool {
 
     return false
 }
+
+// Return the id of the root node of the closure table.
+// This method assumes that there can only be one root node.
+func (ct *ClosureTable) RootNodeId() (int64, error) {
+    m := map[int64]int{}
+    for _, rel := range *ct {
+        m[rel.Descendant]++
+    }
+
+    trip := 0
+    var result int64
+    for item, count := range m {
+        if count == 1 {
+            result = item
+            trip++
+        }
+
+        if trip > 1 {
+            return int64(-1), errors.New("More than one potential root node was present in the closure table.")
+        }
+    }
+
+    if trip < 1 {
+        return int64(-1), errors.New("No potential root nodes were present in the closure table.")
+    }
+
+    return result, nil
+}
