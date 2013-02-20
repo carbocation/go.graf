@@ -28,7 +28,7 @@ func closureTable() {
         }
     }
 
-    fmt.Printf("%#v\n", ct)
+    fmt.Printf("%v\n", ct)
     fmt.Println("Success")
 }
 

@@ -54,11 +54,23 @@ func (ct *ClosureTable) AddChild(new Child) error {
     // Self
     *ct = append(*ct, Relationship{Ancestor: new.Child, Descendant: new.Child, Depth: 0})
     // Direct relationship
-    *ct = append(*ct, Relationship{Ancestor: new.Parent, Descendant: new.Child, Depth: 1})
-    //TODO Derived relationships
-    // ...
+    //*ct = append(*ct, Relationship{Ancestor: new.Parent, Descendant: new.Child, Depth: 1})
+    for _, rel := range ct.GetAncestralRelationships(new.Parent) {
+        *ct = append(*ct, Relationship{Ancestor: rel.Ancestor, Descendant: new.Child, Depth: rel.Depth+1})
+    }
 
     return nil
+}
+
+func (ct *ClosureTable) GetAncestralRelationships(id int64) []Relationship {
+    list := []Relationship{}
+    for _, rel := range *ct {
+        if rel.Descendant == id {
+            list = append(list, rel)
+        }
+    }
+
+    return list
 }
 
 // EntityExists asks if an entity of a given id exists in the closure table
