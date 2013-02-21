@@ -7,29 +7,34 @@ import (
     "math/rand"
 )
 
-var N int = 10
+var N int = 4
 
 func main() {
-    makeEntries()
-    closureTable()
+    //makeEntries()
+    //closureTable()
+    closureTree()
+}
+
+func closureTree() {
+    ct := buildClosureTable(N)
+    
+    //Now we have a closure table. Feed it to the ClosureTree to build a recursive structure.
+    tree := forum.ClosureTree{}
+    err := tree.Populate(ct)
+    if err != nil {
+        fmt.Println(err)
+        return
+    }
+    
+    fmt.Printf("%v\n", ct)
+    fmt.Printf("%v\n", tree)
 }
 
 func closureTable() {
     // Create the closure table with a single progenitor
-    ct := forum.ClosureTable{forum.Relationship{Ancestor: 0, Descendant: 0, Depth: 0}}
-    
-    for i := 1; i < N; i++ {
-        // Create a place for entry #i, making it the child of a random entry j<i
-        err := ct.AddChild(forum.Child{Parent: rand.Int63n(int64(i)), Child: int64(i)})
-        if err != nil {
-            fmt.Println(err)
-
-            return
-        }
-    }
+    ct := buildClosureTable(N)
 
     fmt.Printf("%v\n", ct)
-    fmt.Println("Success")
 }
 
 func makeEntries() {
@@ -41,4 +46,21 @@ func makeEntries() {
     }
 
     fmt.Printf("Created new entries with the following data:\n%#v\n",entries)
+}
+
+
+func buildClosureTable(N int) forum.ClosureTable {
+    // Create the closure table with a single progenitor
+    ct := forum.ClosureTable{forum.Relationship{Ancestor: 0, Descendant: 0, Depth: 0}}
+    
+    for i := 1; i < N; i++ {
+        // Create a place for entry #i, making it the child of a random entry j<i
+        err := ct.AddChild(forum.Child{Parent: rand.Int63n(int64(i)), Child: int64(i)})
+        if err != nil {
+            fmt.Println(err)
+            break
+        }
+    }
+
+    return ct
 }
