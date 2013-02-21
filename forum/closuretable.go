@@ -37,34 +37,34 @@ func EntityExistsError() error {
 // AddChild takes a Child, verifies that it is acceptable, verifies that the 
 // ClosureTable is suitable to accept a child, and then creates the appropriate 
 // Relationships within the ClosureTable to instantiate that child.
-func (ct *ClosureTable) AddChild(new Child) error {
-    if len(*ct) < 1 {
+func (table *ClosureTable) AddChild(new Child) error {
+    if len(*table) < 1 {
         return EmptyTableError.Error(1)
     }
 
-    if ct.EntityExists(new.Parent) != true {
+    if table.EntityExists(new.Parent) != true {
         return ParentDoesNotExistError()
     }
 
-    if ct.EntityExists(new.Child) {
+    if table.EntityExists(new.Child) {
         return EntityExistsError()
     }
     
     // It checks out, create all of the consequent ancestral relationships:
     // Self
-    *ct = append(*ct, Relationship{Ancestor: new.Child, Descendant: new.Child, Depth: 0})
+    *table = append(*table, Relationship{Ancestor: new.Child, Descendant: new.Child, Depth: 0})
 
     // All derived relationships, including the direct parent<->child relationship
-    for _, rel := range ct.GetAncestralRelationships(new.Parent) {
-        *ct = append(*ct, Relationship{Ancestor: rel.Ancestor, Descendant: new.Child, Depth: rel.Depth+1})
+    for _, rel := range table.GetAncestralRelationships(new.Parent) {
+        *table = append(*table, Relationship{Ancestor: rel.Ancestor, Descendant: new.Child, Depth: rel.Depth+1})
     }
 
     return nil
 }
 
-func (ct *ClosureTable) GetAncestralRelationships(id int64) []Relationship {
+func (table *ClosureTable) GetAncestralRelationships(id int64) []Relationship {
     list := []Relationship{}
-    for _, rel := range *ct {
+    for _, rel := range *table {
         if rel.Descendant == id {
             list = append(list, rel)
         }
@@ -77,8 +77,8 @@ func (ct *ClosureTable) GetAncestralRelationships(id int64) []Relationship {
 // Entities that exist are guaranteed to appear at least once in ancestor and 
 // descendant thanks to the self relationship, so the choice of which one to inspect 
 // is arbitrary
-func (ct *ClosureTable) EntityExists(id int64) bool {
-    for _, r := range *ct {
+func (table *ClosureTable) EntityExists(id int64) bool {
+    for _, r := range *table {
         if r.Descendant == id {
             return true
         }
@@ -89,9 +89,9 @@ func (ct *ClosureTable) EntityExists(id int64) bool {
 
 // Return the id of the root node of the closure table.
 // This method assumes that there can only be one root node.
-func (ct *ClosureTable) RootNodeId() (int64, error) {
+func (table *ClosureTable) RootNodeId() (int64, error) {
     m := map[int64]int{}
-    for _, rel := range *ct {
+    for _, rel := range *table {
         //In go, it's valid to increment an integer in a map without first zeroing it
         m[rel.Descendant]++
     }
