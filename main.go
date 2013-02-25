@@ -13,7 +13,6 @@ var N int = 4
 func main() {
 	//makeEntries()
 	//closureTable()
-	//closureTree()
 	//binaryTree()
 	fmt.Println("Welcome")
 }
@@ -29,21 +28,6 @@ func binaryTree() {
 	for i := range channel {
 		fmt.Printf("%#v\n", i)
 	}
-}
-
-func closureTree() {
-	table := buildClosureTable(N)
-
-	//Now we have a closure table. Feed it to the ClosureTree to build a recursive structure.
-	tree := forum.ClosureTree{}
-	err := tree.Populate(table)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	fmt.Printf("%v\n", table)
-	fmt.Printf("%v\n", tree)
 }
 
 func closureTable() {
