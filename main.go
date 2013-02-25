@@ -5,6 +5,7 @@ import (
     "time"
     "github.com/carbocation/forum.git/forum"
     "math/rand"
+    "github.com/carbocation/util.git/datatypes/binarytree"
 )
 
 var N int = 4
@@ -12,29 +13,44 @@ var N int = 4
 func main() {
     //makeEntries()
     //closureTable()
-    closureTree()
+    //closureTree()
+    //binaryTree()
+    fmt.Println("Welcome")
+}
+
+func binaryTree() {
+    L := binarytree.New(forum.Entry{ Id: 1, Title: "Hello, world", Body: "This is a body.", Created: time.Now(), AuthorId: 1})
+    L.PushLeft(forum.Entry{ Id: 2, Title: "Hello, world", Body: "This is a body.", Created: time.Now(), AuthorId: 1})
+    L.Left().PushLeft(forum.Entry{ Id: 3, Title: "Hello, world", Body: "This is a body.", Created: time.Now(), AuthorId: 1})
+    L.Left().PushRight(forum.Entry{ Id: 4, Title: "Hello, world", Body: "This is a body.", Created: time.Now(), AuthorId: 1})
+    
+    channel := binarytree.Walker(L)
+
+    for i := range channel {
+        fmt.Printf("%#v\n", i)
+    }
 }
 
 func closureTree() {
-    ct := buildClosureTable(N)
+    table := buildClosureTable(N)
     
     //Now we have a closure table. Feed it to the ClosureTree to build a recursive structure.
     tree := forum.ClosureTree{}
-    err := tree.Populate(ct)
+    err := tree.Populate(table)
     if err != nil {
         fmt.Println(err)
         return
     }
     
-    fmt.Printf("%v\n", ct)
+    fmt.Printf("%v\n", table)
     fmt.Printf("%v\n", tree)
 }
 
 func closureTable() {
     // Create the closure table with a single progenitor
-    ct := buildClosureTable(N)
+    table := buildClosureTable(N)
 
-    fmt.Printf("%v\n", ct)
+    fmt.Printf("%v\n", table)
 }
 
 func makeEntries() {

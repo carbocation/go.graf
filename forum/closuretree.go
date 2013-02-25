@@ -10,8 +10,7 @@ type ClosureTree struct {
     Entry "A closure tree element is also an entry element"
     
     //Has-a:
-    Value int64
-    Children []ClosureTree
+    FirstChild, NextSibling *ClosureTree
 }
 
 func (tree *ClosureTree) Populate(table ClosureTable) error {
@@ -22,8 +21,8 @@ func (tree *ClosureTree) Populate(table ClosureTable) error {
         return err
     }
 
-    tree.Value = rootId
-    tree.Children = []ClosureTree{}
+    tree.Id = rootId
+    tree.FirstChild = &ClosureTree{}
     //tree.Children = tree.buildTree(rootId, ct)
 
     fmt.Println("Tree consists of",tree)
