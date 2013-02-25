@@ -5,35 +5,44 @@ import (
     "time"
     "math/rand"
     "fmt"
+    "github.com/carbocation/util.git/datatypes/binarytree"
 )
 
 func TestPopulation(t *testing.T) {
-    // Number of entries to create for the test
-    N := 200
+    // Make some sample entries based on a skeleton; the Id's will be appropriately distinct.
+    entries := map[int64]Entry{
+        0: Entry{ Id: 0, Title: "Hello, world title.", Body: "This is a basic body.", Created: time.Now(), AuthorId: 1},
+        1: Entry{ Id: 1, Title: "Frost Psot", Body: "This is a spam post.", Created: time.Now(), AuthorId: 2},
+        2: Entry{ Id: 2, Title: "Third post", Body: "I want to bury the spam.", Created: time.Now(), AuthorId: 3},
+        3: Entry{ Id: 3, Title: "Les Mis", Body: "It's being shown on the Oscars now.", Created: time.Now(), AuthorId: 3},
+        4: Entry{ Id: 4, Title: "LOOL", Body: "Why are you watching those?", Created: time.Now(), AuthorId: 2},
+    }
 
-    //Create randomized entries
-    entries := makeEntries(N)
-
-    //Create a randomized closure table to structure the entries
-    closuretable := buildClosureTable(N)
+    // Create a closure table to represent the relationships among the entries
+    // In reality, you'd probably directly import the closure table data into the ClosureTable class
+    closuretable := ClosureTable{Relationship{Ancestor: 0, Descendant: 0, Depth: 0}}
+    closuretable.AddChild(Child{Parent: 0, Child: 1})
+    closuretable.AddChild(Child{Parent: 0, Child: 2})
+    closuretable.AddChild(Child{Parent: 2, Child: 3})
+    closuretable.AddChild(Child{Parent: 3, Child: 4})
 
     //Build a tree out of the entries based on the closure table's instructions.
     tree := closuretable.TableToTree(entries)
     
-
-    fmt.Println(tree)
+    fmt.Println(walkBody(tree))
 }
 
-// Helper function that makes the posts.
-func makeEntries(N int) map[int64]Entry {
-    // Make 10 entries based on a skeleton; the Id's will be appropriately distinct.
-    skeleton := Entry{ Id: 1, Title: "Hello, world", Body: "This is a body.", Created: time.Now(), AuthorId: 1}
-    var entries = make(map[int64]Entry,N)
-    for i := 0; i < N; i++ {
-        skeleton.Id, skeleton.Created, entries[int64(i)] = int64(i), time.Now(), skeleton
+func walkBody(el *binarytree.Tree) string {
+    if el == nil {
+        return ""
     }
 
-    return entries
+    out := ""
+    out += el.Value.(Entry).Body
+    out += walkBody(el.Left())
+    out += walkBody(el.Right())
+
+    return out
 }
 
 func buildClosureTable(N int) ClosureTable {
