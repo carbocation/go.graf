@@ -3,7 +3,6 @@ package forum
 import (
     "errors"
     "github.com/carbocation/util.git/datatypes/binarytree"
-    //"fmt"
     "sort"
 )
 
@@ -123,13 +122,6 @@ func (table *ClosureTable) RootNodeId() (int64, error) {
 // Returns a well-formed *binarytree.Tree with those entries as values.
 func (table *ClosureTable) TableToTree(entries map[int64]Entry) *binarytree.Tree {
     // Create the tree from the root node:
-    //rootNodeId, err := table.RootNodeId()
-    /*
-    if err != nil {
-        return &binarytree.Tree{}
-    }
-    */
-
     forest := map[int64]*binarytree.Tree{}
 
     // All entries now are trees
@@ -140,39 +132,28 @@ func (table *ClosureTable) TableToTree(entries map[int64]Entry) *binarytree.Tree
     childparent := table.DepthOneRelationships()
 
     for _, rel := range childparent {
-        //fmt.Println(rel,"is a direct child-parent pair")
-
         // Add the children.
         // If there is already a child, then traverse right until you find nil
         parentTree := forest[rel.Ancestor]
         siblingMode := false
 
         for {
-            //fmt.Println("Trying to set",rel.Descendant,"to be child of",rel.Ancestor)
             if siblingMode {
-                //fmt.Println("Went into sibling mode")
-                //fmt.Println("parentTree == ",parentTree)
                 if parentTree.Right() == nil {
                     // We found an empty slot
-                    //fmt.Println("Setting",rel.Descendant,"to be sibling of",rel.Ancestor)
                     parentTree.SetRight(forest[rel.Descendant])
                     forest[rel.Descendant].SetParent(parentTree)
-                    //fmt.Println(parentTree)
                     break
                 } else {
-                    //fmt.Println("Could not set",rel.Descendant,"to be a sibling of",rel.Ancestor,"because it's already occupied.")
                     parentTree = parentTree.Right()
                 }
             } else {
                 if parentTree.Left() == nil {
                     // We found an empty slot
-                    //fmt.Println("Setting",rel.Descendant,"to be child of",rel.Ancestor)
                     parentTree.SetLeft(forest[rel.Descendant])
                     forest[rel.Descendant].SetParent(parentTree)
-                    //fmt.Println(parentTree)
                     break
                 } else {
-                    //fmt.Println("Could not set",rel.Descendant,"to be a child of",rel.Ancestor,"because it's already occupied. We think parentTree is ",parentTree)
                     parentTree = parentTree.Left()
                     siblingMode = true
                 }
@@ -180,72 +161,12 @@ func (table *ClosureTable) TableToTree(entries map[int64]Entry) *binarytree.Tree
         }
     }
 
-    //fmt.Println(forest)
-    //for _, tree := range forest {
-    /*
-    x := binarytree.Walker(forest[int64(0)])
-    for i := range x {
-        fmt.Println("Walked to element",i)
-    }
-    */
-    //}
-    /*
-    for _, tree := range forest {
-        
-    }*/
-    /*
-    x := binarytree.Walker(forest[int64(0)])
-    for i := range x {
-        fmt.Println("Walked to element",i)
-    }
-    
-    for _, entry := range entries {
-        forest[entry.Id] = binarytree.New(entry)
-    }
-    */
     rootNodeId, err := table.RootNodeId()
     if err != nil {
         return &binarytree.Tree{}
     }
 
     return forest[rootNodeId]
-    
-    /*
-    // All remaining entries have some sort of ancestral relationship with the root
-    // Get the direct parent-child relationships
-    childparent := table.DepthOneRelationships()
-    fmt.Println(childparent)
-
-    // Additionally, fetch the depth that each entry is from the root node
-    depthsFromRoot, deepest := table.DeepestRelationships()
-    fmt.Println(depthsFromRoot, deepest)
-
-    m := map[int64](*binarytree.Tree){}
-    
-    tree := binarytree.New(entries[rootNodeId])
-    m[rootNodeId] = tree
-    
-    // Starting from the shallowest max depths, which necessarily are closest to the root:
-    for _, depth := range depthsFromRoot {
-        for _, rel := deepest[depth] {
-            
-        }
-        fmt.Println(deepest[depth],"Have a maximum depth of",depth)
-    }
-    
-    // There must be something much more efficient than this approach
-    for len(childparent) > 0 {
-        for i, child := range childparent {
-            fmt.Println(child.Descendant, "is the immediate child of",child.Ancestor)
-            delete(childparent, i)
-        }
-    }
-    */
-
-    //Now add all children.
-    
-
-    //return tree
 }
 
 // Returns a map of the ID of each node along with its maximum depth
@@ -255,14 +176,12 @@ func (table *ClosureTable) DeepestRelationships() ([]int, map[int][]Relationship
     discreteDepths := []int{}
 
     for _, rel := range *table {
-        //fmt.Println("For",rel.Descendant,", former best depth was",tmp[rel.Descendant],", new best depth is ",rel.Depth)
         if rel.Depth > tmp[rel.Descendant].Depth {
             tmp[rel.Descendant] = rel
         }
     }
 
     for _, rel := range tmp {
-        //fmt.Println("Appending maxdepth entry",rel,"to depthgroup",rel.Depth)
         out[rel.Depth] = append(out[rel.Depth], rel)
     }
 
