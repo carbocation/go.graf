@@ -8,7 +8,7 @@ import (
     "github.com/carbocation/util.git/datatypes/binarytree"
 )
 
-func TestPopulation(t *testing.T) {
+func TestClosureConversion(t *testing.T) {
     // Make some sample entries based on a skeleton; the Id's will be appropriately distinct.
     entries := []Entry{
         Entry{ Id: 3905, Title: "Hello, world title.", Body: "This is a basic body.", Created: time.Now(), AuthorId: 1},
@@ -29,9 +29,12 @@ func TestPopulation(t *testing.T) {
     closuretable.AddChild(Child{Parent: 3905, Child: 3910})
 
     //Build a tree out of the entries based on the closure table's instructions.
-    tree := closuretable.TableToTree(entries)
-    
-    fmt.Println(walkBody(tree))
+    tree := walkBody(closuretable.TableToTree(entries))
+    expected := "This is a basic body.This is a spam post.I want to bury the spam.It's being shown on the Oscars now.Why are you watching those?I'm here to resurrect the spam."
+
+    if tree != expected {
+        t.Errorf("walkBody(tree) yielded %s, expected %s. Have you made a change that caused the iteration order to become indeterminate, e.g., using a map instead of a slice?", tree, expected)
+    }
 }
 
 func walkBody(el *binarytree.Tree) string {
