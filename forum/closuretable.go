@@ -3,7 +3,7 @@ package forum
 import (
     "errors"
     "github.com/carbocation/util.git/datatypes/binarytree"
-    "fmt"
+    //"fmt"
     "sort"
 )
 
@@ -140,7 +140,7 @@ func (table *ClosureTable) TableToTree(entries map[int64]Entry) *binarytree.Tree
     childparent := table.DepthOneRelationships()
 
     for _, rel := range childparent {
-        fmt.Println(rel,"is a direct child-parent pair")
+        //fmt.Println(rel,"is a direct child-parent pair")
 
         // Add the children.
         // If there is already a child, then traverse right until you find nil
@@ -148,56 +148,67 @@ func (table *ClosureTable) TableToTree(entries map[int64]Entry) *binarytree.Tree
         siblingMode := false
 
         for {
-            fmt.Println("Trying to set",rel.Descendant,"to be child of",rel.Ancestor)
+            //fmt.Println("Trying to set",rel.Descendant,"to be child of",rel.Ancestor)
             if siblingMode {
-                fmt.Println("Went into sibling mode")
-                fmt.Println("parentTree == ",parentTree)
+                //fmt.Println("Went into sibling mode")
+                //fmt.Println("parentTree == ",parentTree)
                 if parentTree.Right() == nil {
                     // We found an empty slot
-                    fmt.Println("Setting",rel.Descendant,"to be sibling of",rel.Ancestor)
+                    //fmt.Println("Setting",rel.Descendant,"to be sibling of",rel.Ancestor)
                     parentTree.SetRight(forest[rel.Descendant])
                     forest[rel.Descendant].SetParent(parentTree)
                     //fmt.Println(parentTree)
                     break
                 } else {
-                    fmt.Println("Could not set",rel.Descendant,"to be a sibling of",rel.Ancestor,"because it's already occupied.")
+                    //fmt.Println("Could not set",rel.Descendant,"to be a sibling of",rel.Ancestor,"because it's already occupied.")
                     parentTree = parentTree.Right()
                 }
             } else {
                 if parentTree.Left() == nil {
                     // We found an empty slot
-                    fmt.Println("Setting",rel.Descendant,"to be child of",rel.Ancestor)
+                    //fmt.Println("Setting",rel.Descendant,"to be child of",rel.Ancestor)
                     parentTree.SetLeft(forest[rel.Descendant])
                     forest[rel.Descendant].SetParent(parentTree)
                     //fmt.Println(parentTree)
                     break
                 } else {
-                    fmt.Println("Could not set",rel.Descendant,"to be a child of",rel.Ancestor,"because it's already occupied. We think parentTree is ",parentTree)
+                    //fmt.Println("Could not set",rel.Descendant,"to be a child of",rel.Ancestor,"because it's already occupied. We think parentTree is ",parentTree)
                     parentTree = parentTree.Left()
                     siblingMode = true
                 }
             }
         }
-        /*
-        for parentTree := forest[rel.Ancestor]; parentTree.Right() != nil; parentTree = parentTree.Right() {
-            fmt.Println("I am inspecting",parentTree)
-        }
-        */
     }
 
-    fmt.Println(forest)
+    //fmt.Println(forest)
     //for _, tree := range forest {
+    /*
     x := binarytree.Walker(forest[int64(0)])
     for i := range x {
         fmt.Println("Walked to element",i)
     }
+    */
     //}
     /*
     for _, tree := range forest {
         
     }*/
+    /*
+    x := binarytree.Walker(forest[int64(0)])
+    for i := range x {
+        fmt.Println("Walked to element",i)
+    }
+    
+    for _, entry := range entries {
+        forest[entry.Id] = binarytree.New(entry)
+    }
+    */
+    rootNodeId, err := table.RootNodeId()
+    if err != nil {
+        return &binarytree.Tree{}
+    }
 
-    return forest[int64(0)]
+    return forest[rootNodeId]
     
     /*
     // All remaining entries have some sort of ancestral relationship with the root
