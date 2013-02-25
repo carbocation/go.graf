@@ -1,41 +1,40 @@
 package forum
 
 import (
-    //"errors"
-    "fmt"
+	//"errors"
+	"fmt"
 )
 
 type ClosureTree struct {
-    //Is-a:
-    Entry "A closure tree element is also an entry element"
-    
-    //Has-a:
-    FirstChild, NextSibling *ClosureTree
+	//Is-a:
+	Entry "A closure tree element is also an entry element"
+
+	//Has-a:
+	FirstChild, NextSibling *ClosureTree
 }
 
 func (tree *ClosureTree) Populate(table ClosureTable) error {
-    // Find the root node(s), as they are the ones without ancestors.
-    // We require that there only be one root node.
-    rootId, err := table.RootNodeId()
-    if err != nil {
-        return err
-    }
+	// Find the root node(s), as they are the ones without ancestors.
+	// We require that there only be one root node.
+	rootId, err := table.RootNodeId()
+	if err != nil {
+		return err
+	}
 
-    tree.Id = rootId
-    tree.FirstChild = &ClosureTree{}
-    //tree.Children = tree.buildTree(rootId, ct)
+	tree.Id = rootId
+	tree.FirstChild = &ClosureTree{}
+	//tree.Children = tree.buildTree(rootId, ct)
 
-    fmt.Println("Tree consists of",tree)
+	fmt.Println("Tree consists of", tree)
 
-    return nil
+	return nil
 }
 
 func (tree *ClosureTree) buildTree(currentNode int64, table ClosureTable) []ClosureTree {
-    //return []ClosureTree{}
-    //return tree.buildTree(
-    return []ClosureTree{}
+	//return []ClosureTree{}
+	//return tree.buildTree(
+	return []ClosureTree{}
 }
-
 
 /*
 type ClosureTree struct {
