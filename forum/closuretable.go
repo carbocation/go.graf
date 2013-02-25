@@ -120,10 +120,10 @@ func (table *ClosureTable) RootNodeId() (int64, error) {
 
 // Takes a map of entries whose keys are the same values as the IDs of the closure table entries
 // Returns a well-formed *binarytree.Tree with those entries as values.
-func (table *ClosureTable) TableToTree(entries map[int64]Entry) *binarytree.Tree {
+func (table *ClosureTable) TableToTree(entries []Entry) *binarytree.Tree {
     // Create the tree from the root node:
     forest := map[int64]*binarytree.Tree{}
-
+    
     // All entries now are trees
     for _, entry := range entries {
         forest[entry.Id] = binarytree.New(entry)
@@ -195,12 +195,12 @@ func (table *ClosureTable) DeepestRelationships() ([]int, map[int][]Relationship
 }
 
 // Returns a map of the ID of each node along with its immediate parent
-func (table *ClosureTable) DepthOneRelationships() map[int64]Relationship {
-    out := map[int64]Relationship{}
+func (table *ClosureTable) DepthOneRelationships() []Relationship {
+    out := []Relationship{}
 
-    for i, rel := range *table {
+    for _, rel := range *table {
         if rel.Depth == 1 {
-            out[int64(i)] = rel
+            out = append(out, rel)
         }
     }
 
