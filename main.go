@@ -4,20 +4,26 @@ import (
 	"fmt"
 	"github.com/carbocation/forum.git/forum"
 	"github.com/carbocation/util.git/datatypes/binarytree"
-	"math/rand"
+	//"math/rand"
 	"time"
+    "net/http"
 )
 
-var N int = 4
-
 func main() {
-	//makeEntries()
-	//closureTable()
-	//binaryTree()
-	fmt.Println("Welcome")
+	http.HandleFunc("/hello/", helloHandler)
+	http.ListenAndServe("localhost:9999", nil)
 }
 
-func binaryTree() {
+func helloHandler(w http.ResponseWriter, r *http.Request) {
+	remPartOfURL := r.URL.Path[len("/hello/"):] //get everything after the /hello/ part of the URL
+	fmt.Fprintf(w, "Hello %s!", remPartOfURL)
+
+    L := binaryTree()
+
+    fmt.Fprintf(w, "%v", L)
+}
+
+func binaryTree() *binarytree.Tree {
 	L := binarytree.New(forum.Entry{Id: 1, Title: "Hello, world", Body: "This is a body.", Created: time.Now(), AuthorId: 1})
 	L.PushLeft(forum.Entry{Id: 2, Title: "Hello, world", Body: "This is a body.", Created: time.Now(), AuthorId: 1})
 	L.Left().PushLeft(forum.Entry{Id: 3, Title: "Hello, world", Body: "This is a body.", Created: time.Now(), AuthorId: 1})
@@ -28,38 +34,6 @@ func binaryTree() {
 	for i := range channel {
 		fmt.Printf("%#v\n", i)
 	}
-}
 
-func closureTable() {
-	// Create the closure table with a single progenitor
-	table := buildClosureTable(N)
-
-	fmt.Printf("%v\n", table)
-}
-
-func makeEntries() {
-	// Make 10 entries based on a skeleton; the Id's will be appropriately distinct.
-	skeleton := forum.Entry{Id: 1, Title: "Hello, world", Body: "This is a body.", Created: time.Now(), AuthorId: 1}
-	var entries = make([]forum.Entry, N)
-	for i := 0; i < N; i++ {
-		entries[i], entries[i].Id, entries[i].Created = skeleton, int64(i+1), time.Now()
-	}
-
-	fmt.Printf("Created new entries with the following data:\n%#v\n", entries)
-}
-
-func buildClosureTable(N int) forum.ClosureTable {
-	// Create the closure table with a single progenitor
-	ct := forum.ClosureTable{forum.Relationship{Ancestor: 0, Descendant: 0, Depth: 0}}
-
-	for i := 1; i < N; i++ {
-		// Create a place for entry #i, making it the child of a random entry j<i
-		err := ct.AddChild(forum.Child{Parent: rand.Int63n(int64(i)), Child: int64(i)})
-		if err != nil {
-			fmt.Println(err)
-			break
-		}
-	}
-
-	return ct
+    return L
 }
