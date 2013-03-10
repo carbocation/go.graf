@@ -14,22 +14,43 @@ import (
 
 func main() {
 	http.HandleFunc("/hello/", commentHandler)
+	http.HandleFunc("/css/", cssHandler)
 	http.HandleFunc("/", defaultHandler)
 	http.ListenAndServe("localhost:9999", nil)
 }
 
 func defaultHandler(w http.ResponseWriter, r *http.Request) {
 	remPartOfURL := r.URL.Path[len("/"):]
-	fmt.Fprintf(w, "<html><body><h1>Welcome, %s</h1><a href='/hello/'>Say hello</a>", remPartOfURL)
+	fmt.Fprintf(w, "<html><head><link rel=\"stylesheet\" href=\"/css/main.css\"></head><body><h1>Welcome, %s</h1><a href='/hello/'>Say hello</a>", remPartOfURL)
 
 	fmt.Fprint(w, "</body></html>")
+}
+
+func cssHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/css")
+	
+	docname := r.URL.Path[len("/css/"):]
+	
+	switch {
+		case docname == "main.css":
+			fmt.Fprintf(w, "%s", mainCss())
+	}
+	
+}
+
+func mainCss() string {
+return `
+div .comment {
+	padding-left: 100px;
+}
+`
 }
 
 func commentHandler(w http.ResponseWriter, r *http.Request) {
 	remPartOfURL := r.URL.Path[len("/hello/"):] //get everything after the /hello/ part of the URL
 	//w.Header().Set("Content-Type", "text/html")
 
-	fmt.Fprint(w, "<html><head></head><body>")
+	fmt.Fprint(w, "<html><head><link rel=\"stylesheet\" href=\"/css/main.css\"></head><body>")
 	fmt.Fprintf(w, "Hello %s!", remPartOfURL)
 
 	PrintNestedComments(w, ClosureTree())
@@ -43,7 +64,7 @@ func PrintNestedComments(w http.ResponseWriter, el *binarytree.Tree) {
 		return
 	}
 
-	fmt.Fprint(w, "<div style=\"padding-left: 100px;\">")
+	fmt.Fprint(w, "<div class=\"comment\">")
 	//Self
 	e := el.Value.(forum.Entry)
 	fmt.Fprintf(w, "Title: %s", e.Title)
