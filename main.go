@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	http.HandleFunc("/hello/", helloHandler)
+	http.HandleFunc("/hello/", commentHandler)
 	http.HandleFunc("/", defaultHandler)
 	http.ListenAndServe("localhost:9999", nil)
 }
@@ -25,7 +25,7 @@ func defaultHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "</body></html>")
 }
 
-func helloHandler(w http.ResponseWriter, r *http.Request) {
+func commentHandler(w http.ResponseWriter, r *http.Request) {
 	remPartOfURL := r.URL.Path[len("/hello/"):] //get everything after the /hello/ part of the URL
 	//w.Header().Set("Content-Type", "text/html")
 
@@ -54,21 +54,6 @@ func PrintNestedComments(w http.ResponseWriter, el *binarytree.Tree) {
 
 	//Siblings are parallel
 	PrintNestedComments(w, el.Right())
-}
-
-func PrintComments(ct *binarytree.Tree) string {
-	x := binarytree.Walker(ct)
-	val := ""
-	for y := range x {
-		js, err := json.Marshal(y)
-		if err != nil {
-			fmt.Println(err)
-			return "ERROR"
-		}
-		val += string(js) + "::"
-	}
-
-	return val
 }
 
 func ClosureTree() *binarytree.Tree {
@@ -103,20 +88,3 @@ func closureTable() *closuretable.ClosureTable {
 
 	return ct
 }
-
-/*
-func binaryTree() *binarytree.Tree {
-	L := binarytree.New(forum.Entry{Id: 1, Title: "Hello, world", Body: "This is a body.", Created: time.Now(), AuthorId: 1})
-	L.PushLeft(forum.Entry{Id: 2, Title: "Hello, world", Body: "This is a body.", Created: time.Now(), AuthorId: 1})
-	L.Left().PushLeft(forum.Entry{Id: 3, Title: "Hello, world", Body: "This is a body.", Created: time.Now(), AuthorId: 1})
-	L.Left().PushRight(forum.Entry{Id: 4, Title: "Hello, world", Body: "This is a body.", Created: time.Now(), AuthorId: 1})
-
-	channel := binarytree.Walker(L)
-
-	for i := range channel {
-		fmt.Printf("%#v\n", i)
-	}
-
-    return L
-}
-*/
