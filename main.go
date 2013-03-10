@@ -7,11 +7,20 @@ import (
 	//"math/rand"
 	"time"
     "net/http"
+    //"html/template"
 )
 
 func main() {
 	http.HandleFunc("/hello/", helloHandler)
+    http.HandleFunc("/", defaultHandler)
 	http.ListenAndServe("localhost:9999", nil)
+}
+
+func defaultHandler(w http.ResponseWriter, r *http.Request) {
+    remPartOfURL := r.URL.Path[len("/"):]
+    fmt.Fprintf(w, "<html><body><h1>Welcome, %s</h1><a href='/hello/'>Say hello</a>", remPartOfURL)
+    
+    //</body></html>
 }
 
 func helloHandler(w http.ResponseWriter, r *http.Request) {
