@@ -45,14 +45,14 @@ func main() {
 
 	// Show the *Rows ptr
 	fmt.Printf("Row pointer: %#v \n", rows)
-	
+
 	cols, err := rows.Columns()
 	if err != nil {
 		fmt.Printf("Column error: %s", err)
 	}
-	
+
 	fmt.Printf("Columns: %s \n", cols)
-	
+
 	// Iterate over the rows
 	for rows.Next() {
 		var rank int

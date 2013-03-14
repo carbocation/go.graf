@@ -5,18 +5,30 @@ import (
 	"github.com/carbocation/forum.git/forum"
 	"github.com/carbocation/util.git/datatypes/binarytree"
 	"github.com/carbocation/util.git/datatypes/closuretable"
-	//"math/rand"
 	"net/http"
+	"strconv"
 	"time"
 	//"html/template"
-	//"encoding/json"
+	"database/sql"
+	_ "github.com/lib/pq"
 )
 
 func main() {
+	http.HandleFunc("/thread/", threadHandler)
 	http.HandleFunc("/hello/", commentHandler)
 	http.HandleFunc("/css/", cssHandler)
 	http.HandleFunc("/", defaultHandler)
 	http.ListenAndServe("localhost:9999", nil)
+}
+
+func initdb() *sql.DB {
+	db, err := sql.Open("postgres", "dbname=postgres sslmode=disable")
+	if err != nil {
+		panic(err)
+	}
+	//defer db.Close()
+	
+	return db
 }
 
 func defaultHandler(w http.ResponseWriter, r *http.Request) {
@@ -28,18 +40,18 @@ func defaultHandler(w http.ResponseWriter, r *http.Request) {
 
 func cssHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/css")
-	
+
 	docname := r.URL.Path[len("/css/"):]
-	
+
 	switch {
-		case docname == "main.css":
-			fmt.Fprintf(w, "%s", mainCss())
+	case docname == "main.css":
+		fmt.Fprintf(w, "%s", mainCss())
 	}
-	
+
 }
 
 func mainCss() string {
-return `
+	return `
 div .comment {
 	padding-left: 100px;
 }
@@ -56,7 +68,57 @@ func commentHandler(w http.ResponseWriter, r *http.Request) {
 	PrintNestedComments(w, ClosureTree())
 
 	fmt.Fprint(w, "</body></html>")
+}
 
+func threadHandler(w http.ResponseWriter, r *http.Request) {
+	db := initdb()
+	defer db.Close()
+	
+	unsafeId := r.URL.Path[len("/thread/"):] //get everything after the /hello/ part of the URL
+	
+	// Prepare a statement
+	stmt, err := db.Prepare("SELECT * FROM golang.yourtable WHERE rank < $1")
+	if err != nil {
+		fmt.Printf("Statement Preparation Error: %s", err)
+	}
+
+	// Query from that prepared statement
+	rows, err := stmt.Query(5)
+	if err != nil {
+		fmt.Printf("Query Error: %v", err)
+	}
+
+	// Show the *Rows ptr
+	fmt.Fprintf(w, "Row pointer: %#v \n", rows)
+
+	cols, err := rows.Columns()
+	if err != nil {
+		fmt.Printf("Column error: %s", err)
+	}
+
+	fmt.Fprintf(w, "Columns: %s \n", cols)
+
+	// Iterate over the rows
+	for rows.Next() {
+		var rank int
+		var username, password string
+		err = rows.Scan(&rank, &username, &password)
+		fmt.Fprintf(w, "Record: %#i, %s, %s \n", rank, username, password)
+	}
+
+	//If the thread ID is not parseable as an integer, stop them
+	id, err := strconv.Atoi(unsafeId)
+	if err != nil {
+		// Default to the root if they gave us a non-integer value
+		id = 0
+	}
+
+	tree := ClosureTree()
+
+	fmt.Fprint(w, "<html><head><link rel=\"stylesheet\" href=\"/css/main.css\"></head><body>")
+	//Print the ID they gave us
+	fmt.Fprintf(w, "Hello %i, here is a tree %+v", id, tree)
+	fmt.Fprint(w, "</body></html>")
 }
 
 func PrintNestedComments(w http.ResponseWriter, el *binarytree.Tree) {
