@@ -1,14 +1,20 @@
 -- SQL file for the app
 
-CREATE TABLE user (
-	id BIGSERIAL PRIMARY KEY,
-	handle TEXT
-)
+CREATE TABLE account (
+	id BIGSERIAL PRIMARY KEY NOT NULL,
+	handle TEXT NOT NULL
+);
 
 CREATE TABLE entry (
-    id BIGSERIAL PRIMARY KEY,
-    title TEXT,
-    body TEXT,
-	created TIMESTAMP WITH TIME ZONE,
-    author_id BIGINT REFERENCES user(id)
+    id BIGSERIAL PRIMARY KEY NOT NULL,
+    title TEXT NOT NULL,
+    body TEXT NOT NULL,
+	created TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    author_id BIGINT REFERENCES account(id) NOT NULL
+);
+
+CREATE TABLE entry_closures (
+	ancestor BIGINT REFERENCES entry(id) NOT NULL,
+	descendant BIGINT REFERENCES entry(id) NOT NULL,
+	depth INT NOT NULL
 );
