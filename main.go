@@ -22,7 +22,7 @@ func main() {
 }
 
 func initdb() *sql.DB {
-	db, err := sql.Open("postgres", "dbname=postgres sslmode=disable")
+	db, err := sql.Open("postgres", "dbname=forumtest sslmode=disable")
 	if err != nil {
 		panic(err)
 	}
@@ -70,20 +70,15 @@ func commentHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "</body></html>")
 }
 
-func threadHandler(w http.ResponseWriter, r *http.Request) {
-	db := initdb()
-	defer db.Close()
-	
-	unsafeId := r.URL.Path[len("/thread/"):] //get everything after the /hello/ part of the URL
-	
+func retrieveEntry(unsafeId string, db *sql.DB, w http.ResponseWriter) (int64, forum.Entry){
 	// Prepare a statement
-	stmt, err := db.Prepare("SELECT * FROM golang.yourtable WHERE rank < $1")
+	stmt, err := db.Prepare("SELECT * FROM entry WHERE id=$1")
 	if err != nil {
 		fmt.Printf("Statement Preparation Error: %s", err)
 	}
 
 	// Query from that prepared statement
-	rows, err := stmt.Query(5)
+	rows, err := stmt.Query(unsafeId)
 	if err != nil {
 		fmt.Printf("Query Error: %v", err)
 	}
@@ -97,27 +92,99 @@ func threadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Fprintf(w, "Columns: %s \n", cols)
+	
+	var entry forum.Entry
+	var aid, authorid int64
+	var title, body []byte
+	var created time.Time
 
 	// Iterate over the rows
 	for rows.Next() {
-		var rank int
-		var username, password string
-		err = rows.Scan(&rank, &username, &password)
-		fmt.Fprintf(w, "Record: %#i, %s, %s \n", rank, username, password)
+		err = rows.Scan(&aid, &title, &body, &created, &authorid)
+		if err != nil {
+			fmt.Printf("Rowscan error: %s", err)
+		}
+		fmt.Fprintf(w, "Record: %#i, %#s, %s, %#s \n", aid, title, body, created)
+		
+		entry = forum.Entry{Id: aid, Title: string(title), Body: string(body), Created: created, AuthorId: authorid}
 	}
 
 	//If the thread ID is not parseable as an integer, stop them
-	id, err := strconv.Atoi(unsafeId)
-	if err != nil {
+	if _, err := strconv.Atoi(unsafeId); err != nil {
 		// Default to the root if they gave us a non-integer value
-		id = 0
+		aid = 0
+	}
+	
+	return aid, entry
+}
+
+func threadHandler(w http.ResponseWriter, r *http.Request) {
+	db := initdb()
+	defer db.Close()
+	
+	unsafeId := r.URL.Path[len("/thread/"):]
+	
+	id, _ := retrieveEntry(unsafeId, db, w)
+	
+	// Generate a closuretable from the root requested id
+	ct := closuretable.New(id)
+	// Pull down the remaining elements in the closure table that are descendants of this node
+	stmt, err := db.Prepare("SELECT * FROM entry_closures WHERE ancestor=$1")
+	if err != nil {
+		fmt.Printf("Statement Preparation Error: %s", err)
 	}
 
-	tree := ClosureTree()
+	rows, err := stmt.Query(unsafeId)
+	if err != nil {
+		fmt.Printf("Query Error: %v", err)
+	}
+	
+	//Populate the closuretable
+	for rows.Next() {
+		var ancestor, descendant int64
+		var depth int
+		err = rows.Scan(&ancestor, &descendant, &depth)
+		if err != nil {
+			fmt.Printf("Rowscan error: %s", err)
+		}
+		
+		err = ct.AddRelationship(closuretable.Relationship{Ancestor: ancestor, Descendant: descendant, Depth: depth})
+		if err != nil {
+			fmt.Fprintf(w, "Error: %s", err)
+		}
+	}
+	
+	id, entries, err := forum.RetrieveDescendantEntries(unsafeId, db)
+	if err != nil {
+		fmt.Fprintf(w, "Error: %s", err)
+	}
+	
+	fmt.Printf("Entries: %#v, %s", entries, err)
+	
+	//Obligatory boxing step
+	interfaceEntries := map[int64]interface{}{}
+	for k, v := range entries {
+		interfaceEntries[k] = v
+	}
+	
+	/*
+	//TODO replace this with real entries
+	d1 := ct.DepthOneRelationships()
+	
+	root, _ := ct.RootNodeId()
+	
+	interfaceEntries := map[int64]interface{}{}
+	interfaceEntries[root] = root
+	for _, rel := range d1 {
+		interfaceEntries[rel.Descendant] = rel.Descendant
+	}
+	*/
+
+	tree := ct.TableToTree(interfaceEntries)
 
 	fmt.Fprint(w, "<html><head><link rel=\"stylesheet\" href=\"/css/main.css\"></head><body>")
 	//Print the ID they gave us
-	fmt.Fprintf(w, "Hello %i, here is a tree %+v", id, tree)
+	fmt.Fprintf(w, "Hello %i, here is an entry %s, and here is a tree %+v", id, tree)
 	fmt.Fprint(w, "</body></html>")
 }
 
