@@ -32,7 +32,7 @@ func initdb() *sql.DB {
 	if err != nil {
 		panic(err)
 	}
-	
+
 	return db
 }
 
@@ -77,13 +77,13 @@ func commentHandler(w http.ResponseWriter, r *http.Request) {
 
 func threadHandler(w http.ResponseWriter, r *http.Request) {
 	unsafeId := r.URL.Path[len("/thread/"):]
-	
+
 	//If the thread ID is not parseable as an integer, stop immediately
 	id, err := strconv.ParseInt(unsafeId, 10, 64)
 	if err != nil {
 		return
 	}
-	
+
 	// Generate a closuretable from the root requested id
 	ct := closuretable.New(id)
 	// Pull down the remaining elements in the closure table that are descendants of this node
@@ -111,7 +111,7 @@ and depth = 1`
 		//fmt.Printf("Query Error: %v", err)
 		return
 	}
-	
+
 	//Populate the closuretable
 	for rows.Next() {
 		var ancestor, descendant int64
@@ -121,26 +121,24 @@ and depth = 1`
 			//fmt.Printf("Rowscan error: %s", err)
 			return
 		}
-		
+
 		err = ct.AddChild(closuretable.Child{Parent: ancestor, Child: descendant})
-		
+
 		//err = ct.AddRelationship(closuretable.Relationship{Ancestor: ancestor, Descendant: descendant, Depth: depth})
 		if err != nil {
 			//fmt.Fprintf(w, "Error: %s", err)
 			return
 		}
 	}
-	
-	fmt.Printf("Closure table is: %#v", ct)
-	
+
 	id, entries, err := forum.RetrieveDescendantEntries(unsafeId, db)
 	if err != nil {
 		//fmt.Fprintf(w, "Error: %s", err)
 		return
 	}
-	
+
 	//fmt.Printf("Entries: %#v, %s", entries, err)
-	
+
 	//Obligatory boxing step
 	interfaceEntries := map[int64]interface{}{}
 	for k, v := range entries {
@@ -148,13 +146,12 @@ and depth = 1`
 	}
 
 	tree, err := ct.TableToTree(interfaceEntries)
-	fmt.Printf("ClosureTree is : %#v", ct)
 	if err != nil {
-		fmt.Printf("TableToTree error: %s", err)
+		//fmt.Printf("TableToTree error: %s", err)
+		return
 	}
 
 	fmt.Fprint(w, "<html><head><link rel=\"stylesheet\" href=\"/css/main.css\"></head><body>")
-	fmt.Printf("Entry: %#v\n", tree)
 	PrintNestedComments(w, tree)
 	fmt.Fprint(w, "</body></html>")
 }
@@ -166,7 +163,6 @@ func PrintNestedComments(w http.ResponseWriter, el *binarytree.Tree) {
 
 	fmt.Fprint(w, "<div class=\"comment\">")
 	//Self
-	fmt.Printf("Entry: %#v\n", el) 
 	e := el.Value.(forum.Entry)
 	fmt.Fprintf(w, "Title: %s", e.Title)
 
