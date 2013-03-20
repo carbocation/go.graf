@@ -188,7 +188,10 @@ func ClosureTree() *binarytree.Tree {
 		3: forum.Entry{Id: 103, Title: "Title 103", Body: "Body 103", Created: time.Now(), AuthorId: 3},
 	}
 
-	ct := closureTable()
+	ct := closuretable.New(0)
+	ct.AddChild(closuretable.Child{Parent: 0, Child: 1})
+	ct.AddChild(closuretable.Child{Parent: 0, Child: 2})
+	ct.AddChild(closuretable.Child{Parent: 1, Child: 3})
 
 	// Obligatory boxing step
 	// Convert to interface type so the generic TableToTree method can be called on these entries
@@ -200,14 +203,4 @@ func ClosureTree() *binarytree.Tree {
 	tree, _ := ct.TableToTree(boxedEntries)
 
 	return tree
-}
-
-func closureTable() *closuretable.ClosureTable {
-	//Make a hierarchy for these entries
-	ct := closuretable.New(0)
-	ct.AddChild(closuretable.Child{Parent: 0, Child: 1})
-	ct.AddChild(closuretable.Child{Parent: 0, Child: 2})
-	ct.AddChild(closuretable.Child{Parent: 1, Child: 3})
-
-	return ct
 }
