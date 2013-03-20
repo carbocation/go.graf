@@ -13,7 +13,13 @@ import (
 	_ "github.com/lib/pq"
 )
 
+var db *sql.DB
+
 func main() {
+	// Initialize the DB and keep here so that it will presumably kept open in a pool
+	db = initdb()
+	defer db.Close()
+
 	http.HandleFunc("/thread/", threadHandler)
 	http.HandleFunc("/hello/", commentHandler)
 	http.HandleFunc("/css/", cssHandler)
@@ -70,58 +76,7 @@ func commentHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "</body></html>")
 }
 
-func retrieveEntry(unsafeId string, db *sql.DB, w http.ResponseWriter) (int64, forum.Entry){
-	// Prepare a statement
-	stmt, err := db.Prepare("SELECT * FROM entry WHERE id=$1")
-	if err != nil {
-		fmt.Printf("Statement Preparation Error: %s", err)
-	}
-
-	// Query from that prepared statement
-	rows, err := stmt.Query(unsafeId)
-	if err != nil {
-		fmt.Printf("Query Error: %v", err)
-	}
-
-	// Show the *Rows ptr
-	fmt.Fprintf(w, "Row pointer: %#v \n", rows)
-
-	cols, err := rows.Columns()
-	if err != nil {
-		fmt.Printf("Column error: %s", err)
-	}
-
-	fmt.Fprintf(w, "Columns: %s \n", cols)
-	
-	var entry forum.Entry
-	var aid, authorid int64
-	var title, body []byte
-	var created time.Time
-
-	// Iterate over the rows
-	for rows.Next() {
-		err = rows.Scan(&aid, &title, &body, &created, &authorid)
-		if err != nil {
-			fmt.Printf("Rowscan error: %s", err)
-		}
-		fmt.Fprintf(w, "Record: %#i, %#s, %s, %#s \n", aid, title, body, created)
-		
-		entry = forum.Entry{Id: aid, Title: string(title), Body: string(body), Created: created, AuthorId: authorid}
-	}
-
-	//If the thread ID is not parseable as an integer, stop them
-	if _, err := strconv.Atoi(unsafeId); err != nil {
-		// Default to the root if they gave us a non-integer value
-		aid = 0
-	}
-	
-	return aid, entry
-}
-
 func threadHandler(w http.ResponseWriter, r *http.Request) {
-	db := initdb()
-	defer db.Close()
-	
 	unsafeId := r.URL.Path[len("/thread/"):]
 	
 	//If the thread ID is not parseable as an integer, stop immediately
