@@ -124,19 +124,38 @@ func threadHandler(w http.ResponseWriter, r *http.Request) {
 	
 	unsafeId := r.URL.Path[len("/thread/"):]
 	
-	id, _ := retrieveEntry(unsafeId, db, w)
+	//If the thread ID is not parseable as an integer, stop immediately
+	id, err := strconv.ParseInt(unsafeId, 10, 64)
+	if err != nil {
+		return
+	}
 	
 	// Generate a closuretable from the root requested id
 	ct := closuretable.New(id)
 	// Pull down the remaining elements in the closure table that are descendants of this node
-	stmt, err := db.Prepare("SELECT * FROM entry_closures WHERE ancestor=$1")
+	q := `select * 
+from entry_closures
+where descendant in (
+select descendant
+from entry_closures
+where ancestor=$1
+)
+and ancestor in (
+select descendant
+from entry_closures
+where ancestor=$1
+)
+and depth = 1`
+	stmt, err := db.Prepare(q)
 	if err != nil {
-		fmt.Printf("Statement Preparation Error: %s", err)
+		//fmt.Printf("Statement Preparation Error: %s", err)
+		return
 	}
 
 	rows, err := stmt.Query(unsafeId)
 	if err != nil {
-		fmt.Printf("Query Error: %v", err)
+		//fmt.Printf("Query Error: %v", err)
+		return
 	}
 	
 	//Populate the closuretable
@@ -145,46 +164,44 @@ func threadHandler(w http.ResponseWriter, r *http.Request) {
 		var depth int
 		err = rows.Scan(&ancestor, &descendant, &depth)
 		if err != nil {
-			fmt.Printf("Rowscan error: %s", err)
+			//fmt.Printf("Rowscan error: %s", err)
+			return
 		}
 		
-		err = ct.AddRelationship(closuretable.Relationship{Ancestor: ancestor, Descendant: descendant, Depth: depth})
+		err = ct.AddChild(closuretable.Child{Parent: ancestor, Child: descendant})
+		
+		//err = ct.AddRelationship(closuretable.Relationship{Ancestor: ancestor, Descendant: descendant, Depth: depth})
 		if err != nil {
-			fmt.Fprintf(w, "Error: %s", err)
+			//fmt.Fprintf(w, "Error: %s", err)
+			return
 		}
 	}
+	
+	fmt.Printf("Closure table is: %#v", ct)
 	
 	id, entries, err := forum.RetrieveDescendantEntries(unsafeId, db)
 	if err != nil {
-		fmt.Fprintf(w, "Error: %s", err)
+		//fmt.Fprintf(w, "Error: %s", err)
+		return
 	}
 	
-	fmt.Printf("Entries: %#v, %s", entries, err)
+	//fmt.Printf("Entries: %#v, %s", entries, err)
 	
 	//Obligatory boxing step
 	interfaceEntries := map[int64]interface{}{}
 	for k, v := range entries {
 		interfaceEntries[k] = v
 	}
-	
-	/*
-	//TODO replace this with real entries
-	d1 := ct.DepthOneRelationships()
-	
-	root, _ := ct.RootNodeId()
-	
-	interfaceEntries := map[int64]interface{}{}
-	interfaceEntries[root] = root
-	for _, rel := range d1 {
-		interfaceEntries[rel.Descendant] = rel.Descendant
-	}
-	*/
 
-	tree := ct.TableToTree(interfaceEntries)
+	tree, err := ct.TableToTree(interfaceEntries)
+	fmt.Printf("ClosureTree is : %#v", ct)
+	if err != nil {
+		fmt.Printf("TableToTree error: %s", err)
+	}
 
 	fmt.Fprint(w, "<html><head><link rel=\"stylesheet\" href=\"/css/main.css\"></head><body>")
-	//Print the ID they gave us
-	fmt.Fprintf(w, "Hello %i, here is an entry %s, and here is a tree %+v", id, tree)
+	fmt.Printf("Entry: %#v\n", tree)
+	PrintNestedComments(w, tree)
 	fmt.Fprint(w, "</body></html>")
 }
 
@@ -195,6 +212,7 @@ func PrintNestedComments(w http.ResponseWriter, el *binarytree.Tree) {
 
 	fmt.Fprint(w, "<div class=\"comment\">")
 	//Self
+	fmt.Printf("Entry: %#v\n", el) 
 	e := el.Value.(forum.Entry)
 	fmt.Fprintf(w, "Title: %s", e.Title)
 
@@ -224,7 +242,7 @@ func ClosureTree() *binarytree.Tree {
 		boxedEntries[k] = v
 	}
 
-	tree := ct.TableToTree(boxedEntries)
+	tree, _ := ct.TableToTree(boxedEntries)
 
 	return tree
 }
