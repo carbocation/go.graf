@@ -11,33 +11,37 @@ import (
 	//"html/template"
 	"database/sql"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/sessions"
 	_ "github.com/lib/pq"
 )
 
 var db *sql.DB
 
+var store = sessions.NewCookieStore([]byte("something-very-secret"))
+
 func main() {
 	// Initialize the DB in the main function so we'll have a pool of connections maintained
 	db = initdb()
 	defer db.Close()
-	
+
 	//Initialize our router
 	r := mux.NewRouter()
-	
+
 	//Create a subrouter for GET requests
 	g := r.Methods("GET").Subrouter()
 	g.HandleFunc("/", defaultHandler)
 	g.HandleFunc("/thread/{id:[0-9]+}", threadHandler)
 	g.HandleFunc("/css/{file}", cssHandler)
 	g.HandleFunc("/hello/{name}", commentHandler)
-	
+
 	//Create a subrouter for POST requests
 	p := r.Methods("POST").Subrouter()
 	p.HandleFunc("/thread", newThreadHandler)
-	
+	p.HandleFunc("/login/{id:[0-9]+}", loginHandler)
+
 	//Notify the http package about our router
 	http.Handle("/", r)
-	
+
 	//Launch the server
 	http.ListenAndServe("localhost:9999", nil)
 }
@@ -55,6 +59,13 @@ func newThreadHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Creating new threads is not yet implemented.\n")
 }
 
+func loginHandler(w http.ResponseWriter, r *http.Request) {
+	session, _ := store.Get(r, "user")
+	defer session.Save(r, w)
+
+	session.Values["id"] = mux.Vars(r)["id"]
+}
+
 func defaultHandler(w http.ResponseWriter, r *http.Request) {
 	remPartOfURL := r.URL.Path[len("/"):]
 	fmt.Fprintf(w, "<html><head><link rel=\"stylesheet\" href=\"/css/main.css\"></head><body><h1>Welcome, %s</h1><a href='/hello/'>Say hello</a>", remPartOfURL)
@@ -64,7 +75,7 @@ func defaultHandler(w http.ResponseWriter, r *http.Request) {
 
 func cssHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/css")
-	
+
 	file := mux.Vars(r)["file"]
 
 	switch {
