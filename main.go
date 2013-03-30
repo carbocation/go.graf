@@ -10,20 +10,35 @@ import (
 	"time"
 	//"html/template"
 	"database/sql"
+	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
 )
 
 var db *sql.DB
 
 func main() {
-	// Initialize the DB and keep here so that it will presumably kept open in a pool
+	// Initialize the DB in the main function so we'll have a pool of connections maintained
 	db = initdb()
 	defer db.Close()
-
-	http.HandleFunc("/thread/", threadHandler)
-	http.HandleFunc("/hello/", commentHandler)
-	http.HandleFunc("/css/", cssHandler)
-	http.HandleFunc("/", defaultHandler)
+	
+	//Initialize our router
+	r := mux.NewRouter()
+	
+	//Create a subrouter for GET requests
+	g := r.Methods("GET").Subrouter()
+	g.HandleFunc("/", defaultHandler)
+	g.HandleFunc("/thread/{id:[0-9]+}", threadHandler)
+	g.HandleFunc("/css/{file}", cssHandler)
+	g.HandleFunc("/hello/{name}", commentHandler)
+	
+	//Create a subrouter for POST requests
+	p := r.Methods("POST").Subrouter()
+	p.HandleFunc("/thread", newThreadHandler)
+	
+	//Notify the http package about our router
+	http.Handle("/", r)
+	
+	//Launch the server
 	http.ListenAndServe("localhost:9999", nil)
 }
 
@@ -36,6 +51,10 @@ func initdb() *sql.DB {
 	return db
 }
 
+func newThreadHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "Creating new threads is not yet implemented.\n")
+}
+
 func defaultHandler(w http.ResponseWriter, r *http.Request) {
 	remPartOfURL := r.URL.Path[len("/"):]
 	fmt.Fprintf(w, "<html><head><link rel=\"stylesheet\" href=\"/css/main.css\"></head><body><h1>Welcome, %s</h1><a href='/hello/'>Say hello</a>", remPartOfURL)
@@ -45,11 +64,11 @@ func defaultHandler(w http.ResponseWriter, r *http.Request) {
 
 func cssHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/css")
-
-	docname := r.URL.Path[len("/css/"):]
+	
+	file := mux.Vars(r)["file"]
 
 	switch {
-	case docname == "main.css":
+	case file == "main.css":
 		fmt.Fprintf(w, "%s", mainCss())
 	}
 
