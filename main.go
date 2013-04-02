@@ -154,8 +154,6 @@ and depth = 1`
 		return
 	}
 
-	//fmt.Printf("Entries: %#v, %s", entries, err)
-
 	//Obligatory boxing step
 	interfaceEntries := map[int64]interface{}{}
 	for k, v := range entries {
@@ -167,14 +165,14 @@ and depth = 1`
 		//fmt.Printf("TableToTree error: %s", err)
 		return
 	}
-	
+
 	//Spew the posts' HTML over a channel
 	htm := make(chan string)
 	go func() {
 		PrintNestedComments(tree, htm)
 		close(htm)
 	}()
-	
+
 	fmt.Fprint(w, "<html><head><link rel=\"stylesheet\" href=\"/css/main.css\"></head><body>")
 	for h := range htm {
 		fmt.Fprint(w, h)
@@ -188,7 +186,7 @@ func PrintNestedComments(el *binarytree.Tree, ch chan string) {
 	}
 
 	ch <- "<div class=\"comment\">"
-	
+
 	//Self
 	e := el.Value.(forum.Entry)
 	ch <- fmt.Sprintf("Title: %s", e.Title)
@@ -199,30 +197,4 @@ func PrintNestedComments(el *binarytree.Tree, ch chan string) {
 
 	//Siblings are parallel
 	PrintNestedComments(el.Right(), ch)
-}
-
-func ClosureTree() *binarytree.Tree {
-	//Make some entries
-	entries := map[int64]forum.Entry{
-		0: forum.Entry{Id: 100, Title: "Title 100", Body: "Body 100", Created: time.Now(), AuthorId: 0},
-		1: forum.Entry{Id: 101, Title: "Title 101", Body: "Body 101", Created: time.Now(), AuthorId: 1},
-		2: forum.Entry{Id: 102, Title: "Title 102", Body: "Body 102", Created: time.Now(), AuthorId: 2},
-		3: forum.Entry{Id: 103, Title: "Title 103", Body: "Body 103", Created: time.Now(), AuthorId: 3},
-	}
-
-	ct := closuretable.New(0)
-	ct.AddChild(closuretable.Child{Parent: 0, Child: 1})
-	ct.AddChild(closuretable.Child{Parent: 0, Child: 2})
-	ct.AddChild(closuretable.Child{Parent: 1, Child: 3})
-
-	// Obligatory boxing step
-	// Convert to interface type so the generic TableToTree method can be called on these entries
-	boxedEntries := map[int64]interface{}{}
-	for k, v := range entries {
-		boxedEntries[k] = v
-	}
-
-	tree, _ := ct.TableToTree(boxedEntries)
-
-	return tree
 }
