@@ -7,7 +7,6 @@ import (
 	"github.com/carbocation/util.git/datatypes/closuretable"
 	"net/http"
 	"strconv"
-	"time"
 	//"html/template"
 	"database/sql"
 	"github.com/gorilla/mux"
