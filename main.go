@@ -32,7 +32,6 @@ func main() {
 	g.HandleFunc("/", defaultHandler)
 	g.HandleFunc("/thread/{id:[0-9]+}", threadHandler)
 	g.HandleFunc("/css/{file}", cssHandler)
-	g.HandleFunc("/hello/{name}", commentHandler)
 
 	//Create a subrouter for POST requests
 	p := r.Methods("POST").Subrouter()
@@ -91,18 +90,6 @@ div .comment {
 	padding-left: 100px;
 }
 `
-}
-
-func commentHandler(w http.ResponseWriter, r *http.Request) {
-	remPartOfURL := r.URL.Path[len("/hello/"):] //get everything after the /hello/ part of the URL
-	//w.Header().Set("Content-Type", "text/html")
-
-	fmt.Fprint(w, "<html><head><link rel=\"stylesheet\" href=\"/css/main.css\"></head><body>")
-	fmt.Fprintf(w, "Hello %s!", remPartOfURL)
-
-	PrintNestedComments(w, ClosureTree())
-
-	fmt.Fprint(w, "</body></html>")
 }
 
 func threadHandler(w http.ResponseWriter, r *http.Request) {
@@ -180,28 +167,38 @@ and depth = 1`
 		//fmt.Printf("TableToTree error: %s", err)
 		return
 	}
-
+	
+	//Spew the posts' HTML over a channel
+	htm := make(chan string)
+	go func() {
+		PrintNestedComments(tree, htm)
+		close(htm)
+	}()
+	
 	fmt.Fprint(w, "<html><head><link rel=\"stylesheet\" href=\"/css/main.css\"></head><body>")
-	PrintNestedComments(w, tree)
+	for h := range htm {
+		fmt.Fprint(w, h)
+	}
 	fmt.Fprint(w, "</body></html>")
 }
 
-func PrintNestedComments(w http.ResponseWriter, el *binarytree.Tree) {
+func PrintNestedComments(el *binarytree.Tree, ch chan string) {
 	if el == nil {
 		return
 	}
 
-	fmt.Fprint(w, "<div class=\"comment\">")
+	ch <- "<div class=\"comment\">"
+	
 	//Self
 	e := el.Value.(forum.Entry)
-	fmt.Fprintf(w, "Title: %s", e.Title)
+	ch <- fmt.Sprintf("Title: %s", e.Title)
 
-	//Children are nested
-	PrintNestedComments(w, el.Left())
-	fmt.Fprint(w, "</div>")
+	//Children are embedded
+	PrintNestedComments(el.Left(), ch)
+	ch <- "</div>"
 
 	//Siblings are parallel
-	PrintNestedComments(w, el.Right())
+	PrintNestedComments(el.Right(), ch)
 }
 
 func ClosureTree() *binarytree.Tree {
