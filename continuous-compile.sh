@@ -17,5 +17,5 @@ if [[ numproc > 0 ]]
 	killall ${PWD##*/}-main.osx 2> /dev/null
 fi
 
-go build -o /tmp/${PWD##*/}-main.osx main.go && /tmp/${PWD##*/}-main.osx &
+go build -o /tmp/${PWD##*/}-main.osx *.go && /tmp/${PWD##*/}-main.osx &
 

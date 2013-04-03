@@ -13,7 +13,7 @@ var cachedTemplates = map[string]*template.Template{}
 var cachedMutex sync.RWMutex
 
 var funcs = template.FuncMap{
-	"reverse": reverse,
+	//"reverse": reverse,
 }
 
 func T(name string) *template.Template {
