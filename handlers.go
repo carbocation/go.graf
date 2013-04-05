@@ -59,12 +59,18 @@ func loginHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	return
 }
 
-func defaultHandler(w http.ResponseWriter, r *http.Request) (err error) {
-	remPartOfURL := r.URL.Path[len("/"):]
+func indexHandler(w http.ResponseWriter, r *http.Request) (err error) {
+	//remPartOfURL := r.URL.Path[len("/"):]
+	
+	//execute the template
+	return T("index.html").Execute(w, map[string]interface{}{})
+	
+	/*
 	fmt.Fprintf(w, "<html><head><link rel=\"stylesheet\" href=\"/css/main.css\"></head><body><h1>Welcome, %s</h1><a href='/hello/'>Say hello</a>", remPartOfURL)
 
 	fmt.Fprint(w, "</body></html>")
-	return
+	*/
+	//return
 }
 
 func cssHandler(w http.ResponseWriter, r *http.Request) (err error) {

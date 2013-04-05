@@ -26,14 +26,14 @@ func main() {
 
 	//Create a subrouter for GET requests
 	g := router.Methods("GET").Subrouter()
-	g.Handle("/", handler(defaultHandler))
-	g.Handle("/thread/{id:[0-9]+}", handler(threadHandler))
+	g.Handle("/", handler(indexHandler)).Name("index")
+	g.Handle("/thread/{id:[0-9]+}", handler(threadHandler)).Name("thread")
 	g.Handle("/css/{file}", handler(cssHandler))
 
 	//Create a subrouter for POST requests
 	p := router.Methods("POST").Subrouter()
-	p.Handle("/thread", handler(newThreadHandler))
-	p.Handle("/login/{id:[0-9]+}", handler(loginHandler))
+	p.Handle("/thread", handler(newThreadHandler)).Name("createThread")
+	p.Handle("/login/{id:[0-9]+}", handler(loginHandler)).Name("login")
 
 	//Notify the http package about our router
 	http.Handle("/", router)
