@@ -45,8 +45,10 @@ func T(name string) *template.Template {
 	cachedMutex.Lock()
 	defer cachedMutex.Unlock()
 
+	//Create a template with the given name:
 	t := template.New("_base.html").Funcs(funcs)
 
+	//
 	t = template.Must(t.ParseFiles(
 		"templates/_base.html",
 		filepath.Join("templates", name),

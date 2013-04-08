@@ -3,6 +3,6 @@
 {{ define "content" }}
     <h1>Forum.git</h1>
 
-    <p>Hello, and welcome to my forum, because it's 2013.</p>
+    <p>Hello, {{.name}} and welcome to my forum. Go to {{reverse "index"}}</p>
 
 {{ end }}

@@ -7,6 +7,7 @@ import (
 	"github.com/carbocation/util.git/datatypes/closuretable"
 	"github.com/goods/httpbuf"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/schema"
 	"net/http"
 	"strconv"
 )
@@ -59,16 +60,27 @@ func loginHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	return
 }
 
+type Demo struct {
+	You string
+}
+
 func indexHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	//remPartOfURL := r.URL.Path[len("/"):]
-	
-	//execute the template
-	return T("index.html").Execute(w, map[string]interface{}{})
-	
-	/*
-	fmt.Fprintf(w, "<html><head><link rel=\"stylesheet\" href=\"/css/main.css\"></head><body><h1>Welcome, %s</h1><a href='/hello/'>Say hello</a>", remPartOfURL)
 
-	fmt.Fprint(w, "</body></html>")
+	r.ParseForm()
+
+	demo := new(Demo)
+	decoder := schema.NewDecoder()
+	decoder.Decode(demo, r.Form)
+
+	//execute the template
+	return T("index.html").Execute(w, map[string]interface{}{
+		"name": demo.You})
+
+	/*
+		fmt.Fprintf(w, "<html><head><link rel=\"stylesheet\" href=\"/css/main.css\"></head><body><h1>Welcome, %s</h1><a href='/hello/'>Say hello</a>", remPartOfURL)
+
+		fmt.Fprint(w, "</body></html>")
 	*/
 	//return
 }
@@ -172,6 +184,6 @@ and depth = 1`
 		fmt.Fprint(w, h)
 	}
 	fmt.Fprint(w, "</body></html>")
-	
+
 	return
 }

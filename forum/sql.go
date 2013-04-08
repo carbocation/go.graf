@@ -23,6 +23,7 @@ func RetrieveDescendantEntries(ancestorId string, db *sql.DB) (int64, map[int64]
 		WHERE closure.ancestor = $1`
 
 	stmt, err := db.Prepare(q)
+	defer stmt.Close()
 	if err != nil {
 		return 0, map[int64]Entry{}, err
 	}
