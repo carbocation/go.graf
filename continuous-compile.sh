@@ -17,5 +17,8 @@ if [[ numproc > 0 ]]
 	killall ${PWD##*/}-main.osx 2> /dev/null
 fi
 
-go build -o /tmp/${PWD##*/}-main.osx main.go && /tmp/${PWD##*/}-main.osx &
+# Build the binary, then
+# add in the static components with NRSC, then
+# launch the binary in the background
+go build -o /tmp/${PWD##*/}-main.osx *.go && ./nrsc-script /tmp/${PWD##*/}-main.osx static && /tmp/${PWD##*/}-main.osx &
 
