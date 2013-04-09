@@ -31,11 +31,18 @@ var funcs = template.FuncMap{
 	"reverse": reverse,
 }
 
+// Parse a template ('name') against _base.html
 func T(name string) *template.Template {
-	// First, read from the global map if there is a cached version available:
+	return t("_base.html", name)
+}
+
+// Parse a template ('name') against an arbitrary base template.
+// Regardless of the base template in use, the 'name' must be unique.
+func t(base, name string) *template.Template {
+	// First, read from the global cache if available:
 	cachedMutex.RLock()
 	if t, ok := cachedTemplates[name]; ok {
-		cachedMutex.RUnlock()
+		defer cachedMutex.RUnlock()
 		return t
 	}
 
@@ -45,14 +52,15 @@ func T(name string) *template.Template {
 	cachedMutex.Lock()
 	defer cachedMutex.Unlock()
 
-	//Create a template with the given name:
-	t := template.New("_base.html").Funcs(funcs)
-
-	//
-	t = template.Must(t.ParseFiles(
-		"templates/_base.html",
+	// Create a template with the given basename and custom functions.
+	// Panic if there is any error
+	t := template.Must(template.New(base).Funcs(funcs).ParseFiles(
+		// First entry must match the name from template.New() for some reason
+		filepath.Join("templates", base),
 		filepath.Join("templates", name),
 	))
+
+	// Add the newly compiled template to our global cache
 	cachedTemplates[name] = t
 
 	return t
