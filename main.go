@@ -1,12 +1,13 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
+	"net/http"
+
+	"bitbucket.org/tebeka/nrsc"
 	"github.com/carbocation/forum.git/forum"
 	"github.com/carbocation/util.git/datatypes/binarytree"
-	"net/http"
-	//"html/template"
-	"database/sql"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	_ "github.com/lib/pq"
@@ -20,6 +21,9 @@ func main() {
 	// Initialize the DB in the main function so we'll have a pool of connections maintained
 	db = initdb()
 	defer db.Close()
+	
+	//Bundled static assets are handled by nrsc
+	nrsc.Handle("/static/")
 
 	//Initialize our router
 	router = mux.NewRouter()
@@ -29,6 +33,7 @@ func main() {
 	g.Handle("/", handler(indexHandler)).Name("index")
 	g.Handle("/thread/{id:[0-9]+}", handler(threadHandler)).Name("thread")
 	g.Handle("/css/{file}", handler(cssHandler))
+	//g.HandleFunc("/static/", staticHandler)
 
 	//Create a subrouter for POST requests
 	p := router.Methods("POST").Subrouter()
