@@ -25,15 +25,13 @@ func main() {
 	//Bundled static assets are handled by nrsc
 	nrsc.Handle("/static/")
 
-	//Initialize our router
+	//Dynamic content is managed by handlers pointed at by the router 
 	router = mux.NewRouter()
 
 	//Create a subrouter for GET requests
 	g := router.Methods("GET").Subrouter()
 	g.Handle("/", handler(indexHandler)).Name("index")
 	g.Handle("/thread/{id:[0-9]+}", handler(threadHandler)).Name("thread")
-	g.Handle("/css/{file}", handler(cssHandler))
-	//g.HandleFunc("/static/", staticHandler)
 
 	//Create a subrouter for POST requests
 	p := router.Methods("POST").Subrouter()
@@ -56,14 +54,6 @@ func initdb() *sql.DB {
 	}
 
 	return db
-}
-
-func mainCss() string {
-	return `
-div .comment {
-	padding-left: 100px;
-}
-`
 }
 
 func PrintNestedComments(el *binarytree.Tree, ch chan string) {

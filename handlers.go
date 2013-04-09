@@ -85,19 +85,6 @@ func indexHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	//return
 }
 
-func cssHandler(w http.ResponseWriter, r *http.Request) (err error) {
-	w.Header().Set("Content-Type", "text/css")
-
-	file := mux.Vars(r)["file"]
-
-	switch {
-	case file == "main.css":
-		fmt.Fprintf(w, "%s", mainCss())
-	}
-
-	return
-}
-
 func threadHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	unsafeId := r.URL.Path[len("/thread/"):]
 
