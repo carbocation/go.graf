@@ -1,0 +1,30 @@
+{{ define "title" }}Thread Template{{ end }}
+
+{{ define "tree" }}
+	<div class="nested">
+	{{with .Value}}
+		{{.Id}}<br />
+		{{.Title}}<br />
+		{{.Body}}<br />
+		<a href="#">Reply</a>
+	{{end}}
+	{{with .Left}}
+	        {{template "tree" .}}
+	{{end}}
+	</div>
+	{{with .Right}}
+	        {{template "tree" .}}
+	{{end}}
+{{ end }}
+
+{{ define "content" }}
+    <div>
+	{{with .Value}}
+		<h1>{{.Id}} {{.Title}}</h1>
+		<p class="lead">{{.Body}}</p>
+		<br />
+		<a href="#">Reply</a>
+	{{end}}
+	{{template "tree" .Left}}
+    </div>
+{{ end }}

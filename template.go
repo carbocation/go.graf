@@ -10,6 +10,8 @@ import (
 	"sync"
 )
 
+// Note that we can't just preload and cache all of the templates
+// because some rely on base templates while others do not
 var cachedTemplates = map[string]*template.Template{}
 var cachedMutex sync.RWMutex
 
