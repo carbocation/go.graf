@@ -2,7 +2,7 @@ package main
 
 import (
 	"errors"
-	"fmt"
+	//"fmt"
 	"github.com/carbocation/forum.git/forum"
 	"github.com/carbocation/util.git/datatypes/closuretable"
 	"github.com/goods/httpbuf"
@@ -159,18 +159,23 @@ and depth = 1`
 		return
 	}
 
-	//Spew the posts' HTML over a channel
-	htm := make(chan string)
-	go func() {
-		PrintNestedComments(tree, htm)
-		close(htm)
-	}()
+	//execute the template
+	return T("thread.html").Execute(w, tree)
 
-	fmt.Fprint(w, "<html><head><link rel=\"stylesheet\" href=\"/css/main.css\"></head><body>")
-	for h := range htm {
-		fmt.Fprint(w, h)
-	}
-	fmt.Fprint(w, "</body></html>")
+	/*
+		//Spew the posts' HTML over a channel
+		htm := make(chan string)
+		go func() {
+			PrintNestedComments(tree, htm)
+			close(htm)
+		}()
 
-	return
+		fmt.Fprint(w, "<html><head><link rel=\"stylesheet\" href=\"/css/main.css\"></head><body>")
+		for h := range htm {
+			fmt.Fprint(w, h)
+		}
+		fmt.Fprint(w, "</body></html>")
+
+		return
+	*/
 }
