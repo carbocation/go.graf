@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
+	"runtime"
 
 	"bitbucket.org/tebeka/nrsc"
 	"github.com/carbocation/forum.git/forum"
@@ -14,14 +15,18 @@ import (
 )
 
 var db *sql.DB
-var store = sessions.NewCookieStore([]byte("something-very-secret"))
+var store = sessions.NewCookieStore([]byte("f2LdNYi5fvo8YNdMDvI9Ggnv2OUaRiIEXFUru+v23ZxskQ"))
 var router *mux.Router
+
+func init() {
+	runtime.GOMAXPROCS(runtime.NumCPU())
+}
 
 func main() {
 	// Initialize the DB in the main function so we'll have a pool of connections maintained
 	db = initdb()
 	defer db.Close()
-	
+
 	//Bundled static assets are handled by nrsc
 	nrsc.Handle("/static/")
 
