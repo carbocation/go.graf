@@ -2,14 +2,14 @@ package main
 
 import (
 	"errors"
-	//"fmt"
+	"net/http"
+	"strconv"
+
 	"github.com/carbocation/forum.git/forum"
 	"github.com/carbocation/util.git/datatypes/closuretable"
 	"github.com/goods/httpbuf"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/schema"
-	"net/http"
-	"strconv"
 )
 
 type handler func(http.ResponseWriter, *http.Request) error
