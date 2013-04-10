@@ -1,6 +1,7 @@
 {{ define "title" }}Thread Template{{ end }}
 
 {{ define "tree" }}
+{{if .}}
 	<div class="nested">
 	{{with .Value}}
 		{{.Id}}<br />
@@ -15,9 +16,11 @@
 	{{with .Right}}
 	        {{template "tree" .}}
 	{{end}}
+{{end}}
 {{ end }}
 
 {{ define "content" }}
+{{if .}}
     <div>
 	{{with .Value}}
 		<h1>{{.Id}} {{.Title}}</h1>
@@ -27,4 +30,7 @@
 	{{end}}
 	{{template "tree" .Left}}
     </div>
+{{ else }}
+	<p class="text-error">The requested post is unavailable.</p>
+{{ end }}
 {{ end }}
