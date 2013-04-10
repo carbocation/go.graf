@@ -161,21 +161,4 @@ and depth = 1`
 
 	//execute the template
 	return T("thread.html").Execute(w, tree)
-
-	/*
-		//Spew the posts' HTML over a channel
-		htm := make(chan string)
-		go func() {
-			PrintNestedComments(tree, htm)
-			close(htm)
-		}()
-
-		fmt.Fprint(w, "<html><head><link rel=\"stylesheet\" href=\"/css/main.css\"></head><body>")
-		for h := range htm {
-			fmt.Fprint(w, h)
-		}
-		fmt.Fprint(w, "</body></html>")
-
-		return
-	*/
 }

@@ -2,13 +2,10 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
 	"net/http"
 	"runtime"
 
 	"bitbucket.org/tebeka/nrsc"
-	"github.com/carbocation/forum.git/forum"
-	"github.com/carbocation/util.git/datatypes/binarytree"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	_ "github.com/lib/pq"
@@ -59,23 +56,4 @@ func initdb() *sql.DB {
 	}
 
 	return db
-}
-
-func PrintNestedComments(el *binarytree.Tree, ch chan string) {
-	if el == nil {
-		return
-	}
-
-	ch <- "<div class=\"comment\">"
-
-	//Self
-	e := el.Value.(forum.Entry)
-	ch <- fmt.Sprintf("Title: %s", e.Title)
-
-	//Children are embedded
-	PrintNestedComments(el.Left(), ch)
-	ch <- "</div>"
-
-	//Siblings are parallel
-	PrintNestedComments(el.Right(), ch)
 }
