@@ -1,3 +1,7 @@
 Identify a way to do Twig-style templates in Go, where you
 expressly refer to a parent file from a child file, if desired.
 -- Consider https://github.com/flosch/pongo
+
+Cache threads that are requested. Come up with a low-cost way to 
+check to see if a tree element has been invalidated and re-load 
+only if so.
