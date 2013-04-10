@@ -13,6 +13,7 @@ import (
 var cachedTemplates = map[string]*template.Template{}
 var cachedMutex sync.RWMutex
 
+//reverse builds a URL based on route information and paramaters with their arguments 
 func reverse(name string, things ...interface{}) string {
 	//convert the things to strings
 	strs := make([]string, len(things))
