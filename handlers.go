@@ -79,10 +79,8 @@ func indexHandler(w http.ResponseWriter, r *http.Request) (err error) {
 }
 
 func threadHandler(w http.ResponseWriter, r *http.Request) (err error) {
-	unsafeId := r.URL.Path[len("/thread/"):]
-
 	//If the thread ID is not parseable as an integer, stop immediately
-	id, err := strconv.ParseInt(unsafeId, 10, 64)
+	id, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
 	if err != nil {
 		return errors.New("The requested thread is invalid.")
 	}
