@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"github.com/carbocation/forum.git/forum"
-	"github.com/carbocation/util.git/datatypes/closuretable"
 	"github.com/goods/httpbuf"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/schema"
@@ -94,51 +93,11 @@ func threadHandler(w http.ResponseWriter, r *http.Request) (err error) {
 		return
 	}
 
-	// Generate a closuretable from the root requested id
-	ct := closuretable.New(id)
-	// Pull down the remaining elements in the closure table that are descendants of this node
-	q := `select * 
-from entry_closures
-where descendant in (
-select descendant
-from entry_closures
-where ancestor=$1
-)
-and ancestor in (
-select descendant
-from entry_closures
-where ancestor=$1
-)
-and depth = 1`
-	stmt, err := db.Prepare(q)
+	// Pull down the closuretable from the root requested id
+	ct, err := forum.ClosureTable(id)
 	if err != nil {
-		//fmt.Printf("Statement Preparation Error: %s", err)
+		//fmt.Fprintf(w, "Error: %s", err)
 		return
-	}
-
-	rows, err := stmt.Query(unsafeId)
-	if err != nil {
-		//fmt.Printf("Query Error: %v", err)
-		return
-	}
-
-	//Populate the closuretable
-	for rows.Next() {
-		var ancestor, descendant int64
-		var depth int
-		err = rows.Scan(&ancestor, &descendant, &depth)
-		if err != nil {
-			//fmt.Printf("Rowscan error: %s", err)
-			return
-		}
-
-		err = ct.AddChild(closuretable.Child{Parent: ancestor, Child: descendant})
-
-		//err = ct.AddRelationship(closuretable.Relationship{Ancestor: ancestor, Descendant: descendant, Depth: depth})
-		if err != nil {
-			//fmt.Fprintf(w, "Error: %s", err)
-			return
-		}
 	}
 
 	id, entries, err := forum.RetrieveDescendantEntries(unsafeId, db)

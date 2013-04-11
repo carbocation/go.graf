@@ -6,6 +6,7 @@ import (
 	"runtime"
 
 	"bitbucket.org/tebeka/nrsc"
+	"github.com/carbocation/forum.git/forum"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	_ "github.com/lib/pq"
@@ -23,6 +24,9 @@ func main() {
 	// Initialize the DB in the main function so we'll have a pool of connections maintained
 	db = initdb()
 	defer db.Close()
+
+	//Initialize the forum package
+	forum.CreateWith(db)
 
 	//Bundled static assets are handled by nrsc
 	nrsc.Handle("/static/")
