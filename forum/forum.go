@@ -12,6 +12,6 @@ type conf struct {
 var Config *conf = &conf{}
 
 //Niladic function to setup the forum
-func CreateWith(db *sql.DB) {
+func Initialize(db *sql.DB) {
 	Config.DB = db
 }

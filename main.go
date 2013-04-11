@@ -26,7 +26,7 @@ func main() {
 	defer db.Close()
 
 	//Initialize the forum package
-	forum.CreateWith(db)
+	forum.Initialize(db)
 
 	//Bundled static assets are handled by nrsc
 	nrsc.Handle("/static/")
