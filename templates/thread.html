@@ -4,10 +4,16 @@
 {{if .}}
 	<div class="nested">
 	{{with .Value}}
-		{{.Id}}<br />
+		<i class="icon-arrow-up"></i><i class="icon-arrow-down"></i>{{.Id}}<br />
 		{{.Title}}<br />
 		{{.Body}}<br />
-		<a href="#">Reply</a>
+		<ul class="inline">
+			<li><a href="#">Reply</a></li>
+			<li><a href="/thread/{{.Id}}">Permalink</a></li>
+			<li><a href="#">Edit</a></li>
+			<li>&nbsp;</li>
+			<li><a href="#">Delete</a></li>
+		</ul>
 	{{end}}
 	{{with .Left}}
 	        {{template "tree" .}}
@@ -26,7 +32,12 @@
 		<h1>{{.Id}} {{.Title}}</h1>
 		<p class="lead">{{.Body}}</p>
 		<br />
-		<a href="#">Reply</a>
+		<ul class="inline">
+			<li><a href="#">Reply</a></li>
+			<li><a href="#">Edit</a></li>
+			<li>&nbsp;</li>
+			<li><a href="#">Delete</a></li>
+		</ul>
 	{{end}}
 	{{template "tree" .Left}}
     </div>
