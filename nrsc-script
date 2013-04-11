@@ -38,7 +38,7 @@ tmp="/tmp/nrsc-$(date +%s).zip"
 trap "rm -f ${tmp}" EXIT
 
 # Create zip file
-(cd "${root}" && zip -r "${tmp}" . $@)
+(cd "${root}" && zip -q -r "${tmp}" . $@)
 
 # Append zip to executable
 cat "${tmp}" >> "${exe}"

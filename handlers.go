@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"github.com/carbocation/forum.git/forum"
-	"github.com/carbocation/util.git/datatypes/closuretable"
 	"github.com/goods/httpbuf"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/schema"
@@ -48,7 +47,6 @@ func (h handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 func newThreadHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	errors.New("Creating new threads is not yet implemented.")
-	//http.Error(w, "Creating new threads is not yet implemented.\n", http.StatusInternalServerError)
 	return
 }
 
@@ -74,77 +72,28 @@ func indexHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	decoder.Decode(demo, r.Form)
 
 	//execute the template
-	return T("index.html").Execute(w, map[string]interface{}{
+	T("index.html").Execute(w, map[string]interface{}{
 		"name": demo.You})
 
-	/*
-		fmt.Fprintf(w, "<html><head><link rel=\"stylesheet\" href=\"/css/main.css\"></head><body><h1>Welcome, %s</h1><a href='/hello/'>Say hello</a>", remPartOfURL)
-
-		fmt.Fprint(w, "</body></html>")
-	*/
-	//return
+	return
 }
 
 func threadHandler(w http.ResponseWriter, r *http.Request) (err error) {
-	unsafeId := r.URL.Path[len("/thread/"):]
-
 	//If the thread ID is not parseable as an integer, stop immediately
-	id, err := strconv.ParseInt(unsafeId, 10, 64)
+	id, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
 	if err != nil {
-		return
+		return errors.New("The requested thread is invalid.")
 	}
 
-	// Generate a closuretable from the root requested id
-	ct := closuretable.New(id)
-	// Pull down the remaining elements in the closure table that are descendants of this node
-	q := `select * 
-from entry_closures
-where descendant in (
-select descendant
-from entry_closures
-where ancestor=$1
-)
-and ancestor in (
-select descendant
-from entry_closures
-where ancestor=$1
-)
-and depth = 1`
-	stmt, err := db.Prepare(q)
+	// Pull down the closuretable from the root requested id
+	ct, err := forum.ClosureTable(id)
 	if err != nil {
-		//fmt.Printf("Statement Preparation Error: %s", err)
-		return
+		return errors.New("The requested thread could not be found.")
 	}
 
-	rows, err := stmt.Query(unsafeId)
+	entries, err := forum.DescendantEntries(id)
 	if err != nil {
-		//fmt.Printf("Query Error: %v", err)
-		return
-	}
-
-	//Populate the closuretable
-	for rows.Next() {
-		var ancestor, descendant int64
-		var depth int
-		err = rows.Scan(&ancestor, &descendant, &depth)
-		if err != nil {
-			//fmt.Printf("Rowscan error: %s", err)
-			return
-		}
-
-		err = ct.AddChild(closuretable.Child{Parent: ancestor, Child: descendant})
-
-		//err = ct.AddRelationship(closuretable.Relationship{Ancestor: ancestor, Descendant: descendant, Depth: depth})
-		if err != nil {
-			//fmt.Fprintf(w, "Error: %s", err)
-			return
-		}
-	}
-
-	id, entries, err := forum.RetrieveDescendantEntries(unsafeId, db)
-	if err != nil {
-		//fmt.Fprintf(w, "Error: %s", err)
-		return
+		return errors.New("The requested thread could not be found.")
 	}
 
 	//Obligatory boxing step
@@ -155,10 +104,11 @@ and depth = 1`
 
 	tree, err := ct.TableToTree(interfaceEntries)
 	if err != nil {
-		//fmt.Printf("TableToTree error: %s", err)
-		return
+		return errors.New("The requested data structure could not be built.")
 	}
 
 	//execute the template
-	return T("thread.html").Execute(w, tree)
+	T("thread.html").Execute(w, tree)
+
+	return
 }
