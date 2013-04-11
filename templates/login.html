@@ -5,7 +5,7 @@
 {{ define "content" }}
     <div class="container">
 
-      <form class="form-signin">
+      <form class="form-signin" method="post" action="{{reverse "postLogin"}}">
         <h2 class="form-signin-heading">Login</h2>
         <input type="text" class="input-block-level" placeholder="Handle">
         <input type="password" class="input-block-level" placeholder="Password">

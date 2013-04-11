@@ -12,9 +12,12 @@ import (
 	_ "github.com/lib/pq"
 )
 
-var db *sql.DB
-var store = sessions.NewCookieStore([]byte("f2LdNYi5fvo8YNdMDvI9Ggnv2OUaRiIEXFUru+v23ZxskQ"))
-var router *mux.Router
+var (
+	db *sql.DB
+	appsecret = "f2LdNYi5fvo8YNdMDvI9Ggnv2OUaRiIEXFUru+v23ZxskQ"
+	store = sessions.NewCookieStore([]byte(appsecret))
+	router *mux.Router
+)
 
 func init() {
 	runtime.GOMAXPROCS(runtime.NumCPU())

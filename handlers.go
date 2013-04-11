@@ -9,6 +9,7 @@ import (
 	"github.com/goods/httpbuf"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/schema"
+	//"code.google.com/p/xsrftoken"
 )
 
 type handler func(http.ResponseWriter, *http.Request) error
@@ -60,6 +61,11 @@ func postLoginHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	/*
 	session, _ := store.Get(r, "user")
 	defer session.Save(r, w)
+	
+	//See http://godoc.org/code.google.com/p/xsrftoken
+	// for generating CSRF tokens. Needs to be done once every
+	// 24 hours.
+	//xsrftoken.Generate( XXXX TODO XXXX)
 
 	session.Values["id"] = mux.Vars(r)["id"]
 	*/
