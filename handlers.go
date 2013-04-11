@@ -47,7 +47,6 @@ func (h handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 func newThreadHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	errors.New("Creating new threads is not yet implemented.")
-	//http.Error(w, "Creating new threads is not yet implemented.\n", http.StatusInternalServerError)
 	return
 }
 
@@ -73,15 +72,10 @@ func indexHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	decoder.Decode(demo, r.Form)
 
 	//execute the template
-	return T("index.html").Execute(w, map[string]interface{}{
+	T("index.html").Execute(w, map[string]interface{}{
 		"name": demo.You})
 
-	/*
-		fmt.Fprintf(w, "<html><head><link rel=\"stylesheet\" href=\"/css/main.css\"></head><body><h1>Welcome, %s</h1><a href='/hello/'>Say hello</a>", remPartOfURL)
-
-		fmt.Fprint(w, "</body></html>")
-	*/
-	//return
+	return
 }
 
 func threadHandler(w http.ResponseWriter, r *http.Request) (err error) {
@@ -96,13 +90,11 @@ func threadHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	// Pull down the closuretable from the root requested id
 	ct, err := forum.ClosureTable(id)
 	if err != nil {
-		//fmt.Fprintf(w, "Error: %s", err)
 		return errors.New("The requested thread could not be found.")
 	}
 
 	entries, err := forum.DescendantEntries(id)
 	if err != nil {
-		//fmt.Fprintf(w, "Error: %s", err)
 		return errors.New("The requested thread could not be found.")
 	}
 
@@ -114,10 +106,11 @@ func threadHandler(w http.ResponseWriter, r *http.Request) (err error) {
 
 	tree, err := ct.TableToTree(interfaceEntries)
 	if err != nil {
-		//fmt.Printf("TableToTree error: %s", err)
-		return
+		return errors.New("The requested data structure could not be built.")
 	}
 
 	//execute the template
-	return T("thread.html").Execute(w, tree)
+	T("thread.html").Execute(w, tree)
+
+	return
 }
