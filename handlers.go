@@ -100,7 +100,7 @@ func threadHandler(w http.ResponseWriter, r *http.Request) (err error) {
 		return
 	}
 
-	id, entries, err := forum.RetrieveDescendantEntries(unsafeId, db)
+	id, entries, err := forum.DescendantEntries(unsafeId)
 	if err != nil {
 		//fmt.Fprintf(w, "Error: %s", err)
 		return

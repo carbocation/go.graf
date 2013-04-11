@@ -1,22 +1,20 @@
 package forum
 
 import (
-	"database/sql"
 	"strconv"
 	"time"
 
 	"github.com/carbocation/util.git/datatypes/closuretable"
-	_ "github.com/lib/pq"
 )
 
 // Retrieves all entries that are descendants of the ancestral entry, including the ancestral entry itself
-func RetrieveDescendantEntries(ancestorId string, db *sql.DB) (int64, map[int64]Entry, error) {
+func DescendantEntries(ancestorId string) (root int64, entries map[int64]Entry, err error) {
 
 	//If the thread ID is not parseable as an integer, stop immediately
-	root, err := strconv.ParseInt(ancestorId, 10, 64)
+	root, err = strconv.ParseInt(ancestorId, 10, 64)
 	if err != nil {
 		// Default to the root if they gave us a non-integer value
-		return 0, map[int64]Entry{}, err
+		return
 	}
 
 	q := `SELECT e.*
@@ -24,19 +22,19 @@ func RetrieveDescendantEntries(ancestorId string, db *sql.DB) (int64, map[int64]
 		JOIN entry e ON e.id = closure.descendant
 		WHERE closure.ancestor = $1`
 
-	stmt, err := db.Prepare(q)
+	stmt, err := Config.DB.Prepare(q)
 	defer stmt.Close()
 	if err != nil {
-		return 0, map[int64]Entry{}, err
+		return
 	}
 
 	// Query from that prepared statement
 	rows, err := stmt.Query(root)
 	if err != nil {
-		return 0, map[int64]Entry{}, err
+		return
 	}
 
-	entries := map[int64]Entry{}
+	entries = map[int64]Entry{}
 
 	var id, authorid int64
 	var title, body string
@@ -46,16 +44,16 @@ func RetrieveDescendantEntries(ancestorId string, db *sql.DB) (int64, map[int64]
 	for rows.Next() {
 		err = rows.Scan(&id, &title, &body, &created, &authorid)
 		if err != nil {
-			return 0, map[int64]Entry{}, err
+			return
 		}
 
 		entries[id] = Entry{Id: id, Title: title, Body: body, Created: created, AuthorId: authorid}
 	}
 
-	return root, entries, nil
+	return
 }
 
-//Returns a closure table built from a given ID
+//Returns a closure table of IDs that are descendants of a given ID
 func ClosureTable(id int64) (ct *closuretable.ClosureTable, err error) {
 	ct = closuretable.New(id)
 
@@ -76,13 +74,14 @@ and depth = 1`
 	stmt, err := Config.DB.Prepare(q)
 	if err != nil {
 		//fmt.Printf("Statement Preparation Error: %s", err)
-		return ct, err
+		return
 	}
 
 	rows, err := stmt.Query(id)
+	defer stmt.Close()
 	if err != nil {
 		//fmt.Printf("Query Error: %v", err)
-		return ct, err
+		return
 	}
 
 	//Populate the closuretable
@@ -92,7 +91,7 @@ and depth = 1`
 		err = rows.Scan(&ancestor, &descendant, &depth)
 		if err != nil {
 			//fmt.Printf("Rowscan error: %s", err)
-			return ct, err
+			return
 		}
 
 		err = ct.AddChild(closuretable.Child{Parent: ancestor, Child: descendant})
@@ -100,9 +99,9 @@ and depth = 1`
 		//err = ct.AddRelationship(closuretable.Relationship{Ancestor: ancestor, Descendant: descendant, Depth: depth})
 		if err != nil {
 			//fmt.Fprintf(w, "Error: %s", err)
-			return ct, err
+			return
 		}
 	}
 
-	return ct, nil
+	return
 }
