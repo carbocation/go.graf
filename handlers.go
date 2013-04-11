@@ -90,20 +90,20 @@ func threadHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	//If the thread ID is not parseable as an integer, stop immediately
 	id, err := strconv.ParseInt(unsafeId, 10, 64)
 	if err != nil {
-		return
+		return errors.New("The requested thread is invalid.")
 	}
 
 	// Pull down the closuretable from the root requested id
 	ct, err := forum.ClosureTable(id)
 	if err != nil {
 		//fmt.Fprintf(w, "Error: %s", err)
-		return
+		return errors.New("The requested thread could not be found.")
 	}
 
-	id, entries, err := forum.DescendantEntries(unsafeId)
+	entries, err := forum.DescendantEntries(id)
 	if err != nil {
 		//fmt.Fprintf(w, "Error: %s", err)
-		return
+		return errors.New("The requested thread could not be found.")
 	}
 
 	//Obligatory boxing step

@@ -1,22 +1,13 @@
 package forum
 
 import (
-	"strconv"
 	"time"
 
 	"github.com/carbocation/util.git/datatypes/closuretable"
 )
 
 // Retrieves all entries that are descendants of the ancestral entry, including the ancestral entry itself
-func DescendantEntries(ancestorId string) (root int64, entries map[int64]Entry, err error) {
-
-	//If the thread ID is not parseable as an integer, stop immediately
-	root, err = strconv.ParseInt(ancestorId, 10, 64)
-	if err != nil {
-		// Default to the root if they gave us a non-integer value
-		return
-	}
-
+func DescendantEntries(root int64) (entries map[int64]Entry, err error) {
 	q := `SELECT e.*
 		FROM entry_closures closure
 		JOIN entry e ON e.id = closure.descendant
