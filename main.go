@@ -38,11 +38,12 @@ func main() {
 	g := router.Methods("GET").Subrouter()
 	g.Handle("/", handler(indexHandler)).Name("index")
 	g.Handle("/thread/{id:[0-9]+}", handler(threadHandler)).Name("thread")
+	g.Handle("/login", handler(loginHandler)).Name("login")
 
 	//Create a subrouter for POST requests
 	p := router.Methods("POST").Subrouter()
 	p.Handle("/thread", handler(newThreadHandler)).Name("createThread")
-	p.Handle("/login/{id:[0-9]+}", handler(loginHandler)).Name("login")
+	p.Handle("/login", handler(postLoginHandler)).Name("postLogin")
 
 	//Notify the http package about our router
 	http.Handle("/", router)

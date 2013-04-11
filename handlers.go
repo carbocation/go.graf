@@ -51,10 +51,25 @@ func newThreadHandler(w http.ResponseWriter, r *http.Request) (err error) {
 }
 
 func loginHandler(w http.ResponseWriter, r *http.Request) (err error) {
+	//execute the template
+	T("login.html").Execute(w, map[string]interface{}{})
+	return
+}
+
+func postLoginHandler(w http.ResponseWriter, r *http.Request) (err error) {
+	/*
 	session, _ := store.Get(r, "user")
 	defer session.Save(r, w)
 
 	session.Values["id"] = mux.Vars(r)["id"]
+	*/
+	r.ParseForm()
+
+	user := new(User)
+	decoder := schema.NewDecoder()
+	decoder.Decode(user, r.Form)
+	
+	errors.New("Logging in is not yet implemented, but maybe it worked.")
 	return
 }
 
