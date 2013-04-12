@@ -2,13 +2,13 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/carbocation/forum.git/forum"
 	"github.com/goods/httpbuf"
 	"github.com/gorilla/mux"
-	"github.com/gorilla/schema"
 	//"code.google.com/p/xsrftoken"
 )
 
@@ -59,42 +59,39 @@ func loginHandler(w http.ResponseWriter, r *http.Request) (err error) {
 
 func postLoginHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	/*
-	session, _ := store.Get(r, "user")
-	defer session.Save(r, w)
-	
-	//See http://godoc.org/code.google.com/p/xsrftoken
-	// for generating CSRF tokens. Needs to be done once every
-	// 24 hours.
-	//xsrftoken.Generate( XXXX TODO XXXX)
+		session, _ := store.Get(r, "user")
+		defer session.Save(r, w)
 
-	session.Values["id"] = mux.Vars(r)["id"]
+		//See http://godoc.org/code.google.com/p/xsrftoken
+		// for generating CSRF tokens. Needs to be done once every
+		// 24 hours.
+		//xsrftoken.Generate( XXXX TODO XXXX)
+
+		session.Values["id"] = mux.Vars(r)["id"]
 	*/
 	r.ParseForm()
 
 	user := new(User)
-	decoder := schema.NewDecoder()
 	decoder.Decode(user, r.Form)
 	
+	fmt.Fprintf(w, "%+v", r.Form)
+	fmt.Fprintf(w, "%+v", r.Form["Password"])
+	
+	tmp := user.Password
+	fmt.Fprintf(w, "%+v", user)
+	if err := user.SetPassword(tmp); err != nil {
+		return err
+	}
+
+	fmt.Fprintf(w, "%+v", user)
+
 	errors.New("Logging in is not yet implemented, but maybe it worked.")
 	return
 }
 
-type Demo struct {
-	You string
-}
-
 func indexHandler(w http.ResponseWriter, r *http.Request) (err error) {
-	//remPartOfURL := r.URL.Path[len("/"):]
-
-	r.ParseForm()
-
-	demo := new(Demo)
-	decoder := schema.NewDecoder()
-	decoder.Decode(demo, r.Form)
-
-	//execute the template
 	T("index.html").Execute(w, map[string]interface{}{
-		"name": demo.You})
+		"name": "NAMEGOESHEREMAYBE"})
 
 	return
 }

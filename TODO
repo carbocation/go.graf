@@ -5,3 +5,6 @@ expressly refer to a parent file from a child file, if desired.
 Cache threads that are requested. Come up with a low-cost way to 
 check to see if a tree element has been invalidated and re-load 
 only if so.
+
+Add flash cookie if your login failed. Redirect to login form on 
+failed login. Redirect to target page on successful login. 

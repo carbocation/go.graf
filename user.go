@@ -1,25 +1,36 @@
 package main
 
 import (
-	"code.google.com/p/go.crypto/bcrypt"
+	"errors"
 	"time"
+
+	"code.google.com/p/go.crypto/bcrypt"
 )
+
+type Password string
 
 type User struct {
 	Id       int64     "The user's auto-incremented ID"
 	Handle   string    "The user's name"
-	Password []byte    "The byteslice of the user's bcrypted password"
+	Password Password  "The byteslice of the user's bcrypted password"
 	Created  time.Time "The creation timestamp of the user's account"
 }
 
 //SetPassword takes a plaintext password and hashes it with bcrypt and sets the
 //password field to the hash.
-func (u *User) SetPassword(password string) {
+func (u *User) SetPassword(password Password) (err error) {
+	if len(password) < 1 {
+		err = errors.New("Error: no password was chosen.")
+		return
+	}
+
 	hpass, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		panic(err) //this is a panic because bcrypt errors on invalid costs
+		return
 	}
-	u.Password = hpass
+	u.Password = Password(hpass)
+	
+	return
 }
 
 //Login validates and returns a user object if they exist in the database.

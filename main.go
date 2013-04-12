@@ -13,10 +13,10 @@ import (
 )
 
 var (
-	db *sql.DB
-	appsecret = "f2LdNYi5fvo8YNdMDvI9Ggnv2OUaRiIEXFUru+v23ZxskQ"
-	store = sessions.NewCookieStore([]byte(appsecret))
-	router *mux.Router
+	db        *sql.DB     //db maintains a pool of connections to our database of choice 
+	appsecret             = "f2LdNYi5fvo8YNdMDvI9Ggnv2OUaRiIEXFUru+v23ZxskQ"
+	store                 = sessions.NewCookieStore([]byte(appsecret))
+	router    *mux.Router = mux.NewRouter() //Dynamic content is managed by handlers pointed at by the router 
 )
 
 func init() {
@@ -33,9 +33,6 @@ func main() {
 
 	//Bundled static assets are handled by nrsc
 	nrsc.Handle("/static/")
-
-	//Dynamic content is managed by handlers pointed at by the router 
-	router = mux.NewRouter()
 
 	//Create a subrouter for GET requests
 	g := router.Methods("GET").Subrouter()
