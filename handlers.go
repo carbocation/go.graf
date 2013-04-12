@@ -28,6 +28,8 @@ func (h handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	//run the handler and grab the error, and report it
 	buf := new(httpbuf.Buffer)
 	//err = h(buf, req, ctx)
+	//TODO May want to call context.ClearHandler() around h()
+	// but probably don't have to because Mux apparently does this automatically 
 	err := h(buf, req)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
