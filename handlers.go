@@ -24,6 +24,10 @@ func (h handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		}
 		defer ctx.Close()
 	*/
+	
+	session, _ := store.Get(req, "app")
+	session.Values["one"] = 1
+	session.Save(req, w)
 
 	//run the handler and grab the error, and report it
 	buf := new(httpbuf.Buffer)
