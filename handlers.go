@@ -12,29 +12,29 @@ import (
 	//"code.google.com/p/xsrftoken"
 )
 
-type handler func(http.ResponseWriter, *http.Request) error
+type handler func(http.ResponseWriter, *http.Request, *Context) error
 
 func (h handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	//create the context
+	ctx, err := NewContext(req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer ctx.Close()
+
 	/*
-		//create the context
-		ctx, err := NewContext(req)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		defer ctx.Close()
+		session, _ := store.Get(req, "app")
+		session.Values["one"] = 1
+		session.Save(req, w)
 	*/
-	
-	session, _ := store.Get(req, "app")
-	session.Values["one"] = 1
-	session.Save(req, w)
 
 	//run the handler and grab the error, and report it
 	buf := new(httpbuf.Buffer)
-	//err = h(buf, req, ctx)
 	//TODO May want to call context.ClearHandler() around h()
 	// but probably don't have to because Mux apparently does this automatically 
-	err := h(buf, req)
+	//err := h(buf, req)
+	err = h(buf, req, ctx)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -52,18 +52,18 @@ func (h handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	buf.Apply(w)
 }
 
-func newThreadHandler(w http.ResponseWriter, r *http.Request) (err error) {
+func newThreadHandler(w http.ResponseWriter, r *http.Request, ctx *Context) (err error) {
 	errors.New("Creating new threads is not yet implemented.")
 	return
 }
 
-func loginHandler(w http.ResponseWriter, r *http.Request) (err error) {
+func loginHandler(w http.ResponseWriter, r *http.Request, ctx *Context) (err error) {
 	//execute the template
 	T("login.html").Execute(w, map[string]interface{}{})
 	return
 }
 
-func postLoginHandler(w http.ResponseWriter, r *http.Request) (err error) {
+func postLoginHandler(w http.ResponseWriter, r *http.Request, ctx *Context) (err error) {
 	/*
 		session, _ := store.Get(r, "user")
 		defer session.Save(r, w)
@@ -79,10 +79,10 @@ func postLoginHandler(w http.ResponseWriter, r *http.Request) (err error) {
 
 	user := new(User)
 	decoder.Decode(user, r.Form)
-	
+
 	fmt.Fprintf(w, "%+v", r.Form)
 	fmt.Fprintf(w, "%+v", r.Form["Password"])
-	
+
 	tmp := user.Password
 	fmt.Fprintf(w, "%+v", user)
 	if err := user.SetPassword(tmp); err != nil {
@@ -95,14 +95,14 @@ func postLoginHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	return
 }
 
-func indexHandler(w http.ResponseWriter, r *http.Request) (err error) {
+func indexHandler(w http.ResponseWriter, r *http.Request, ctx *Context) (err error) {
 	T("index.html").Execute(w, map[string]interface{}{
 		"name": "NAMEGOESHEREMAYBE"})
 
 	return
 }
 
-func threadHandler(w http.ResponseWriter, r *http.Request) (err error) {
+func threadHandler(w http.ResponseWriter, r *http.Request, ctx *Context) (err error) {
 	//If the thread ID is not parseable as an integer, stop immediately
 	id, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
 	if err != nil {
