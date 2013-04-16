@@ -13,3 +13,14 @@ type Entry struct {
 	Created  time.Time "Time at which the post was created."
 	AuthorId int64     "ID of the author of the post"
 }
+
+//Note: why not just manage what is real and what is not through methods?
+//The 'get' methods would populate the view-type methods automatically
+//or leave them blank if irrelevant. The 'set' methods would store the 
+//essential / non-derived fields and ignore the others. That way you don't
+//have to juggle two view types
+type EntryView struct {
+	Entry
+	Points   int64
+	HasVoted bool
+}
