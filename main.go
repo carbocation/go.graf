@@ -13,10 +13,10 @@ import (
 )
 
 var (
-	db        *sql.DB     //db maintains a pool of connections to our database of choice 
-	appsecret             = "f2LdNYi5fvo8YNdMDvI9Ggnv2OUaRiIEXFUru+v23ZxskQ"
-	store                 = sessions.NewCookieStore([]byte(appsecret))
-	router    *mux.Router = mux.NewRouter() //Dynamic content is managed by handlers pointed at by the router 
+	db        *sql.DB     = initdb()                                                                                   //db maintains a pool of connections to our database of choice 
+	appsecret             = `75Oop7MSN88WstKJSTyu9ALiO0Nbeckv/4/eDLDJcpXn0Ny1H9PdpzXDqApie77tZ04GFsdHehmzcMkAqh16Dg==` //64 bit random string generated with `openssl rand -base64 64`
+	store                 = sessions.NewFilesystemStore("", []byte(appsecret))                                         //With an empty first argument, this will put session files in os.TempDir() (/tmp)
+	router    *mux.Router = mux.NewRouter()                                                                            //Dynamic content is managed by handlers pointed at by the router 
 )
 
 func init() {
@@ -24,8 +24,7 @@ func init() {
 }
 
 func main() {
-	// Initialize the DB in the main function so we'll have a pool of connections maintained
-	db = initdb()
+	// Defer the close of the DB in the main function so we'll have a pool of connections maintained until the program exits
 	defer db.Close()
 
 	//Initialize the forum package
