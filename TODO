@@ -11,3 +11,13 @@ Note ^ Might just want to create smarter getters and setters for
 the structs, and declare the complete set of data on the structs 
 that you might want, but only populate/access what is needed.
 And, you know, cache stuff.
+
+Probably want to create a standardized way of passing data to 
+the templates. You probably want 2+ fields:
+  1: Global context. This contains sitewide global vales. 
+  2: Session context. This contains user-specific values for the 
+  current session.
+Then, every _base template can depend on both of those being present, 
+so you will not break them by accidentally leaving one of those two out, 
+and you will not create _base templates that include something outside
+that scope. 
