@@ -13,3 +13,6 @@ that you might want, but only populate/access what is needed.
 And, you know, cache stuff.
 
 Use gorilla context instead of this custom one
+
+Store the user object or otherwise indicate that a user is logged
+in so that on the next request, you know who they are.
