@@ -17,7 +17,7 @@ type handler func(http.ResponseWriter, *http.Request) error
 func (h handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	//Load session values into req	
 	OpenContext(req)
-	
+
 	//For now, print the user's info to the console all the time
 	fmt.Printf("User object: %+v\n", context.Get(req, ThisUser))
 
@@ -36,46 +36,20 @@ func (h handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	buf.Apply(w)
 }
 
-func newThreadHandler(w http.ResponseWriter, r *http.Request) (err error) {
-	errors.New("Creating new threads is not yet implemented.")
-	return
-}
-
 func loginHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	//execute the template
-	T("login.html").Execute(w, map[string]interface{}{})
-	return
-}
-
-func postLoginHandler(w http.ResponseWriter, r *http.Request) (err error) {
-	r.ParseForm()
-
-	login := new(Login)
-	//Parse the form values into the Login object
-	decoder.Decode(login, r.Form)
-
-	user, err := login.Login()
-	if err != nil {
-
-		//They're a guest user
-		context.Set(r, ThisUser, &User{})
-	} else {
-		//They're a real user
-		context.Set(r, ThisUser, user)
+	data := struct {
+		User *User
+	}{
+		context.Get(r, ThisUser).(*User),
 	}
-
-	//Add the user's struct to the session
-	session, _ := store.Get(r, "app")
-	session.Values["user"] = user
-
-	//Redirect to a GET address to prevent form resubmission
-	http.Redirect(w, r, reverse("index"), http.StatusSeeOther)
-
+	//T("login.html").Execute(w, map[string]interface{}{})
+	T("login.html").Execute(w, data)
 	return
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) (err error) {
-	data := struct{
+	data := struct {
 		User *User
 	}{
 		context.Get(r, ThisUser).(*User),
@@ -115,8 +89,45 @@ func threadHandler(w http.ResponseWriter, r *http.Request) (err error) {
 		return errors.New("The requested data structure could not be built.")
 	}
 
-	//execute the template
-	T("thread.html").Execute(w, tree)
+	data := map[string]interface{}{
+		"User": context.Get(r, ThisUser).(*User),
+		"Tree": tree,
+	}
 
+	//execute the template
+	T("thread.html").Execute(w, data)
+
+	return
+}
+
+func postLoginHandler(w http.ResponseWriter, r *http.Request) (err error) {
+	r.ParseForm()
+
+	login := new(Login)
+	//Parse the form values into the Login object
+	decoder.Decode(login, r.Form)
+
+	user, err := login.Login()
+	if err != nil {
+
+		//They're a guest user
+		context.Set(r, ThisUser, &User{})
+	} else {
+		//They're a real user
+		context.Set(r, ThisUser, user)
+	}
+
+	//Add the user's struct to the session
+	session, _ := store.Get(r, "app")
+	session.Values["user"] = user
+
+	//Redirect to a GET address to prevent form resubmission
+	http.Redirect(w, r, reverse("index"), http.StatusSeeOther)
+
+	return
+}
+
+func postThreadHandler(w http.ResponseWriter, r *http.Request) (err error) {
+	errors.New("Creating new threads is not yet implemented.")
 	return
 }

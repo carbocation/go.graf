@@ -26,7 +26,8 @@
 {{ end }}
 
 {{ define "content" }}
-{{if .}}
+{{if .Tree}}
+{{with .Tree}}
     <div>
 	{{with .Value}}
 		<h1>{{.Id}} {{.Title}}</h1>
@@ -43,5 +44,6 @@
     </div>
 {{ else }}
 	<p class="text-error">The requested post is unavailable.</p>
+{{ end }}
 {{ end }}
 {{ end }}

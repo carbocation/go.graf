@@ -41,7 +41,7 @@ func main() {
 
 	//Create a subrouter for POST requests
 	p := router.Methods("POST").Subrouter()
-	p.Handle("/thread", handler(newThreadHandler)).Name("createThread")
+	p.Handle("/thread", handler(postThreadHandler)).Name("postThread")
 	p.Handle("/login", handler(postLoginHandler)).Name("postLogin")
 
 	//Notify the http package about our router
