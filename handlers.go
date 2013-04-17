@@ -75,8 +75,13 @@ func postLoginHandler(w http.ResponseWriter, r *http.Request) (err error) {
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) (err error) {
-	T("index.html").Execute(w, map[string]interface{}{
-		"name": "NAMEGOESHEREMAYBE"})
+	data := struct{
+		User *User
+	}{
+		context.Get(r, ThisUser).(*User),
+	}
+
+	T("index.html").Execute(w, data)
 
 	return
 }
