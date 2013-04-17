@@ -10,6 +10,7 @@
         <meta name="author" content="">
         
         <link href="/static/css/forum.css" rel="stylesheet" media="screen">
+        {{ template "header" . }}
         <!-- Bootstrap -->
         <link href="/static/css/bootstrap.min.css" rel="stylesheet" media="screen">
         
@@ -31,7 +32,7 @@
               <a class="brand" href="/">{{$project}}</a>
               <div class="nav-collapse collapse">
                 <p class="navbar-text pull-right">
-                  Logged in as <a href="#" class="navbar-link">Username</a>
+                  {{ if .User.Handle}}Logged in as <a href="#" class="navbar-link">{{.User.Handle}}</a>{{else}}<a href="{{reverse "login"}}" class="navbar-link">Log in</a>{{end}}
                 </p>
                 <ul class="nav">
                   <li class="active"><a href="/">Home</a></li>
@@ -53,3 +54,8 @@
     	<script src="/static/js/bootstrap.min.js"></script>
     </body>
 </html>
+
+{{/* Defining defaults so there aren't parse errors if sub-templates don't define such values */}}
+{{ define "header" }}{{end}}
+{{ define "content"}}{{end}}
+{{ define "title" }}{{end}}

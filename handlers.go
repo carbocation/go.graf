@@ -2,78 +2,60 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/carbocation/forum.git/forum"
 	"github.com/goods/httpbuf"
+	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
-	"github.com/gorilla/schema"
 )
 
 type handler func(http.ResponseWriter, *http.Request) error
 
 func (h handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	/*
-		//create the context
-		ctx, err := NewContext(req)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		defer ctx.Close()
-	*/
+	//Load session values into req	
+	OpenContext(req)
 
-	//run the handler and grab the error, and report it
+	//For now, print the user's info to the console all the time
+	fmt.Printf("User object: %+v\n", context.Get(req, ThisUser))
+
+	//Run the handler and grab the error, and report it. We buffer the 
+	// output so that handlers can modify session data at any point.
 	buf := new(httpbuf.Buffer)
-	//err = h(buf, req, ctx)
-	err := h(buf, req)
-	if err != nil {
+	if err := h(buf, req); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	//save the session
-	/*
-		if err = ctx.Session.Save(req, buf); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-	*/
+	//Save any changed session values
+	CloseContext(req, buf)
 
 	//apply the buffered response to the writer
 	buf.Apply(w)
 }
 
-func newThreadHandler(w http.ResponseWriter, r *http.Request) (err error) {
-	errors.New("Creating new threads is not yet implemented.")
-	return
-}
-
 func loginHandler(w http.ResponseWriter, r *http.Request) (err error) {
-	session, _ := store.Get(r, "user")
-	defer session.Save(r, w)
-
-	session.Values["id"] = mux.Vars(r)["id"]
+	//execute the template
+	data := struct {
+		User *User
+	}{
+		context.Get(r, ThisUser).(*User),
+	}
+	//T("login.html").Execute(w, map[string]interface{}{})
+	T("login.html").Execute(w, data)
 	return
-}
-
-type Demo struct {
-	You string
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) (err error) {
-	//remPartOfURL := r.URL.Path[len("/"):]
+	data := struct {
+		User *User
+	}{
+		context.Get(r, ThisUser).(*User),
+	}
 
-	r.ParseForm()
-
-	demo := new(Demo)
-	decoder := schema.NewDecoder()
-	decoder.Decode(demo, r.Form)
-
-	//execute the template
-	T("index.html").Execute(w, map[string]interface{}{
-		"name": demo.You})
+	T("index.html").Execute(w, data)
 
 	return
 }
@@ -107,8 +89,45 @@ func threadHandler(w http.ResponseWriter, r *http.Request) (err error) {
 		return errors.New("The requested data structure could not be built.")
 	}
 
-	//execute the template
-	T("thread.html").Execute(w, tree)
+	data := map[string]interface{}{
+		"User": context.Get(r, ThisUser).(*User),
+		"Tree": tree,
+	}
 
+	//execute the template
+	T("thread.html").Execute(w, data)
+
+	return
+}
+
+func postLoginHandler(w http.ResponseWriter, r *http.Request) (err error) {
+	r.ParseForm()
+
+	login := new(Login)
+	//Parse the form values into the Login object
+	decoder.Decode(login, r.Form)
+
+	user, err := login.Login()
+	if err != nil {
+
+		//They're a guest user
+		context.Set(r, ThisUser, &User{})
+	} else {
+		//They're a real user
+		context.Set(r, ThisUser, user)
+	}
+
+	//Add the user's struct to the session
+	session, _ := store.Get(r, "app")
+	session.Values["user"] = user
+
+	//Redirect to a GET address to prevent form resubmission
+	http.Redirect(w, r, reverse("index"), http.StatusSeeOther)
+
+	return
+}
+
+func postThreadHandler(w http.ResponseWriter, r *http.Request) (err error) {
+	errors.New("Creating new threads is not yet implemented.")
 	return
 }

@@ -12,17 +12,19 @@ import (
 	_ "github.com/lib/pq"
 )
 
-var db *sql.DB
-var store = sessions.NewCookieStore([]byte("f2LdNYi5fvo8YNdMDvI9Ggnv2OUaRiIEXFUru+v23ZxskQ"))
-var router *mux.Router
+var (
+	db        *sql.DB     = initdb()                                                                                   //db maintains a pool of connections to our database of choice 
+	appsecret             = `75Oop7MSN88WstKJSTyu9ALiO0Nbeckv/4/eDLDJcpXn0Ny1H9PdpzXDqApie77tZ04GFsdHehmzcMkAqh16Dg==` //64 bit random string generated with `openssl rand -base64 64`
+	store                 = sessions.NewFilesystemStore("", []byte(appsecret))                                         //With an empty first argument, this will put session files in os.TempDir() (/tmp)
+	router    *mux.Router = mux.NewRouter()                                                                            //Dynamic content is managed by handlers pointed at by the router 
+)
 
 func init() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 }
 
 func main() {
-	// Initialize the DB in the main function so we'll have a pool of connections maintained
-	db = initdb()
+	// Defer the close of the DB in the main function so we'll have a pool of connections maintained until the program exits
 	defer db.Close()
 
 	//Initialize the forum package
@@ -31,18 +33,16 @@ func main() {
 	//Bundled static assets are handled by nrsc
 	nrsc.Handle("/static/")
 
-	//Dynamic content is managed by handlers pointed at by the router 
-	router = mux.NewRouter()
-
 	//Create a subrouter for GET requests
 	g := router.Methods("GET").Subrouter()
 	g.Handle("/", handler(indexHandler)).Name("index")
 	g.Handle("/thread/{id:[0-9]+}", handler(threadHandler)).Name("thread")
+	g.Handle("/login", handler(loginHandler)).Name("login")
 
 	//Create a subrouter for POST requests
 	p := router.Methods("POST").Subrouter()
-	p.Handle("/thread", handler(newThreadHandler)).Name("createThread")
-	p.Handle("/login/{id:[0-9]+}", handler(loginHandler)).Name("login")
+	p.Handle("/thread", handler(postThreadHandler)).Name("postThread")
+	p.Handle("/login", handler(postLoginHandler)).Name("postLogin")
 
 	//Notify the http package about our router
 	http.Handle("/", router)

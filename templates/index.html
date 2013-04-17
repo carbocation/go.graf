@@ -3,7 +3,7 @@
 {{ define "content" }}
     <h1>Forum.git</h1>
 
-    <p class="lead">Hello, {{.name}} and welcome to the forum.</p>
+    <p class="lead">Hello, {{ if .User.Handle}}{{.User.Handle}}{{else}}Guest{{end}}, and welcome to the forum.</p>
     
     <p>Perhaps you would be interested in <a href="{{reverse "thread" "id" 1}}">Thread #1</a>?</p>
 

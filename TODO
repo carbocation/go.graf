@@ -1,7 +1,13 @@
-Identify a way to do Twig-style templates in Go, where you
-expressly refer to a parent file from a child file, if desired.
--- Consider https://github.com/flosch/pongo
-
 Cache threads that are requested. Come up with a low-cost way to 
 check to see if a tree element has been invalidated and re-load 
 only if so.
+
+Add flash cookie if your login failed. Redirect to login form on 
+failed login. Redirect to target page on successful login. 
+
+Create view forms of each struct. They will incorporate the data 
+form by composition, e.g.: type ViewEntry { Entry, Points int64 }
+Note ^ Might just want to create smarter getters and setters for 
+the structs, and declare the complete set of data on the structs 
+that you might want, but only populate/access what is needed.
+And, you know, cache stuff.

@@ -1,0 +1,19 @@
+{{ define "header" }}
+	<link href="/static/css/login.css" rel="stylesheet" media="screen">
+{{ end }}
+
+{{ define "content" }}
+    <div class="container">
+
+      <form class="form-signin" method="post" action="{{reverse "postLogin"}}">
+        <h2 class="form-signin-heading">Login</h2>
+        <input type="text" class="input-block-level" placeholder="Username" name="Handle">
+        <input type="password" class="input-block-level" placeholder="Password" name="PlaintextPassword">
+        <label class="checkbox">
+          <input type="checkbox" value="remember-me"> Remember me
+        </label>
+        <button class="btn btn-large btn-primary" type="submit">Sign in</button>
+      </form>
+
+    </div>
+{{ end }}
