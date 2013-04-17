@@ -29,11 +29,13 @@ type EntryView struct {
 
 // Retrieves all entries that are descendants of the ancestral entry, including the ancestral entry itself
 func DescendantEntries(root int64) (entries map[int64]Entry, err error) {
+	entries = map[int64]Entry{}
+
 	stmt, err := Config.DB.Prepare(queries.DescendantEntries)
-	defer stmt.Close()
 	if err != nil {
 		return
 	}
+	defer stmt.Close()
 
 	// Query from that prepared statement
 	rows, err := stmt.Query(root)
@@ -41,20 +43,15 @@ func DescendantEntries(root int64) (entries map[int64]Entry, err error) {
 		return
 	}
 
-	entries = map[int64]Entry{}
-
-	var id, authorid int64
-	var title, body string
-	var created time.Time
-
 	// Iterate over the rows
 	for rows.Next() {
-		err = rows.Scan(&id, &title, &body, &created, &authorid)
+		var e Entry
+		err = rows.Scan(&e.Id, &e.Title, &e.Body, &e.Created, &e.AuthorId)
 		if err != nil {
 			return
 		}
 
-		entries[id] = Entry{Id: id, Title: title, Body: body, Created: created, AuthorId: authorid}
+		entries[e.Id] = e
 	}
 
 	return

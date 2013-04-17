@@ -2,27 +2,29 @@ package main
 
 import (
 	"errors"
-	"fmt"
+	//"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/carbocation/forum.git/forum"
 	"github.com/goods/httpbuf"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/context"
 	//"code.google.com/p/xsrftoken"
 )
 
-type handler func(http.ResponseWriter, *http.Request, *Context) error
+type handler func(http.ResponseWriter, *http.Request) error
 
 func (h handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	//create the context
+	/*
 	ctx, err := NewContext(req)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	defer ctx.Close()
-
+	*/
 	/*
 		session, _ := store.Get(req, "app")
 		session.Values["one"] = 1
@@ -33,8 +35,8 @@ func (h handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	buf := new(httpbuf.Buffer)
 	//TODO May want to call context.ClearHandler() around h()
 	// but probably don't have to because Mux apparently does this automatically 
-	//err := h(buf, req)
-	err = h(buf, req, ctx)
+	err := h(buf, req)
+	//err = h(buf, req, ctx)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -52,18 +54,18 @@ func (h handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	buf.Apply(w)
 }
 
-func newThreadHandler(w http.ResponseWriter, r *http.Request, ctx *Context) (err error) {
+func newThreadHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	errors.New("Creating new threads is not yet implemented.")
 	return
 }
 
-func loginHandler(w http.ResponseWriter, r *http.Request, ctx *Context) (err error) {
+func loginHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	//execute the template
 	T("login.html").Execute(w, map[string]interface{}{})
 	return
 }
 
-func postLoginHandler(w http.ResponseWriter, r *http.Request, ctx *Context) (err error) {
+func postLoginHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	/*
 		session, _ := store.Get(r, "user")
 		defer session.Save(r, w)
@@ -77,32 +79,37 @@ func postLoginHandler(w http.ResponseWriter, r *http.Request, ctx *Context) (err
 	*/
 	r.ParseForm()
 
-	user := new(User)
-	decoder.Decode(user, r.Form)
-
-	fmt.Fprintf(w, "%+v", r.Form)
-	fmt.Fprintf(w, "%+v", r.Form["Password"])
-
-	tmp := user.Password
-	fmt.Fprintf(w, "%+v", user)
-	if err := user.SetPassword(tmp); err != nil {
-		return err
+	login := new(Login)
+	//Parse the form values into the Login object
+	decoder.Decode(login, r.Form)
+	
+	//fmt.Printf("Login params: %+v\n", login)
+	
+	user, err := login.Login()
+	if err != nil {
+		//fmt.Printf("Error in login on line ~90: %+v\n", err)
+		
+		//They're a guest user
+		context.Set(r, ThisUser, &User{})
+	}else{
+		//They're a real user
+		context.Set(r, ThisUser, user)
+		//fmt.Printf("%+v", context.Get(r, ThisUser))
 	}
+	
+	//http.Redirect(w, req, reverse("index"), http.StatusSeeOther)
 
-	fmt.Fprintf(w, "%+v", user)
-
-	errors.New("Logging in is not yet implemented, but maybe it worked.")
 	return
 }
 
-func indexHandler(w http.ResponseWriter, r *http.Request, ctx *Context) (err error) {
+func indexHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	T("index.html").Execute(w, map[string]interface{}{
 		"name": "NAMEGOESHEREMAYBE"})
 
 	return
 }
 
-func threadHandler(w http.ResponseWriter, r *http.Request, ctx *Context) (err error) {
+func threadHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	//If the thread ID is not parseable as an integer, stop immediately
 	id, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
 	if err != nil {

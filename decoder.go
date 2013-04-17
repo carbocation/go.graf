@@ -18,9 +18,9 @@ var decoder *schema.Decoder
 
 func init() {
 	decoder = schema.NewDecoder()
-	decoder.RegisterConverter(Password(""), convertPassword)
+	decoder.RegisterConverter(string(""), convertPassword)
 }
 
 func convertPassword(value string) reflect.Value {
-	return reflect.ValueOf(Password(value))
+	return reflect.ValueOf(string(value))
 }

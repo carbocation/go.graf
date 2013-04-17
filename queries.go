@@ -1,7 +1,9 @@
 package main
 
 var queries = struct {
-	ClosureTableDescendantEntries string
+	FindOneUserById string
+	FindOneByHandle	string
 }{
-	ClosureTableDescendantEntries: `HELLO`,
+	FindOneUserById: `SELECT id, handle, password, created FROM account WHERE id=$1 LIMIT 1`,
+	FindOneByHandle: `SELECT id, handle, password, created FROM account WHERE handle=$1 LIMIT 1`, 
 }
