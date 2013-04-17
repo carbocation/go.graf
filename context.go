@@ -6,6 +6,7 @@ import (
 
 	"github.com/goods/httpbuf"
 	"github.com/gorilla/context"
+	"github.com/gorilla/sessions"
 )
 
 const (
@@ -38,4 +39,14 @@ func CloseContext(req *http.Request, buf *httpbuf.Buffer) (httpStatus int) {
 	}
 
 	return http.StatusOK
+}
+
+func DeleteContext(req *http.Request, w http.ResponseWriter) {
+	//Delete all user-set variables
+	context.Purge(0)
+	
+	//Destroy the session
+	session, _ := store.Get(req, "app")
+	session.Options = &sessions.Options{MaxAge: -1}
+	session.Save(req, w)
 }

@@ -38,6 +38,7 @@ func main() {
 	g.Handle("/", handler(indexHandler)).Name("index")
 	g.Handle("/thread/{id:[0-9]+}", handler(threadHandler)).Name("thread")
 	g.Handle("/login", handler(loginHandler)).Name("login")
+	g.Handle("/logout", handler(logoutHandler)).Name("logout")
 
 	//Create a subrouter for POST requests
 	p := router.Methods("POST").Subrouter()

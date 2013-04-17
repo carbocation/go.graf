@@ -48,6 +48,14 @@ func loginHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	return
 }
 
+func logoutHandler(w http.ResponseWriter, r *http.Request) (err error) {
+	DeleteContext(r, w)
+
+	http.Redirect(w, r, reverse("index"), http.StatusSeeOther)
+	
+	return
+}
+
 func indexHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	data := struct {
 		User *User

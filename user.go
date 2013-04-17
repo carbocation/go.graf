@@ -20,6 +20,14 @@ type User struct {
 	Created  time.Time "The creation timestamp of the user's account"
 }
 
+//When a new user registers, create them by calling NewUser() so that we 
+//populate default variables, such as the time when they were created.
+func NewUser() *User {
+	return &User{
+		Created: time.Now(),
+	}
+}
+
 //SetPassword takes a plaintext password and hashes it with bcrypt and sets the
 //password field to the hash.
 func (u *User) SetPassword(password string) (err error) {
@@ -93,20 +101,3 @@ func FindOneUserById(id int64) (user *User, err error) {
 	return &User{}, nil
 
 }
-
-//Login validates and returns a user object if they exist in the database.
-/*
-//Commented out because we have no *Context so far.
-func Login(ctx *Context, username, password string) (u *User, err error) {
-	err = ctx.C("users").Find(bson.M{"username": username}).One(&u)
-	if err != nil {
-		return
-	}
-
-	err = bcrypt.CompareHashAndPassword(u.Password, []byte(password))
-	if err != nil {
-		u = nil
-	}
-	return
-}
-*/
