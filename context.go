@@ -1,56 +1,41 @@
 package main
 
 import (
-	//"github.com/gorilla/context"
+	"encoding/gob"
+	"net/http"
+
+	"github.com/goods/httpbuf"
+	"github.com/gorilla/context"
 )
 
 const (
 	ThisUser = 0
 )
 
-/*
-import (
-	"fmt"
-	"net/http"
-
-	"github.com/gorilla/sessions"
-)
-
-type Context struct {
-	Session *sessions.Session
-	User    *User
+func init() {
+	//Tell gob about non-standard things we'll be serializing to disk
+	gob.Register(new(User))
 }
 
-func (c *Context) Close() {
+func OpenContext(req *http.Request) {
+	session, _ := store.Get(req, "app")
 
+	//Put the user into context
+	if session.Values["user"] != nil {
+		context.Set(req, ThisUser, session.Values["user"])
+	} else {
+		context.Set(req, ThisUser, new(User))
+	}
 }
 
-func NewContext(req *http.Request) (ctx *Context, err error) {
-	sess, err := store.Get(req, "app")
+func CloseContext(req *http.Request, buf *httpbuf.Buffer) (httpStatus int) {
+	session, _ := store.Get(req, "app")
+
+	err := session.Save(req, buf)
+
 	if err != nil {
-		return
-	}
-	ctx = &Context{
-		Session: sess,
+		return http.StatusInternalServerError
 	}
 
-	//testing
-	fmt.Printf("%+v", sess.Values)
-	//testing
-
-	var uid int64 = 0
-	if ctx.Session.Values["id"] != nil {
-		uid = ctx.Session.Values["id"].(int64)
-	}
-
-	//try to fill in the user from the session
-	ctx.User, err = FindOneUserById(uid)
-	/*
-		if uid, ok := sess.Values["user"].(bson.ObjectId); ok {
-			err = ctx.C("users").Find(bson.M{"_id": uid}).One(&ctx.User)
-		}
-
-
-	return
+	return http.StatusOK
 }
-*/
