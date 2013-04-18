@@ -21,3 +21,6 @@ Then, every _base template can depend on both of those being present,
 so you will not break them by accidentally leaving one of those two out, 
 and you will not create _base templates that include something outside
 that scope. 
+
+Redirect requests coming to /thread/1 to /thread/1/title-of-thread 
+programmatically always. If it's an error, redirect to an error page.
