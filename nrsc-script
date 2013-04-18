@@ -18,7 +18,7 @@ fi
 
 exe=$1
 shift
-root=$1
+directories=$1
 shift
 
 if [ ! -f "${exe}" ]; then
@@ -26,10 +26,13 @@ if [ ! -f "${exe}" ]; then
     exit 1
 fi
 
-if [ ! -d "${root}" ]; then
-    echo "error: ${root} is not a directory"
-    exit 1
-fi
+for root in $directories
+do
+    if [ ! -d "${root}" ]; then
+        echo "error: ${root} is not a directory"
+        exit 1
+    fi
+done
 
 # Exit on 1'st error
 set -e
@@ -38,7 +41,7 @@ tmp="/tmp/nrsc-$(date +%s).zip"
 trap "rm -f ${tmp}" EXIT
 
 # Create zip file
-(cd "${root}" && zip -q -r "${tmp}" . $@)
+(zip -r "${tmp}" ${directories} $@)
 
 # Append zip to executable
 cat "${tmp}" >> "${exe}"

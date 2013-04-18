@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"runtime"
 
-	"bitbucket.org/tebeka/nrsc"
+	"bitbucket.org/carbocation/nrsc"
 	"github.com/carbocation/forum.git/forum"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"

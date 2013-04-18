@@ -8,6 +8,8 @@ import (
 	"html/template"
 	"path/filepath"
 	"sync"
+
+	"bitbucket.org/carbocation/nrsc"
 )
 
 // Note that we can't just preload and cache all of the templates
@@ -57,11 +59,8 @@ func t(base, name string) *template.Template {
 
 	// Create a template with the given basename and custom functions.
 	// Panic if there is any error
-	t := template.Must(template.New(base).Funcs(funcs).ParseFiles(
-		// First entry must match the name from template.New() for some reason
-		filepath.Join("templates", base),
-		filepath.Join("templates", name),
-	))
+	n := template.New(base).Funcs(funcs)
+	t := template.Must(nrsc.LoadTemplates(n, filepath.Join("templates", base), filepath.Join("templates", name)))
 
 	// Add the newly compiled template to our global cache
 	cachedTemplates[name] = t
