@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"net/http"
 	"runtime"
 
@@ -55,8 +56,9 @@ func main() {
 }
 
 func initdb() *sql.DB {
-	db, err := sql.Open("postgres", "dbname=forumtest sslmode=disable")
+	db, err := sql.Open("postgres", "dbname=projects user=askbitcoin password=xnkxglie sslmode=disable")
 	if err != nil {
+		fmt.Println("Panic: "+err.Error())
 		panic(err)
 	}
 
