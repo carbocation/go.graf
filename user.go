@@ -50,27 +50,16 @@ func (u *User) createInDb() (err error) {
 	defer CreateUserStmt.Close()
 	if err != nil {
 		_ = tx.Rollback()
-		return
+		return errors.New("Error: We had a database problem.")
 	}
 	
-	/*
-	res, err := CreateUserStmt.Exec(u.Handle, u.Email, u.Password)
-	if err != nil {
-		_ = tx.Rollback()
-		return
-	}
-	//Success. Update the Id
-	u.Id, _ = res.LastInsertId()
-	*/
-	
-	//Success. Update the Id
 	//Note: because pq handles LastInsertId oddly (or not at all?), instead of 
 	//calling .Exec() then .LastInsertId, we prepare a statement that ends in 
 	//`RETURNING id` and we .QueryRow().Select() the result  
 	err = CreateUserStmt.QueryRow(u.Handle, u.Email, u.Password).Scan(&u.Id)
 	if err != nil {
 		_ = tx.Rollback()
-		return
+		return errors.New("Error: your username or email address was already found in the database. Please choose differently.")
 	}
 	
 	//Declare transactional victory

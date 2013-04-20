@@ -194,7 +194,7 @@ func postRegisterHandler(w http.ResponseWriter, r *http.Request) (err error) {
 		context.Set(r, ThisUser, user)
 		
 		//Tell the user why we failed
-		session.AddFlash(fmt.Sprintf("Registration failed: %s", err))
+		session.AddFlash(fmt.Sprintf("%s", err))
 		
 		return registerHandler(w, r)
 	}
