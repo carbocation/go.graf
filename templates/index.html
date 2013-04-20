@@ -1,7 +1,7 @@
 {{ define "title" }}Forum.git{{ end }}
 
 {{ define "content" }}
-    <h1>Forum.git</h1>
+    <h1>{{.G.Site}}</h1>
 
     <p class="lead">Hello, {{ if .User.Handle}}{{.User.Handle}}{{else}}Guest{{end}}, and welcome to the forum.</p>
     
