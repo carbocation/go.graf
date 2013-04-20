@@ -72,6 +72,32 @@ func indexHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	return
 }
 
+func registerHandler(w http.ResponseWriter, r *http.Request) (err error) {
+	data := struct {
+		G    GlobalValues
+		User *User
+		Messages []interface{}
+	}{
+		globals,
+		context.Get(r, ThisUser).(*User),
+		[]interface{}{},
+	}
+
+	//Don't let non-guests register again
+	if !data.User.Guest() {
+		http.Redirect(w, r, reverse("index"), http.StatusSeeOther)
+	}
+	
+	session, _ := store.Get(r, "app")
+	if flashes := session.Flashes(); len(flashes) > 0 {
+        // Just print the flash values.
+        data.Messages = flashes
+    }
+
+	T("register.html").Execute(w, data)
+	return
+}
+
 func threadHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	//If the thread ID is not parseable as an integer, stop immediately
 	id, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
@@ -135,6 +161,50 @@ func postLoginHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	session.Values["user"] = user
 
 	//Redirect to a GET address to prevent form resubmission
+	http.Redirect(w, r, reverse("index"), http.StatusSeeOther)
+
+	return
+}
+
+func postRegisterHandler(w http.ResponseWriter, r *http.Request) (err error) {
+	r.ParseForm()
+
+	//Don't let non-guests register again
+	if !context.Get(r, ThisUser).(*User).Guest() {
+		http.Redirect(w, r, reverse("index"), http.StatusSeeOther)
+		return
+	}
+
+	//Make sure the repeat passwords match
+	if r.FormValue("PlaintextPassword") != r.FormValue("PlaintextPassword2") {
+		http.Redirect(w, r, reverse("register"), http.StatusSeeOther)
+		return
+	}
+	
+	//Locate the session
+	session, _ := store.Get(r, "app")
+
+	//Try to create the new user in the database
+	user := new(User)
+	decoder.Decode(user, r.Form)
+	err = user.Register(r.FormValue("PlaintextPassword"))
+	if err != nil {
+		//If our registration fails for any reason, set a flag and show the form again
+		//http.Redirect(w, r, reverse("register"), http.StatusSeeOther)
+		context.Set(r, ThisUser, user)
+		
+		//Tell the user why we failed
+		session.AddFlash(fmt.Sprintf("Registration failed: %s", err))
+		
+		return registerHandler(w, r)
+	}
+
+	//They're a real user. Overwrite full object by populating from the DB
+	user, err = FindOneUserById(user.Id)
+	context.Set(r, ThisUser, user)
+
+	session.Values["user"] = user
+
 	http.Redirect(w, r, reverse("index"), http.StatusSeeOther)
 
 	return

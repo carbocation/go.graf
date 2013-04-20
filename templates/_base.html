@@ -33,7 +33,7 @@
                   {{ if .User.Handle}}
                   Logged in as <a href="#" class="navbar-link">{{.User.Handle}}</a> | <a href="{{reverse "logout"}}" class="navbar-link">Log out</a>
                   {{else}}
-                  <a href="{{reverse "login"}}" class="navbar-link">Log in</a>
+                  <a href="{{reverse "register"}}" class="navbar-link">Register</a> | <a href="{{reverse "login"}}" class="navbar-link">Log in</a>
                   {{end}}
                 </p>
                 <ul class="nav">

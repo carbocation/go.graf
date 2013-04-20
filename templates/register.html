@@ -1,0 +1,24 @@
+{{ define "header" }}
+	<link href="/static/css/login.css" rel="stylesheet" media="screen">
+{{ end }}
+
+{{ define "content" }}
+	{{ range .Messages }}
+	<div class="container">
+		<p class="text-error">{{.}}</p>
+	</div>
+	{{end}}
+    <div class="container">
+
+      <form class="form-signin" method="post" action="{{reverse "postRegister"}}">
+        <h2 class="form-signin-heading">Register</h2>
+        <input type="text" class="input-block-level" placeholder="Username" name="Handle" value="{{.User.Handle}}">
+        <input type="text" class="input-block-level" placeholder="Email address" name="Email" value="{{.User.Email}}">
+        <input type="password" class="input-block-level" placeholder="Password" name="PlaintextPassword">
+        <input type="password" class="input-block-level" placeholder="Password (Again)" name="PlaintextPassword2">
+        
+        <button class="btn btn-large btn-primary" type="submit">Register</button>
+      </form>
+
+    </div>
+{{ end }}

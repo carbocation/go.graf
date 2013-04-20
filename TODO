@@ -24,3 +24,8 @@ that scope.
 
 Redirect requests coming to /thread/1 to /thread/1/title-of-thread 
 programmatically always. If it's an error, redirect to an error page.
+
+When registration fails and you pre-populate the form again for the user, 
+show the posted form values instead of modifying the User struct, because 
+when you modify the user struct the screen says "Logged in as {desired username}" 
+at the top right. Bad!

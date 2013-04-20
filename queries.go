@@ -1,9 +1,11 @@
 package main
 
 var queries = struct {
-	FindOneUserById string
-	FindOneByHandle	string
+	UserFindById string
+	UserFindByHandle	string
+	UserCreate string
 }{
-	FindOneUserById: `SELECT id, handle, password, created FROM account WHERE id=$1 LIMIT 1`,
-	FindOneByHandle: `SELECT id, handle, password, created FROM account WHERE handle=$1 LIMIT 1`, 
+	UserFindById: `SELECT id, handle, email, password, created FROM account WHERE id=$1 LIMIT 1`,
+	UserFindByHandle: `SELECT id, handle, email, password, created FROM account WHERE handle=$1 LIMIT 1`,
+	UserCreate: `INSERT INTO account (handle, email, password) VALUES ($1, $2, $3) RETURNING id`, 
 }

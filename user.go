@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	//"fmt"
 	"time"
 
 	"code.google.com/p/go.crypto/bcrypt"
@@ -16,16 +15,68 @@ type Login struct {
 type User struct {
 	Id       int64     "The user's auto-incremented ID"
 	Handle   string    "The user's name"
+	Email    string    "The user's email"
 	Password string    "The user's bcrypted password"
 	Created  time.Time "The creation timestamp of the user's account"
 }
 
-//When a new user registers, create them by calling NewUser() so that we 
-//populate default variables, such as the time when they were created.
-func NewUser() *User {
-	return &User{
-		Created: time.Now(),
+func (u *User) Guest() bool {
+	if u.Id == 0 {
+		return true
 	}
+
+	return false
+}
+
+func (u *User) Register(password string) (err error) {
+	//Make sure they sent us a bcrypt-able password
+	err = u.SetPassword(password)
+	if err != nil {
+		//Fail here to avoid modifying the DB
+		return
+	}
+
+	//We will now try to store this new user to the database.
+	err = u.createInDb()
+
+	return
+}
+
+func (u *User) createInDb() (err error) {
+	//Wrap in a transaction
+	tx, err := db.Begin()
+
+	CreateUserStmt, err := tx.Prepare(queries.UserCreate)
+	defer CreateUserStmt.Close()
+	if err != nil {
+		_ = tx.Rollback()
+		return
+	}
+	
+	/*
+	res, err := CreateUserStmt.Exec(u.Handle, u.Email, u.Password)
+	if err != nil {
+		_ = tx.Rollback()
+		return
+	}
+	//Success. Update the Id
+	u.Id, _ = res.LastInsertId()
+	*/
+	
+	//Success. Update the Id
+	//Note: because pq handles LastInsertId oddly (or not at all?), instead of 
+	//calling .Exec() then .LastInsertId, we prepare a statement that ends in 
+	//`RETURNING id` and we .QueryRow().Select() the result  
+	err = CreateUserStmt.QueryRow(u.Handle, u.Email, u.Password).Scan(&u.Id)
+	if err != nil {
+		_ = tx.Rollback()
+		return
+	}
+	
+	//Declare transactional victory
+	tx.Commit()
+
+	return
 }
 
 //SetPassword takes a plaintext password and hashes it with bcrypt and sets the
@@ -77,14 +128,14 @@ func FindOneByHandle(handle string) (user *User, err error) {
 	user = new(User)
 
 	//Find one or zero existent users
-	FindUserStmt, err := db.Prepare(queries.FindOneByHandle)
+	FindUserStmt, err := db.Prepare(queries.UserFindByHandle)
 	if err != nil {
 		return
 	}
 	defer FindUserStmt.Close()
 
 	//Read any found values into the user object
-	err = FindUserStmt.QueryRow(handle).Scan(&user.Id, &user.Handle, &user.Password, &user.Created)
+	err = FindUserStmt.QueryRow(handle).Scan(&user.Id, &user.Handle, &user.Email, &user.Password, &user.Created)
 	if err != nil {
 		user = new(User)
 	}
@@ -98,6 +149,25 @@ func FindOneByHandle(handle string) (user *User, err error) {
 
 //If a user with this id exists, return a *User object. Otherwise, nil.
 func FindOneUserById(id int64) (user *User, err error) {
-	return &User{}, nil
+	//Initialize empty user
+	user = new(User)
 
+	//Find one or zero existent users
+	FindUserStmt, err := db.Prepare(queries.UserFindById)
+	if err != nil {
+		return
+	}
+	defer FindUserStmt.Close()
+
+	//Read any found values into the user object
+	err = FindUserStmt.QueryRow(id).Scan(&user.Id, &user.Handle, &user.Email, &user.Password, &user.Created)
+	if err != nil {
+		user = new(User)
+	}
+
+	//If there are no records, the error will be non-nil
+	//You may want to obscure this error message elsewhere, 
+	//E.g., to hide whether a login failure was due to a non-existent
+	//user or a bad password for a real user.  
+	return
 }
