@@ -1,4 +1,4 @@
-pg_dump -h localhost -p 5432 -U projectuser -W --schema-only -n askbitcoin projects
+pg_dump -h localhost -p 5432 -U askbitcoin -W --schema-only -n askbitcoin projects
 
 # -h for host
 # -p for port

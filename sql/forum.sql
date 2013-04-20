@@ -9,13 +9,13 @@ SET check_function_bodies = false;
 SET client_min_messages = warning;
 
 --
--- Name: askbitcoin; Type: SCHEMA; Schema: -; Owner: projectuser
+-- Name: askbitcoin; Type: SCHEMA; Schema: -; Owner: askbitcoin
 --
 
 CREATE SCHEMA askbitcoin;
 
 
-ALTER SCHEMA askbitcoin OWNER TO projectuser;
+ALTER SCHEMA askbitcoin OWNER TO askbitcoin;
 
 SET search_path = askbitcoin, pg_catalog;
 
@@ -24,21 +24,22 @@ SET default_tablespace = '';
 SET default_with_oids = false;
 
 --
--- Name: account; Type: TABLE; Schema: askbitcoin; Owner: projectuser; Tablespace: 
+-- Name: account; Type: TABLE; Schema: askbitcoin; Owner: askbitcoin; Tablespace: 
 --
 
 CREATE TABLE account (
     id bigint NOT NULL,
     handle text NOT NULL,
     created timestamp with time zone DEFAULT now() NOT NULL,
-    password text
+    password text,
+    email text NOT NULL
 );
 
 
-ALTER TABLE askbitcoin.account OWNER TO projectuser;
+ALTER TABLE askbitcoin.account OWNER TO askbitcoin;
 
 --
--- Name: account_id_seq; Type: SEQUENCE; Schema: askbitcoin; Owner: projectuser
+-- Name: account_id_seq; Type: SEQUENCE; Schema: askbitcoin; Owner: askbitcoin
 --
 
 CREATE SEQUENCE account_id_seq
@@ -49,17 +50,17 @@ CREATE SEQUENCE account_id_seq
     CACHE 1;
 
 
-ALTER TABLE askbitcoin.account_id_seq OWNER TO projectuser;
+ALTER TABLE askbitcoin.account_id_seq OWNER TO askbitcoin;
 
 --
--- Name: account_id_seq; Type: SEQUENCE OWNED BY; Schema: askbitcoin; Owner: projectuser
+-- Name: account_id_seq; Type: SEQUENCE OWNED BY; Schema: askbitcoin; Owner: askbitcoin
 --
 
 ALTER SEQUENCE account_id_seq OWNED BY account.id;
 
 
 --
--- Name: entry; Type: TABLE; Schema: askbitcoin; Owner: projectuser; Tablespace: 
+-- Name: entry; Type: TABLE; Schema: askbitcoin; Owner: askbitcoin; Tablespace: 
 --
 
 CREATE TABLE entry (
@@ -71,10 +72,10 @@ CREATE TABLE entry (
 );
 
 
-ALTER TABLE askbitcoin.entry OWNER TO projectuser;
+ALTER TABLE askbitcoin.entry OWNER TO askbitcoin;
 
 --
--- Name: entry_closures; Type: TABLE; Schema: askbitcoin; Owner: projectuser; Tablespace: 
+-- Name: entry_closures; Type: TABLE; Schema: askbitcoin; Owner: askbitcoin; Tablespace: 
 --
 
 CREATE TABLE entry_closures (
@@ -84,10 +85,10 @@ CREATE TABLE entry_closures (
 );
 
 
-ALTER TABLE askbitcoin.entry_closures OWNER TO projectuser;
+ALTER TABLE askbitcoin.entry_closures OWNER TO askbitcoin;
 
 --
--- Name: entry_id_seq; Type: SEQUENCE; Schema: askbitcoin; Owner: projectuser
+-- Name: entry_id_seq; Type: SEQUENCE; Schema: askbitcoin; Owner: askbitcoin
 --
 
 CREATE SEQUENCE entry_id_seq
@@ -98,31 +99,31 @@ CREATE SEQUENCE entry_id_seq
     CACHE 1;
 
 
-ALTER TABLE askbitcoin.entry_id_seq OWNER TO projectuser;
+ALTER TABLE askbitcoin.entry_id_seq OWNER TO askbitcoin;
 
 --
--- Name: entry_id_seq; Type: SEQUENCE OWNED BY; Schema: askbitcoin; Owner: projectuser
+-- Name: entry_id_seq; Type: SEQUENCE OWNED BY; Schema: askbitcoin; Owner: askbitcoin
 --
 
 ALTER SEQUENCE entry_id_seq OWNED BY entry.id;
 
 
 --
--- Name: id; Type: DEFAULT; Schema: askbitcoin; Owner: projectuser
+-- Name: id; Type: DEFAULT; Schema: askbitcoin; Owner: askbitcoin
 --
 
 ALTER TABLE ONLY account ALTER COLUMN id SET DEFAULT nextval('account_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: askbitcoin; Owner: projectuser
+-- Name: id; Type: DEFAULT; Schema: askbitcoin; Owner: askbitcoin
 --
 
 ALTER TABLE ONLY entry ALTER COLUMN id SET DEFAULT nextval('entry_id_seq'::regclass);
 
 
 --
--- Name: PRIMARY; Type: CONSTRAINT; Schema: askbitcoin; Owner: projectuser; Tablespace: 
+-- Name: PRIMARY; Type: CONSTRAINT; Schema: askbitcoin; Owner: askbitcoin; Tablespace: 
 --
 
 ALTER TABLE ONLY entry_closures
@@ -130,7 +131,7 @@ ALTER TABLE ONLY entry_closures
 
 
 --
--- Name: account_pkey; Type: CONSTRAINT; Schema: askbitcoin; Owner: projectuser; Tablespace: 
+-- Name: account_pkey; Type: CONSTRAINT; Schema: askbitcoin; Owner: askbitcoin; Tablespace: 
 --
 
 ALTER TABLE ONLY account
@@ -138,7 +139,7 @@ ALTER TABLE ONLY account
 
 
 --
--- Name: entry_pkey; Type: CONSTRAINT; Schema: askbitcoin; Owner: projectuser; Tablespace: 
+-- Name: entry_pkey; Type: CONSTRAINT; Schema: askbitcoin; Owner: askbitcoin; Tablespace: 
 --
 
 ALTER TABLE ONLY entry
@@ -146,7 +147,23 @@ ALTER TABLE ONLY entry
 
 
 --
--- Name: entry_author_id_fkey; Type: FK CONSTRAINT; Schema: askbitcoin; Owner: projectuser
+-- Name: unique_email; Type: CONSTRAINT; Schema: askbitcoin; Owner: askbitcoin; Tablespace: 
+--
+
+ALTER TABLE ONLY account
+    ADD CONSTRAINT unique_email UNIQUE (email);
+
+
+--
+-- Name: unique_handle; Type: CONSTRAINT; Schema: askbitcoin; Owner: askbitcoin; Tablespace: 
+--
+
+ALTER TABLE ONLY account
+    ADD CONSTRAINT unique_handle UNIQUE (handle);
+
+
+--
+-- Name: entry_author_id_fkey; Type: FK CONSTRAINT; Schema: askbitcoin; Owner: askbitcoin
 --
 
 ALTER TABLE ONLY entry
@@ -154,7 +171,7 @@ ALTER TABLE ONLY entry
 
 
 --
--- Name: entry_closures_ancestor_fkey; Type: FK CONSTRAINT; Schema: askbitcoin; Owner: projectuser
+-- Name: entry_closures_ancestor_fkey; Type: FK CONSTRAINT; Schema: askbitcoin; Owner: askbitcoin
 --
 
 ALTER TABLE ONLY entry_closures
@@ -162,7 +179,7 @@ ALTER TABLE ONLY entry_closures
 
 
 --
--- Name: entry_closures_descendant_fkey; Type: FK CONSTRAINT; Schema: askbitcoin; Owner: projectuser
+-- Name: entry_closures_descendant_fkey; Type: FK CONSTRAINT; Schema: askbitcoin; Owner: askbitcoin
 --
 
 ALTER TABLE ONLY entry_closures
@@ -170,12 +187,12 @@ ALTER TABLE ONLY entry_closures
 
 
 --
--- Name: askbitcoin; Type: ACL; Schema: -; Owner: projectuser
+-- Name: askbitcoin; Type: ACL; Schema: -; Owner: askbitcoin
 --
 
 REVOKE ALL ON SCHEMA askbitcoin FROM PUBLIC;
-REVOKE ALL ON SCHEMA askbitcoin FROM projectuser;
-GRANT ALL ON SCHEMA askbitcoin TO projectuser;
+REVOKE ALL ON SCHEMA askbitcoin FROM askbitcoin;
+GRANT ALL ON SCHEMA askbitcoin TO askbitcoin;
 
 
 --
