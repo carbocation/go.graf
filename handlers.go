@@ -39,8 +39,10 @@ func (h handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 func loginHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	//execute the template
 	data := struct {
+		G    GlobalValues
 		User *User
 	}{
+		globals,
 		context.Get(r, ThisUser).(*User),
 	}
 	//T("login.html").Execute(w, map[string]interface{}{})
@@ -52,14 +54,16 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	DeleteContext(r, w)
 
 	http.Redirect(w, r, reverse("index"), http.StatusSeeOther)
-	
+
 	return
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	data := struct {
+		G    GlobalValues
 		User *User
 	}{
+		globals,
 		context.Get(r, ThisUser).(*User),
 	}
 
@@ -98,6 +102,7 @@ func threadHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	}
 
 	data := map[string]interface{}{
+		"G":    globals,
 		"User": context.Get(r, ThisUser).(*User),
 		"Tree": tree,
 	}

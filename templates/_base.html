@@ -29,7 +29,7 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
               </button>
-              <a class="brand" href="/">{{$project}}</a>
+              <a class="brand" href="/">{{ .G.Site }}</a>
               <div class="nav-collapse collapse">
                 <p class="navbar-text pull-right">
                   {{ if .User.Handle}}
@@ -52,7 +52,7 @@
             {{ template "content" . }}
         </section>
         <footer id="footer">
-            {{$project}}, © 2013 <a href='{{$email}}'>{{$email}}</a>
+            {{ .G.Site }}, © 2013 <a href='mailto: {{ .G.ContactEmail }}'>{{ .G.ContactEmail }}</a>
         </footer>
         <script src="/static/js/jquery.1.9.1.min.js"></script>
     	<script src="/static/js/bootstrap.min.js"></script>

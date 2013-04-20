@@ -13,11 +13,20 @@ import (
 	_ "github.com/lib/pq"
 )
 
+type GlobalValues struct {
+	Site         string "Site name"
+	ContactEmail string "Webmaster email address"
+}
+
 var (
 	db        *sql.DB     = initdb()                                                                                   //db maintains a pool of connections to our database of choice 
 	appsecret             = `75Oop7MSN88WstKJSTyu9ALiO0Nbeckv/4/eDLDJcpXn0Ny1H9PdpzXDqApie77tZ04GFsdHehmzcMkAqh16Dg==` //64 bit random string generated with `openssl rand -base64 64`
 	store                 = sessions.NewFilesystemStore("", []byte(appsecret))                                         //With an empty first argument, this will put session files in os.TempDir() (/tmp)
 	router    *mux.Router = mux.NewRouter()                                                                            //Dynamic content is managed by handlers pointed at by the router 
+	globals               = GlobalValues{
+		Site:         "Ask Bitcoin",
+		ContactEmail: "james@carbocation.com",
+	}
 )
 
 func init() {
@@ -58,7 +67,7 @@ func main() {
 func initdb() *sql.DB {
 	db, err := sql.Open("postgres", "dbname=projects user=askbitcoin password=xnkxglie sslmode=disable")
 	if err != nil {
-		fmt.Println("Panic: "+err.Error())
+		fmt.Println("Panic: " + err.Error())
 		panic(err)
 	}
 
