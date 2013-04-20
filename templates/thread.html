@@ -1,4 +1,10 @@
-{{ define "title" }}Thread Template{{ end }}
+{{ define "title" }}
+	{{ with .Tree }}
+		{{with .Value}}
+			{{.Title}}
+		{{end}}
+	{{end}}
+{{ end }}
 
 {{ define "tree" }}
 {{if .}}
