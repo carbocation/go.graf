@@ -9,6 +9,7 @@
         
         <link href="/static/css/forum.css" rel="stylesheet" media="screen">
         {{ template "header" . }}
+        <link rel="icon" href="/static/img/favicon.ico">
         <!-- Bootstrap -->
         <link href="/static/css/bootstrap.min.css" rel="stylesheet" media="screen">
         
@@ -50,7 +51,7 @@
             {{ template "content" . }}
         </section>
         <footer id="footer">
-            {{ .G.Site }}, © 2013 <a href='mailto: {{ .G.ContactEmail }}'>{{ .G.ContactEmail }}</a>
+            {{ .G.Site }}, © 2013 <a href='mailto:{{ .G.ContactEmail }}'>{{ .G.ContactEmail }}</a>
         </footer>
         <script src="/static/js/jquery.1.9.1.min.js"></script>
     	<script src="/static/js/bootstrap.min.js"></script>
