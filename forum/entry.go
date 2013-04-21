@@ -2,6 +2,7 @@ package forum
 
 import (
 	"time"
+	"database/sql"
 
 	"github.com/carbocation/util.git/datatypes/closuretable"
 )
@@ -12,8 +13,10 @@ type Entry struct {
 	Id       int64     "The ID of the post"
 	Title    string    "Title of the post. Will be empty for entries that are really intended to be comments."
 	Body     string    "Contents of the post. Will be empty for entries that are intended to be links."
+	Url      string    //Used if the post is just a link
 	Created  time.Time "Time at which the post was created."
 	AuthorId int64     "ID of the author of the post"
+	Forum    bool      `schema:"-"` //Is this Entry actually a forum?
 }
 
 //Note: why not just manage what is real and what is not through methods?
@@ -46,9 +49,17 @@ func DescendantEntries(root int64) (entries map[int64]Entry, err error) {
 	// Iterate over the rows
 	for rows.Next() {
 		var e Entry
-		err = rows.Scan(&e.Id, &e.Title, &e.Body, &e.Created, &e.AuthorId)
+		var body, url sql.NullString
+		err = rows.Scan(&e.Id, &e.Title, &body, &url, &e.Created, &e.AuthorId, &e.Forum)
 		if err != nil {
 			return
+		}
+		
+		//Only the body or the url will be set; they are mutually exclusive
+		if body.Valid {
+			e.Body = body.String
+		}else if url.Valid {
+			e.Url = url.String
 		}
 
 		entries[e.Id] = e

@@ -11,7 +11,7 @@ type User struct {
 	Id       int64     "The user's auto-incremented ID"
 	Handle   string    "The user's name"
 	Email    string    "The user's email"
-	Password string    `schema:"-"` //Do not allow this to be set directly by forms
+	Password string    `schema:"-"` //Do not allow this to be set by users
 	Created  time.Time "The creation timestamp of the user's account"
 
 	//Values below here should not be stored in the database

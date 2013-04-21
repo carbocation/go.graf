@@ -7,7 +7,8 @@ var queries = struct {
 	DescendantEntries      string
 	DescendantClosureTable string
 }{
-	DescendantEntries: `SELECT e.*
+//&e.Id, &e.Title, &e.Body, &e.Url, &e.Created, &e.AuthorId
+	DescendantEntries: `SELECT e.id, e.title, e.body, e.url, e.created, e.author_id, e.forum
 FROM entry_closures closure
 JOIN entry e ON e.id = closure.descendant
 WHERE closure.ancestor = $1`,
