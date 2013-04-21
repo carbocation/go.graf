@@ -1,8 +1,8 @@
 package forum
 
 import (
-	"time"
 	"database/sql"
+	"time"
 
 	"github.com/carbocation/util.git/datatypes/closuretable"
 )
@@ -17,6 +17,9 @@ type Entry struct {
 	Created  time.Time "Time at which the post was created."
 	AuthorId int64     "ID of the author of the post"
 	Forum    bool      `schema:"-"` //Is this Entry actually a forum?
+
+	//These are not stored in the DB and are just generated fields
+	AuthorHandle string //Name of the author
 }
 
 //Note: why not just manage what is real and what is not through methods?
@@ -44,14 +47,14 @@ func DepthOneDescendantEntries(root int64) (entries map[int64]Entry, err error) 
 
 func getEntries(root int64, flag string) (entries map[int64]Entry, err error) {
 	entries = map[int64]Entry{}
-	
+
 	var stmt *sql.Stmt
 
 	switch flag {
-		case "AllDescendants":
-			stmt, err = Config.DB.Prepare(queries.DescendantEntries)
-		case "DepthOneDescendants":
-			stmt, err = Config.DB.Prepare(queries.DepthOneDescendantEntries)
+	case "AllDescendants":
+		stmt, err = Config.DB.Prepare(queries.DescendantEntries)
+	case "DepthOneDescendants":
+		stmt, err = Config.DB.Prepare(queries.DepthOneDescendantEntries)
 	}
 	if err != nil {
 		return
@@ -68,15 +71,15 @@ func getEntries(root int64, flag string) (entries map[int64]Entry, err error) {
 	for rows.Next() {
 		var e Entry
 		var body, url sql.NullString
-		err = rows.Scan(&e.Id, &e.Title, &body, &url, &e.Created, &e.AuthorId, &e.Forum)
+		err = rows.Scan(&e.Id, &e.Title, &body, &url, &e.Created, &e.AuthorId, &e.Forum, &e.AuthorHandle)
 		if err != nil {
 			return
 		}
-		
+
 		//Only the body or the url will be set; they are mutually exclusive
 		if body.Valid {
 			e.Body = body.String
-		}else if url.Valid {
+		} else if url.Valid {
 			e.Url = url.String
 		}
 
@@ -100,21 +103,21 @@ func DepthOneClosureTable(id int64) (ct *closuretable.ClosureTable, err error) {
 
 func getClosureTable(id int64, flag string) (ct *closuretable.ClosureTable, err error) {
 	ct = closuretable.New(id)
-	
+
 	var stmt *sql.Stmt
 
 	// Pull down the remaining elements in the closure table that are descendants of this node
 	switch flag {
-		case "AllDescendants":
-			stmt, err = Config.DB.Prepare(queries.DescendantClosureTable)
-		case "DepthOneDescendants":
-			stmt, err = Config.DB.Prepare(queries.DepthOneClosureTable)
+	case "AllDescendants":
+		stmt, err = Config.DB.Prepare(queries.DescendantClosureTable)
+	case "DepthOneDescendants":
+		stmt, err = Config.DB.Prepare(queries.DepthOneClosureTable)
 	}
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	
+
 	rows, err := stmt.Query(id)
 	if err != nil {
 		//fmt.Printf("Query Error: %v", err)

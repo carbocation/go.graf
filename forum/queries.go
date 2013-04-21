@@ -9,9 +9,10 @@ var queries = struct {
 	DepthOneDescendantEntries string //Entry itself and all immediate descendents
 	DepthOneClosureTable      string
 }{
-	DescendantEntries: `SELECT e.id, e.title, e.body, e.url, e.created, e.author_id, e.forum
+	DescendantEntries: `SELECT e.id, e.title, e.body, e.url, e.created, e.author_id, e.forum, a.handle
 FROM entry_closures closure
 JOIN entry e ON e.id = closure.descendant
+JOIN account a ON a.id=e.author_id
 WHERE closure.ancestor = $1`,
 	DescendantClosureTable: `select * 
 from entry_closures
@@ -26,9 +27,10 @@ from entry_closures
 where ancestor=$1
 )
 and depth = 1`,
-	DepthOneDescendantEntries: `SELECT e.id, e.title, e.body, e.url, e.created, e.author_id, e.forum
+	DepthOneDescendantEntries: `SELECT e.id, e.title, e.body, e.url, e.created, e.author_id, e.forum, a.handle
 FROM entry_closures closure
 JOIN entry e ON e.id = closure.descendant
+JOIN account a ON a.id=e.author_id
 WHERE 1=1
 AND closure.ancestor = $1
 AND (closure.depth=1 OR closure.depth=0)`,

@@ -5,11 +5,12 @@
 	<div>
 		<i class="icon-arrow-up"></i><i class="icon-arrow-down"></i>
 		<a href="{{reverse "thread" "id" .Tree.Value.Id}}">{{.Tree.Value.Title}}</a><br />
-			{{if eq .Tree.Value.AuthorId .User.Id}}
 			<ul class="inline">
+				<li>By {{.Tree.Value.AuthorHandle}}</li>
+				{{if eq .Tree.Value.AuthorId .User.Id}}
 				<li><a href="#">Edit</a></li>
+				{{end}}
 			</ul>
-			{{end}}
         {{template "tree" mapfn "User" .User "Tree" .Tree.Left}}
 	</div>
         {{template "tree" mapfn "User" .User "Tree" .Tree.Right}}
