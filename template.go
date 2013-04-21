@@ -4,6 +4,7 @@ Derived from zeebo's https://github.com/zeebo/gostbook/blob/master/template.go
 package main
 
 import (
+	"errors"
 	"fmt"
 	"html/template"
 	"path/filepath"
@@ -60,9 +61,27 @@ func eq(args ...interface{}) bool {
 	return false
 }
 
+// From gary_b on the go-nuts mailing list
+// https://groups.google.com/d/msg/golang-nuts/yGXyPGnHjJQ/ia-zmmOag8IJ
+func mapfn(kvs ...interface{}) (map[string]interface{}, error) {
+	if len(kvs)%2 != 0 {
+		return nil, errors.New("map requires even number of arguments.")
+	}
+	m := make(map[string]interface{})
+	for i := 0; i < len(kvs); i += 2 {
+		s, ok := kvs[i].(string)
+		if !ok {
+			return nil, errors.New("even args to map must be strings.")
+		}
+		m[s] = kvs[i+1]
+	}
+	return m, nil
+}
+
 var funcs = template.FuncMap{
 	"reverse": reverse,
-	"eq": eq,
+	"eq":      eq,
+	"mapfn":   mapfn,
 }
 
 // Parse a template ('name') against _base.html
