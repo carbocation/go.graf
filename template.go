@@ -4,9 +4,11 @@ Derived from zeebo's https://github.com/zeebo/gostbook/blob/master/template.go
 package main
 
 import (
+	"errors"
 	"fmt"
 	"html/template"
 	"path/filepath"
+	"reflect"
 	"sync"
 
 	"bitbucket.org/carbocation/nrsc"
@@ -32,8 +34,54 @@ func reverse(name string, things ...interface{}) string {
 	return u.Path
 }
 
+// From Russ Cox on the go-nuts mailing list
+// https://groups.google.com/d/msg/golang-nuts/OEdSDgEC7js/iyhU9DW_IKcJ
+// eq reports whether the first argument is equal to
+// any of the remaining arguments.
+func eq(args ...interface{}) bool {
+	if len(args) == 0 {
+		return false
+	}
+	x := args[0]
+	switch x := x.(type) {
+	case string, int, int64, byte, float32, float64:
+		for _, y := range args[1:] {
+			if x == y {
+				return true
+			}
+		}
+		return false
+	}
+
+	for _, y := range args[1:] {
+		if reflect.DeepEqual(x, y) {
+			return true
+		}
+	}
+	return false
+}
+
+// From gary_b on the go-nuts mailing list
+// https://groups.google.com/d/msg/golang-nuts/yGXyPGnHjJQ/ia-zmmOag8IJ
+func mapfn(kvs ...interface{}) (map[string]interface{}, error) {
+	if len(kvs)%2 != 0 {
+		return nil, errors.New("map requires even number of arguments.")
+	}
+	m := make(map[string]interface{})
+	for i := 0; i < len(kvs); i += 2 {
+		s, ok := kvs[i].(string)
+		if !ok {
+			return nil, errors.New("even args to map must be strings.")
+		}
+		m[s] = kvs[i+1]
+	}
+	return m, nil
+}
+
 var funcs = template.FuncMap{
 	"reverse": reverse,
+	"eq":      eq,
+	"mapfn":   mapfn,
 }
 
 // Parse a template ('name') against _base.html

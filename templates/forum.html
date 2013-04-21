@@ -1,0 +1,34 @@
+{{ define "title" }}{{.Tree.Value.Title}}{{ end }}
+
+{{ define "tree" }}
+{{if .Tree}}
+	<div>
+		<i class="icon-arrow-up"></i><i class="icon-arrow-down"></i>
+		<a href="{{reverse "thread" "id" .Tree.Value.Id}}">{{.Tree.Value.Title}}</a><br />
+			{{if eq .Tree.Value.AuthorId .User.Id}}
+			<ul class="inline">
+				<li><a href="#">Edit</a></li>
+			</ul>
+			{{end}}
+        {{template "tree" mapfn "User" .User "Tree" .Tree.Left}}
+	</div>
+        {{template "tree" mapfn "User" .User "Tree" .Tree.Right}}
+{{end}}
+{{end}}
+
+{{ define "content" }}
+{{if .Tree}}
+    <div>
+	{{with .Tree.Value}}
+		<h1>Forum {{.Title}}</h1>
+		{{.Body}}<br />
+		<ul class="inline">
+			<li><a href="{{reverse "newThread"}}">Submit a new story</a></li>
+		</ul>
+	{{end}}
+	{{template "tree" mapfn "User" .User "Tree" .Tree.Left}}
+    </div>
+{{else}}
+	<p class="text-error">The requested forum is unavailable.</p>
+{{end}}
+{{ end }}
