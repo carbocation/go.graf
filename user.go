@@ -11,7 +11,7 @@ type User struct {
 	Id       int64     "The user's auto-incremented ID"
 	Handle   string    "The user's name"
 	Email    string    "The user's email"
-	Password string    "The user's bcrypted password"
+	Password string    `schema:"-"` //Do not allow this to be set directly by forms
 	Created  time.Time "The creation timestamp of the user's account"
 
 	//Values below here should not be stored in the database
@@ -74,19 +74,17 @@ func (u *User) SetPassword(password string) (err error) {
 		return
 	}
 
-	hpass, err := bEncrypt(password)
+	hpass, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+
+	//Regardless of success or failure, we now get rid of the PlaintextPassword value
+	u.PlaintextPassword = ""
+
 	if err != nil {
 		return
 	}
 	u.Password = string(hpass)
 
 	return
-}
-
-func bEncrypt(pass string) (string, error) {
-	hashedpass, err := bcrypt.GenerateFromPassword([]byte(pass), bcrypt.DefaultCost)
-
-	return string(hashedpass), err
 }
 
 //If a login checks out, return a new user object
@@ -101,6 +99,10 @@ func (login *User) Login() (user *User, err error) {
 
 	//If the user account's password validates, update u with the new user object
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(login.PlaintextPassword))
+
+	//Regardless of success or failure, we now get rid of the PlaintextPassword value
+	login.PlaintextPassword = ""
+
 	if err != nil {
 		user = new(User)
 		err = errors.New("The username or password was invalid")
