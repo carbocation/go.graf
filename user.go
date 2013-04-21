@@ -7,17 +7,15 @@ import (
 	"code.google.com/p/go.crypto/bcrypt"
 )
 
-type Login struct {
-	Handle            string "The username"
-	PlaintextPassword string "The password"
-}
-
 type User struct {
 	Id       int64     "The user's auto-incremented ID"
 	Handle   string    "The user's name"
 	Email    string    "The user's email"
 	Password string    "The user's bcrypted password"
 	Created  time.Time "The creation timestamp of the user's account"
+
+	//Values below here should not be stored in the database
+	PlaintextPassword string "Plaintext password. Not stored in the database; used for logging in."
 }
 
 func (u *User) Guest() bool {
@@ -28,9 +26,9 @@ func (u *User) Guest() bool {
 	return false
 }
 
-func (u *User) Register(password string) (err error) {
+func (u *User) Register() (err error) {
 	//Make sure they sent us a bcrypt-able password
-	err = u.SetPassword(password)
+	err = u.SetPassword(u.PlaintextPassword)
 	if err != nil {
 		//Fail here to avoid modifying the DB
 		return
@@ -52,7 +50,7 @@ func (u *User) createInDb() (err error) {
 		_ = tx.Rollback()
 		return errors.New("Error: We had a database problem.")
 	}
-	
+
 	//Note: because pq handles LastInsertId oddly (or not at all?), instead of 
 	//calling .Exec() then .LastInsertId, we prepare a statement that ends in 
 	//`RETURNING id` and we .QueryRow().Select() the result  
@@ -61,7 +59,7 @@ func (u *User) createInDb() (err error) {
 		_ = tx.Rollback()
 		return errors.New("Error: your username or email address was already found in the database. Please choose differently.")
 	}
-	
+
 	//Declare transactional victory
 	tx.Commit()
 
@@ -92,7 +90,7 @@ func bEncrypt(pass string) (string, error) {
 }
 
 //If a login checks out, return a new user object
-func (login *Login) Login() (user *User, err error) {
+func (login *User) Login() (user *User, err error) {
 	user, err = FindOneByHandle(login.Handle)
 	//If a valid user couldn't be found, the user shall become logged out
 	if err != nil {

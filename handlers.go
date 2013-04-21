@@ -142,7 +142,7 @@ func threadHandler(w http.ResponseWriter, r *http.Request) (err error) {
 func postLoginHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	r.ParseForm()
 
-	login := new(Login)
+	login := new(User)
 	//Parse the form values into the Login object
 	decoder.Decode(login, r.Form)
 
@@ -187,7 +187,7 @@ func postRegisterHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	//Try to create the new user in the database
 	user := new(User)
 	decoder.Decode(user, r.Form)
-	err = user.Register(r.FormValue("PlaintextPassword"))
+	err = user.Register()
 	if err != nil {
 		//If our registration fails for any reason, set a flag and show the form again
 		//http.Redirect(w, r, reverse("register"), http.StatusSeeOther)
