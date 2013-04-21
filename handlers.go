@@ -115,6 +115,12 @@ func threadHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	if err != nil {
 		return errors.New("The requested thread could not be found.")
 	}
+	
+	//Make sure this not a forum
+	if entries[id].Forum {
+		http.Redirect(w, r, reverse("forum", "id", id), http.StatusSeeOther)
+		return
+	}
 
 	//Obligatory boxing step
 	interfaceEntries := map[int64]interface{}{}
@@ -135,6 +141,57 @@ func threadHandler(w http.ResponseWriter, r *http.Request) (err error) {
 
 	//execute the template
 	T("thread.html").Execute(w, data)
+
+	return
+}
+
+func newThreadHandler(w http.ResponseWriter, r *http.Request) (err error) {
+	return
+}
+
+func forumHandler(w http.ResponseWriter, r *http.Request) (err error) {
+	//If the forum ID is not parseable as an integer, stop immediately
+	id, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
+	if err != nil {
+		return errors.New("The requested forum is invalid.")
+	}
+	
+	// Pull down the closuretable from the root requested id
+	ct, err := forum.DepthOneClosureTable(id)
+	if err != nil {
+		return errors.New("The requested thread could not be found.")
+	}
+
+	entries, err := forum.DepthOneDescendantEntries(id)
+	if err != nil {
+		return errors.New("The requested thread could not be found.")
+	}
+	
+	//Make sure this is a forum
+	if entries[id].Forum != true {
+		http.Redirect(w, r, reverse("thread", "id", id), http.StatusSeeOther)
+		return
+	}
+
+	//Obligatory boxing step
+	interfaceEntries := map[int64]interface{}{}
+	for k, v := range entries {
+		interfaceEntries[k] = v
+	}
+
+	tree, err := ct.TableToTree(interfaceEntries)
+	if err != nil {
+		return errors.New("The requested data structure could not be built.")
+	}
+
+	data := map[string]interface{}{
+		"G":    globals,
+		"User": context.Get(r, ThisUser).(*User),
+		"Tree": tree,
+	}
+
+	//execute the template
+	T("forum.html").Execute(w, data)
 
 	return
 }
