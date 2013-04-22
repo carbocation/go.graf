@@ -4,6 +4,7 @@ import (
 	"encoding/gob"
 	"net/http"
 
+	"github.com/carbocation/go.user"
 	"github.com/goods/httpbuf"
 	"github.com/gorilla/context"
 	"github.com/gorilla/sessions"
@@ -15,7 +16,7 @@ const (
 
 func init() {
 	//Tell gob about non-standard things we'll be serializing to disk
-	gob.Register(new(User))
+	gob.Register(new(user.User))
 }
 
 func OpenContext(req *http.Request) {
@@ -25,7 +26,7 @@ func OpenContext(req *http.Request) {
 	if session.Values["user"] != nil {
 		context.Set(req, ThisUser, session.Values["user"])
 	} else {
-		context.Set(req, ThisUser, new(User))
+		context.Set(req, ThisUser, new(user.User))
 	}
 }
 
@@ -44,7 +45,7 @@ func CloseContext(req *http.Request, buf *httpbuf.Buffer) (httpStatus int) {
 func DeleteContext(req *http.Request, w http.ResponseWriter) {
 	//Delete all user-set variables
 	context.Purge(0)
-	
+
 	//Destroy the session
 	session, _ := store.Get(req, "app")
 	session.Options = &sessions.Options{MaxAge: -1}
