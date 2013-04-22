@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/carbocation/go.forum"
+	"github.com/carbocation/go.user"
 	"github.com/goods/httpbuf"
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
@@ -40,10 +41,10 @@ func loginHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	//execute the template
 	data := struct {
 		G    GlobalValues
-		User *User
+		User *user.User
 	}{
 		globals,
-		context.Get(r, ThisUser).(*User),
+		context.Get(r, ThisUser).(*user.User),
 	}
 	//T("login.html").Execute(w, map[string]interface{}{})
 	T("login.html").Execute(w, data)
@@ -61,10 +62,10 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) (err error) {
 func indexHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	data := struct {
 		G    GlobalValues
-		User *User
+		User *user.User
 	}{
 		globals,
-		context.Get(r, ThisUser).(*User),
+		context.Get(r, ThisUser).(*user.User),
 	}
 
 	T("index.html").Execute(w, data)
@@ -74,12 +75,12 @@ func indexHandler(w http.ResponseWriter, r *http.Request) (err error) {
 
 func registerHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	data := struct {
-		G    GlobalValues
-		User *User
+		G        GlobalValues
+		User     *user.User
 		Messages []interface{}
 	}{
 		globals,
-		context.Get(r, ThisUser).(*User),
+		context.Get(r, ThisUser).(*user.User),
 		[]interface{}{},
 	}
 
@@ -87,12 +88,12 @@ func registerHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	if !data.User.Guest() {
 		http.Redirect(w, r, reverse("index"), http.StatusSeeOther)
 	}
-	
+
 	session, _ := store.Get(r, "app")
 	if flashes := session.Flashes(); len(flashes) > 0 {
-        // Just print the flash values.
-        data.Messages = flashes
-    }
+		// Just print the flash values.
+		data.Messages = flashes
+	}
 
 	T("register.html").Execute(w, data)
 	return
@@ -115,7 +116,7 @@ func threadHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	if err != nil {
 		return errors.New("The requested thread could not be found.")
 	}
-	
+
 	//Make sure this not a forum
 	if entries[id].Forum {
 		http.Redirect(w, r, reverse("forum", "id", id), http.StatusSeeOther)
@@ -135,7 +136,7 @@ func threadHandler(w http.ResponseWriter, r *http.Request) (err error) {
 
 	data := map[string]interface{}{
 		"G":    globals,
-		"User": context.Get(r, ThisUser).(*User),
+		"User": context.Get(r, ThisUser).(*user.User),
 		"Tree": tree,
 	}
 
@@ -155,7 +156,7 @@ func forumHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	if err != nil {
 		return errors.New("The requested forum is invalid.")
 	}
-	
+
 	// Pull down the closuretable from the root requested id
 	ct, err := forum.DepthOneClosureTable(id)
 	if err != nil {
@@ -166,7 +167,7 @@ func forumHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	if err != nil {
 		return errors.New("The requested thread could not be found.")
 	}
-	
+
 	//Make sure this is a forum
 	if entries[id].Forum != true {
 		http.Redirect(w, r, reverse("thread", "id", id), http.StatusSeeOther)
@@ -186,7 +187,7 @@ func forumHandler(w http.ResponseWriter, r *http.Request) (err error) {
 
 	data := map[string]interface{}{
 		"G":    globals,
-		"User": context.Get(r, ThisUser).(*User),
+		"User": context.Get(r, ThisUser).(*user.User),
 		"Tree": tree,
 	}
 
@@ -199,23 +200,20 @@ func forumHandler(w http.ResponseWriter, r *http.Request) (err error) {
 func postLoginHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	r.ParseForm()
 
-	login := new(User)
+	login := new(user.User)
 	//Parse the form values into the Login object
 	decoder.Decode(login, r.Form)
 
-	user, err := login.Login()
+	u, err := login.Login()
 	if err != nil {
-
-		//They're a guest user
-		context.Set(r, ThisUser, &User{})
-	} else {
-		//They're a real user
-		context.Set(r, ThisUser, user)
+		u = new(user.User)
 	}
+
+	context.Set(r, ThisUser, u)
 
 	//Add the user's struct to the session
 	session, _ := store.Get(r, "app")
-	session.Values["user"] = user
+	session.Values["user"] = u
 
 	//Redirect to a GET address to prevent form resubmission
 	http.Redirect(w, r, reverse("index"), http.StatusSeeOther)
@@ -227,7 +225,7 @@ func postRegisterHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	r.ParseForm()
 
 	//Don't let non-guests register again
-	if !context.Get(r, ThisUser).(*User).Guest() {
+	if !context.Get(r, ThisUser).(*user.User).Guest() {
 		http.Redirect(w, r, reverse("index"), http.StatusSeeOther)
 		return
 	}
@@ -237,30 +235,30 @@ func postRegisterHandler(w http.ResponseWriter, r *http.Request) (err error) {
 		http.Redirect(w, r, reverse("register"), http.StatusSeeOther)
 		return
 	}
-	
+
 	//Locate the session
 	session, _ := store.Get(r, "app")
 
 	//Try to create the new user in the database
-	user := new(User)
-	decoder.Decode(user, r.Form)
-	err = user.Register()
+	u := new(user.User)
+	decoder.Decode(u, r.Form)
+	err = u.Register()
 	if err != nil {
 		//If our registration fails for any reason, set a flag and show the form again
 		//http.Redirect(w, r, reverse("register"), http.StatusSeeOther)
-		context.Set(r, ThisUser, user)
-		
+		context.Set(r, ThisUser, u)
+
 		//Tell the user why we failed
 		session.AddFlash(fmt.Sprintf("%s", err))
-		
+
 		return registerHandler(w, r)
 	}
 
 	//They're a real user. Overwrite full object by populating from the DB
-	user, err = FindOneUserById(user.Id)
-	context.Set(r, ThisUser, user)
+	u, err = user.FindOneUserById(u.Id)
+	context.Set(r, ThisUser, u)
 
-	session.Values["user"] = user
+	session.Values["user"] = u
 
 	http.Redirect(w, r, reverse("index"), http.StatusSeeOther)
 

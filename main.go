@@ -8,6 +8,7 @@ import (
 
 	"bitbucket.org/carbocation/nrsc"
 	"github.com/carbocation/go.forum"
+	"github.com/carbocation/go.user"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	_ "github.com/lib/pq"
@@ -37,8 +38,9 @@ func main() {
 	// Defer the close of the DB in the main function so we'll have a pool of connections maintained until the program exits
 	defer db.Close()
 
-	//Initialize the forum package
+	//Initialize the ancillary packages
 	forum.Initialize(db)
+	user.Initialize(db)
 
 	//Bundled static assets are handled by nrsc
 	nrsc.Handle("/static/")
