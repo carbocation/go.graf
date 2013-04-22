@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/carbocation/util.git/datatypes/closuretable"
+	"github.com/carbocation/go.util/datatypes/closuretable"
 )
 
 // Put ModifiedBy, ModifiedAuthor in a separate table. A post can only be 
