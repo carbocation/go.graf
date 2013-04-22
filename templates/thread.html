@@ -1,19 +1,13 @@
-{{ define "title" }}
-	{{ with .Tree }}
-		{{with .Value}}
-			{{.Title}}
-		{{end}}
-	{{end}}
-{{ end }}
+{{ define "title" }}{{.Tree.Value.Title}}{{ end }}
 
 {{ define "tree" }}
 {{if .}}
 	<div class="nested">
 	{{with .Value}}
-		<i class="icon-arrow-up"></i><i class="icon-arrow-down"></i>{{.Id}}<br />
-		{{.Title}}<br />
+		<i class="icon-arrow-up"></i><i class="icon-arrow-down"></i>
 		{{.Body}}<br />
 		<ul class="inline">
+			<li>By {{.AuthorHandle}}</li>
 			<li><a href="#">Reply</a></li>
 			<li><a href="/thread/{{.Id}}">Permalink</a></li>
 			<li><a href="#">Edit</a></li>
@@ -40,6 +34,7 @@
 		<p class="lead">{{.Body}}</p>
 		<br />
 		<ul class="inline">
+			<li>By {{.AuthorHandle}}</li>
 			<li><a href="#">Reply</a></li>
 			<li><a href="#">Edit</a></li>
 			<li>&nbsp;</li>
