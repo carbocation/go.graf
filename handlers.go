@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/carbocation/forum.git/forum"
+	"github.com/carbocation/go.forum"
 	"github.com/goods/httpbuf"
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
