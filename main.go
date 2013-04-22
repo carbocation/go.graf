@@ -7,7 +7,7 @@ import (
 	"runtime"
 
 	"bitbucket.org/carbocation/nrsc"
-	"github.com/carbocation/forum.git/forum"
+	"github.com/carbocation/forum.go/forum"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	_ "github.com/lib/pq"
