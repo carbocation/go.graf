@@ -12,10 +12,10 @@
         {{ range .Messages }}
 			<p class="text-error">{{.}}</p><br />
 		{{end}}
-        <input type="text" class="input-block-level" placeholder="Username" name="Handle" value="{{.User.Handle}}">
-        <input type="text" class="input-block-level" placeholder="Email address" name="Email" value="{{.User.Email}}">
-        <input type="password" class="input-block-level" placeholder="Password" name="PlaintextPassword">
-        <input type="password" class="input-block-level" placeholder="Password (Again)" name="PlaintextPassword2">
+        <input type="text" class="input-block-level" placeholder="Username" name="Handle" value="{{.User.Handle}}" required>
+        <input type="email" class="input-block-level" placeholder="Email address" name="Email" value="{{.User.Email}}" required>
+        <input type="password" class="input-block-level" placeholder="Password" name="PlaintextPassword" required>
+        <input type="password" class="input-block-level" placeholder="Password (Again)" name="PlaintextPassword2" required>
         
         <button class="btn btn-large btn-primary" type="submit">Register</button>
         
