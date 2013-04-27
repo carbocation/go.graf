@@ -55,10 +55,12 @@
         </footer>
         <script src="/static/js/jquery.1.9.1.min.js"></script>
     	<script src="/static/js/bootstrap.min.js"></script>
+    	{{ template "scripts" . }}
     </body>
 </html>
 
 {{/* Defining defaults so there aren't parse errors if sub-templates don't define such values */}}
+{{ define "scripts" }}{{end}}
 {{ define "header" }}{{end}}
 {{ define "content"}}{{end}}
 {{ define "title" }}{{end}}

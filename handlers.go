@@ -147,6 +147,7 @@ func threadHandler(w http.ResponseWriter, r *http.Request) (err error) {
 }
 
 func newThreadHandler(w http.ResponseWriter, r *http.Request) (err error) {
+	fmt.Fprint(w, "Successfully tried to create a thread.")
 	return
 }
 

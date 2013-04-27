@@ -1,48 +1,95 @@
 {{ define "title" }}{{.Tree.Value.Title}}{{ end }}
 
-{{ define "tree" }}
+{{ define "scripts" }}
+<script src="/static/js/template.js"></script>
+<script>
+$(document).ready(function(){
+	$(".reply").on("click", function(event){
+		//console.log($(this).parent())
+		parentId = ($(this).closest("div.entry")[0].id).split(/_/)[1]
+		
+		targetDiv = "active_"+parentId;
+		
+		console.log(targetDiv);
+		
+		app.replaceTemplate("ItemTemplate", {id: "id", title: "name"}, targetDiv);
+	});
+	
+	$(".appender").on("click", function(event){
+		//console.log($(this).parent())
+		parentId = $(this).closest("div.entry")[0].id
+		
+		app.appendTemplate("ItemTemplate", {id: "id", title: "name"}, parentId)
+	});
+});
+</script>
+{{end}}
+
+{{define "tree"}}
 {{if .}}
-	<div class="nested">
-	{{with .Value}}
-		<i class="icon-arrow-up"></i><i class="icon-arrow-down"></i>
-		{{.Body}}<br />
-		<ul class="inline">
-			<li>By {{.AuthorHandle}}</li>
-			<li><a href="#">Reply</a></li>
-			<li><a href="/thread/{{.Id}}">Permalink</a></li>
-			<li><a href="#">Edit</a></li>
-			<li>&nbsp;</li>
-			<li><a href="#">Delete</a></li>
-		</ul>
-	{{end}}
-	{{with .Left}}
-	        {{template "tree" .}}
-	{{end}}
+	<div class="entry nested" id="entry_{{.Value.Id}}">
+		{{with .Value}}
+			<i class="icon-arrow-up"></i><i class="icon-arrow-down"></i>
+			{{.Body}}<br />
+			<ul class="inline">
+				<li>By {{.AuthorHandle}}</li>
+				<li><a class="reply">Reply</a></li>
+				<li><a href="/thread/{{.Id}}">Permalink</a></li>
+				<li><a href="edit">Edit</a></li>
+				<li>&nbsp;</li>
+				<li><a href="delete">Delete</a></li>
+			</ul>
+			{{/* 
+				Messages holds things of which there can only be one.
+				For example, you can only get one 'reply' box when 
+				you click Reply; you can't get several to stack up.
+			*/}} 
+			<div class="active_controls" id="active_{{.Id}}"></div>
+		{{end}}
+		<div class="children" id="children_{{.Value.Id}}">
+			{{with .Left}}
+		        {{template "tree" .}}
+			{{end}}
+		</div>
 	</div>
 	{{with .Right}}
 	        {{template "tree" .}}
 	{{end}}
 {{end}}
-{{ end }}
+{{end}}
+
+{{ define "replyForm" }}
+<script id="ItemTemplate" type="text/html">
+ <div class="entry nested" id="<#= id #>">
+    <div><#= id #></div>
+    <div><#= title #></div>
+ </div>
+</script>
+{{end}}
 
 {{ define "content" }}
 {{if .Tree}}
 {{with .Tree}}
-    <div>
-	{{with .Value}}
-		<h1>{{.Id}} {{.Title}}</h1>
-		<p class="lead">{{.Body}}</p>
-		<br />
-		<ul class="inline">
-			<li>By {{.AuthorHandle}}</li>
-			<li><a href="#">Reply</a></li>
-			<li><a href="#">Edit</a></li>
-			<li>&nbsp;</li>
-			<li><a href="#">Delete</a></li>
-		</ul>
-	{{end}}
-	{{template "tree" .Left}}
+    <div class="entry" id="entry_{{.Value.Id}}">
+		{{with .Value}}
+			<h1>{{.Id}} {{.Title}}</h1>
+			<p class="lead">{{.Body}}</p>
+			<br />
+			<ul class="inline">
+				<li>By {{.AuthorHandle}}</li>
+				<li><a href="reply">Reply</a></li>
+				<li><a href="edit">Edit</a></li>
+				<li>&nbsp;</li>
+				<li><a href="delete">Delete</a></li>
+			</ul>
+			<div class="active_controls" id="active_{{.Id}}"></div>
+		{{end}}
+		<div id="active_{{.Value.Id}}"></div>
+		<div class="children" id="children_{{.Value.Id}}">
+			{{template "tree" .Left}}
+		</div>
     </div>
+    {{template "replyForm" .}}
 {{ else }}
 	<p class="text-error">The requested post is unavailable.</p>
 {{ end }}
