@@ -29,8 +29,7 @@ $(document).ready(function(){
 {{if .}}
 	<div class="entry nested" id="entry_{{.Value.Id}}">
 		{{with .Value}}
-			<i class="icon-arrow-up"></i><i class="icon-arrow-down"></i>
-			{{.Body}}<br />
+			▲ {{.Body}} ▼<br />
 			<ul class="inline">
 				<li>By {{.AuthorHandle}}</li>
 				<li><a class="reply">Reply</a></li>
@@ -72,7 +71,7 @@ $(document).ready(function(){
 {{with .Tree}}
     <div class="entry" id="entry_{{.Value.Id}}">
 		{{with .Value}}
-			<h1>{{.Id}} {{.Title}}</h1>
+			<h1>△ {{.Id}} {{.Title}} ▽</h1>
 			<p class="lead">{{.Body}}</p>
 			<br />
 			<ul class="inline">
