@@ -26,9 +26,9 @@ $(document).ready(function(){
 {{end}}
 
 {{define "tree"}}
-{{if .}}
-	<div class="entry nested" id="entry_{{.Value.Id}}">
-		{{with .Value}}
+{{if .Tree}}
+	<div class="entry nested" id="entry_{{.Tree.Value.Id}}">
+		{{with .Tree.Value}}
 			▲ {{.Body}} ▼<br />
 			<ul class="inline">
 				<li>By {{.AuthorHandle}}</li>
@@ -45,15 +45,11 @@ $(document).ready(function(){
 			*/}} 
 			<div class="active_controls" id="active_{{.Id}}"></div>
 		{{end}}
-		<div class="children" id="children_{{.Value.Id}}">
-			{{with .Left}}
-		        {{template "tree" .}}
-			{{end}}
+		<div class="children" id="children_{{.Tree.Value.Id}}">
+	        {{template "tree" mapfn "User" .User "Tree" .Tree.Left}}
 		</div>
 	</div>
-	{{with .Right}}
-	        {{template "tree" .}}
-	{{end}}
+    {{template "tree" mapfn "User" .User "Tree" .Tree.Right}}
 {{end}}
 {{end}}
 
@@ -68,9 +64,8 @@ $(document).ready(function(){
 
 {{ define "content" }}
 {{if .Tree}}
-{{with .Tree}}
     <div class="entry" id="entry_{{.Value.Id}}">
-		{{with .Value}}
+		{{with .Tree.Value}}
 			<h1>△ {{.Id}} {{.Title}} ▽</h1>
 			<p class="lead">{{.Body}}</p>
 			<br />
@@ -85,12 +80,11 @@ $(document).ready(function(){
 		{{end}}
 		<div id="active_{{.Value.Id}}"></div>
 		<div class="children" id="children_{{.Value.Id}}">
-			{{template "tree" .Left}}
+			{{template "tree" mapfn "User" .User "Tree" .Tree.Left}}
 		</div>
     </div>
     {{template "replyForm" .}}
 {{ else }}
 	<p class="text-error">The requested post is unavailable.</p>
-{{ end }}
-{{ end }}
-{{ end }}
+{{end}}
+{{end}}
