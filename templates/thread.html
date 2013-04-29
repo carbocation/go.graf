@@ -4,15 +4,37 @@
 <script src="/static/js/template.js"></script>
 <script>
 $(document).ready(function(){
+	var getParentId = function(item){
+		return ($(item).closest("div.entry")[0].id).split(/_/)[1]
+	};
+	
 	$(".reply").on("click", function(event){
-		//console.log($(this).parent())
-		parentId = ($(this).closest("div.entry")[0].id).split(/_/)[1]
+		app.replaceTemplate("ReplyTemplate", {id: "id", title: "name"}, "active_"+getParentId(this));
+	});
+	
+	$(document).on("click", ".clear_active_controls", {}, function(event){
+		event.preventDefault();
 		
-		targetDiv = "active_"+parentId;
+		app.replaceTemplate("BlankTemplate", {}, "active_" + getParentId(this));
+	});
+	
+	$(document).on("submit", "form.reply", {}, function(event){
+		event.preventDefault();
 		
-		console.log(targetDiv);
+		console.log(getParentId(this));
 		
-		app.replaceTemplate("ItemTemplate", {id: "id", title: "name"}, targetDiv);
+		console.log($(this).serializeArray());
+		
+		console.log("submit");
+		
+		$.ajax("{{reverse "postThread"}}")
+	    .done(function(msg) {
+	    	console.log(msg); 
+    	})
+	    .fail(function() { alert("error"); });
+	    //.always(function() { alert("complete"); });
+		
+		app.replaceTemplate("BlankTemplate", {}, "active_" + getParentId(this));
 	});
 	
 	$(".appender").on("click", function(event){
@@ -53,12 +75,23 @@ $(document).ready(function(){
 {{end}}
 {{end}}
 
-{{ define "replyForm" }}
-<script id="ItemTemplate" type="text/html">
- <div class="entry nested" id="<#= id #>">
-    <div><#= id #></div>
-    <div><#= title #></div>
- </div>
+{{ define "jsTemplates" }}
+<script id="ReplyTemplate" type="text/html">
+<div id="<#= id #>">
+	<form class="reply" id="reply_<#= id #>">
+		<div class="row">
+			<div class="span9">
+				<textarea name="body" class="span9 inplace-compose" placeholder="Type your reply"></textarea>
+			</div>
+		</div>
+		<button class="btn btn-primary">Save reply</button>
+		<button class="btn clear_active_controls">Cancel</button>
+	</form>
+</div>
+</script>
+
+<script id="BlankTemplate" type="text/html">
+<div></div>
 </script>
 {{end}}
 
@@ -83,7 +116,7 @@ $(document).ready(function(){
 			{{template "tree" mapfn "User" .User "Tree" .Tree.Left}}
 		</div>
     </div>
-    {{template "replyForm" .}}
+    {{template "jsTemplates" .}}
 {{ else }}
 	<p class="text-error">The requested post is unavailable.</p>
 {{end}}

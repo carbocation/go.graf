@@ -12,7 +12,9 @@ body {
 	}
 }
 
-/* Navbar> */
+/* 
+Navbar> 
+*/
 .navbar-inverse .navbar-inner {
 	background-color: #9d261d;
 	background-image: none;
@@ -34,7 +36,17 @@ body {
 	color: #ffffff;
 }
 /*
- <Navbar
+<Navbar
+*/
+
+/*
+ In-place form elements>
+*/
+textarea.inplace-compose {
+	min-height: 200px;
+}
+/*
+ <In-place form elements
 */
 
 .sidebar-nav {
