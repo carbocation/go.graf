@@ -1,9 +1,33 @@
 @CHARSET "UTF-8";
 
 body {
-	padding-top: 60px;
-	padding-bottom: 40px;
+	background-color: #f9f9f9;
 }
+
+/* Navbar> */
+.navbar-inverse .navbar-inner {
+	background-color: #9d261d;
+	background-image: none;
+}
+
+.navbar-inverse .btn-navbar {
+	background-color: #9d261d;
+	background-image: none;
+	border-color: #fff;
+}
+ 
+.navbar-inverse .navbar-text {
+	color: #d0d0d0;
+}
+
+.navbar-inverse .brand,
+.navbar-inverse .navbar-link,
+.navbar-inverse .nav-collapse .nav>li>a, .navbar-inverse .nav-collapse .dropdown-menu a {
+	color: #ffffff;
+}
+/*
+ <Navbar
+*/
 
 .sidebar-nav {
 	padding: 9px 0;
