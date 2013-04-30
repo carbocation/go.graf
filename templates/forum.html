@@ -3,8 +3,7 @@
 {{ define "tree" }}
 {{if .Tree}}
 	<div>
-		<i class="icon-arrow-up"></i><i class="icon-arrow-down"></i>
-		<a href="{{reverse "thread" "id" .Tree.Value.Id}}">{{.Tree.Value.Title}}</a><br />
+		▲ <a href="{{reverse "thread" "id" .Tree.Value.Id}}">{{.Tree.Value.Title}}</a> ▼<br />
 			<ul class="inline">
 				<li>By {{.Tree.Value.AuthorHandle}}</li>
 				{{if eq .Tree.Value.AuthorId .User.Id}}

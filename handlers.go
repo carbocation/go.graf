@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strconv"
 
 	"github.com/carbocation/go.forum"
@@ -109,12 +110,14 @@ func threadHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	// Pull down the closuretable from the root requested id
 	ct, err := forum.ClosureTable(id)
 	if err != nil {
-		return errors.New("The requested thread could not be found.")
+		fmt.Printf("main.threadHandler: %s", err)
+		return errors.New("The requested thread's ancestry map could not be found.")
 	}
 
 	entries, err := forum.DescendantEntries(id)
 	if err != nil {
-		return errors.New("The requested thread could not be found.")
+		fmt.Printf("main.threadHandler: %s", err)
+		return errors.New("The requested thread's neighbor entries could not be found.")
 	}
 
 	//Make sure this not a forum
@@ -131,6 +134,7 @@ func threadHandler(w http.ResponseWriter, r *http.Request) (err error) {
 
 	tree, err := ct.TableToTree(interfaceEntries)
 	if err != nil {
+		fmt.Printf("main.threadHandler: Error converting closure table to tree: %s", err)
 		return errors.New("The requested data structure could not be built.")
 	}
 
@@ -146,10 +150,6 @@ func threadHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	return
 }
 
-func newThreadHandler(w http.ResponseWriter, r *http.Request) (err error) {
-	return
-}
-
 func forumHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	//If the forum ID is not parseable as an integer, stop immediately
 	id, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
@@ -159,13 +159,17 @@ func forumHandler(w http.ResponseWriter, r *http.Request) (err error) {
 
 	// Pull down the closuretable from the root requested id
 	ct, err := forum.DepthOneClosureTable(id)
+	fmt.Printf("%+v\n", ct)
 	if err != nil {
-		return errors.New("The requested thread could not be found.")
+		return errors.New("The requested forum's ancestry map could not be found.")
+	}
+	if ct.Size() < 1{
+		return errors.New("The requested forum's ancestry map had 0 entries.")
 	}
 
 	entries, err := forum.DepthOneDescendantEntries(id)
 	if err != nil {
-		return errors.New("The requested thread could not be found.")
+		return errors.New("The requested forum's neighbor entries could not be found.")
 	}
 
 	//Make sure this is a forum
@@ -182,6 +186,7 @@ func forumHandler(w http.ResponseWriter, r *http.Request) (err error) {
 
 	tree, err := ct.TableToTree(interfaceEntries)
 	if err != nil {
+		fmt.Printf("Error: %s", err)
 		return errors.New("The requested data structure could not be built.")
 	}
 
@@ -193,6 +198,12 @@ func forumHandler(w http.ResponseWriter, r *http.Request) (err error) {
 
 	//execute the template
 	T("forum.html").Execute(w, data)
+
+	return
+}
+
+func newThreadHandler(w http.ResponseWriter, r *http.Request) (err error) {
+	fmt.Fprint(w, "New thread form will go here.")
 
 	return
 }
@@ -265,7 +276,64 @@ func postRegisterHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	return
 }
 
-func postThreadHandler(w http.ResponseWriter, r *http.Request) (err error) {
-	errors.New("Creating new threads is not yet implemented.")
-	return
+func postThreadHandler(w http.ResponseWriter, r *http.Request) error {
+	var pid int64 //parent ID
+	var err error
+	var parent, entry *forum.Entry
+
+	entry = new(forum.Entry)
+	r.ParseForm()
+	decoder.Decode(entry, r.Form)
+
+	fmt.Printf("%+v", entry)
+
+	//Don't let guests post (currently)
+	//TODO(james) automatically create accounts for guests who try to post
+	if context.Get(r, ThisUser).(*user.User).Guest() {
+		http.Error(w, "NowayBro!", http.StatusUnauthorized)
+
+		return errors.New("Unauthorized")
+	}
+
+	//TODO(james) stop relying on the existence of a user ID here
+	user := context.Get(r, ThisUser).(*user.User)
+	entry.AuthorId = user.Id
+
+	//Make sure the parent_id is valid
+	if pid, err = strconv.ParseInt(r.FormValue("parent_id"), 10, 64); err != nil {
+		return err
+	}
+
+	//Make sure the parent post exists
+	if parent, err = forum.OneEntry(pid); err != nil {
+		return err
+	}
+
+	//If posting to a forum, must have a title and body or URL.
+	if parent.Forum {
+		//Min length
+		if len(entry.Body) < 5 {
+			if u, err := url.Parse(entry.Url); err != nil {
+				return errors.New("Either free-text or a URL must be provided.")
+			} else {
+				//The URL is valid
+				entry.Url = u.String()
+			}
+		}
+		//entry.Body is therefore valid
+	} else {
+		//Thread reply
+		entry.Url = ""
+		if len(entry.Body) < 5 {
+			return errors.New("Please craft a longer reply.")
+		}
+		//entry.Body is therefore valid
+	}
+
+	err = entry.Persist(parent.Id)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

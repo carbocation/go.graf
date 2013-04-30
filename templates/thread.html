@@ -1,50 +1,136 @@
 {{ define "title" }}{{.Tree.Value.Title}}{{ end }}
 
-{{ define "tree" }}
-{{if .}}
-	<div class="nested">
-	{{with .Value}}
-		<i class="icon-arrow-up"></i><i class="icon-arrow-down"></i>
-		{{.Body}}<br />
-		<ul class="inline">
-			<li>By {{.AuthorHandle}}</li>
-			<li><a href="#">Reply</a></li>
-			<li><a href="/thread/{{.Id}}">Permalink</a></li>
-			<li><a href="#">Edit</a></li>
-			<li>&nbsp;</li>
-			<li><a href="#">Delete</a></li>
-		</ul>
-	{{end}}
-	{{with .Left}}
-	        {{template "tree" .}}
-	{{end}}
-	</div>
-	{{with .Right}}
-	        {{template "tree" .}}
-	{{end}}
+{{ define "scripts" }}
+<script src="/static/js/template.js"></script>
+<script>
+$(document).ready(function(){
+	var getParentId = function(item){
+		return ($(item).closest("div.entry")[0].id).split(/_/)[1]
+	};
+	
+	$(".reply").on("click", function(event){
+		app.replaceTemplate("ReplyTemplate", {parent_id: getParentId(this)}, "active_"+getParentId(this));
+	});
+	
+	$(document).on("click", ".clear_active_controls", {}, function(event){
+		event.preventDefault();
+		
+		app.replaceTemplate("BlankTemplate", {}, "active_" + getParentId(this));
+	});
+	
+	$(document).on("submit", "form.reply", {}, function(event){
+		event.preventDefault();
+		
+		var parentId = getParentId(this);
+		var submission = $(this).serializeArray();
+		
+		console.log("Parent id is: "+parentId)
+		
+		$.ajax({
+			url: "{{ reverse "postThread" }}", 
+			type: "POST",
+			data: submission,
+		}).done(function(msg) {
+			$("#message_"+parentId).append("<p class=\"text-info\">"+msg+"</p>")
+	    	console.log(msg);
+			
+			{{/*TODO(james) ignore the response and let websockets kick the message back*/}}
+	    	$("#children_"+parentId).append(msg)
+	    	app.replaceTemplate("BlankTemplate", {}, "active_" + parentId);
+    	})
+	    .fail(function(msg){ console.log(msg.status + ": " + msg.responseText); });
+	    //.always(function(msg) { console.log(msg); });
+	});
+	
+	$(".appender").on("click", function(event){
+		parentId = $(this).closest("div.entry")[0].id
+		
+		app.appendTemplate("ItemTemplate", {id: "id", title: "name"}, parentId)
+	});
+});
+</script>
 {{end}}
-{{ end }}
+
+{{ define "jsTemplates" }}
+<script id="ReplyTemplate" type="text/html">
+<div>
+	<form class="reply" id="reply_<#= parent_id #>">
+		<div class="row">
+			<div class="span9">
+				<textarea name="Body" class="span9 inplace-compose" placeholder="Type your reply"></textarea>
+			</div>
+		</div>
+		<input type="hidden" name="parent_id" value="<#= parent_id #>">
+		<button class="btn btn-primary">Save reply</button>
+		<button class="btn clear_active_controls">Cancel</button>
+	</form>
+</div>
+</script>
+
+<script id="BlankTemplate" type="text/html">
+<div></div>
+</script>
+{{end}}
 
 {{ define "content" }}
 {{if .Tree}}
-{{with .Tree}}
-    <div>
-	{{with .Value}}
-		<h1>{{.Id}} {{.Title}}</h1>
-		<p class="lead">{{.Body}}</p>
-		<br />
-		<ul class="inline">
-			<li>By {{.AuthorHandle}}</li>
-			<li><a href="#">Reply</a></li>
-			<li><a href="#">Edit</a></li>
-			<li>&nbsp;</li>
-			<li><a href="#">Delete</a></li>
-		</ul>
-	{{end}}
-	{{template "tree" .Left}}
+    <div class="entry" id="entry_{{.Tree.Value.Id}}">
+		{{with .Tree.Value}}
+			<h1>△ {{.Id}} {{.Title}} ▽</h1>
+			<p class="lead">{{.Body}}</p>
+			<br />
+			<div class="active_messages" id="message_{{.Id}}"></div>
+			<ul class="inline">
+				<li>By {{.AuthorHandle}}</li>
+				<li><a class="reply">Reply</a></li>
+				{{/* TODO(james)
+				<li><a href="edit">Edit</a></li>
+				<li>&nbsp;</li>
+				<li><a href="delete">Delete</a></li>
+				*/}}
+			</ul>
+			<div class="active_controls" id="active_{{.Id}}"></div>
+		{{end}}
+		<div class="children" id="children_{{.Tree.Value.Id}}">
+			{{template "tree" mapfn "User" .User "Tree" .Tree.Left "Color" false}}
+		</div>
     </div>
+    {{template "jsTemplates" .}}
 {{ else }}
 	<p class="text-error">The requested post is unavailable.</p>
-{{ end }}
-{{ end }}
-{{ end }}
+{{end}}
+{{end}}
+
+
+{{define "tree"}}
+{{if .Tree}}
+	<div class="entry nested color{{.Color}}" id="entry_{{.Tree.Value.Id}}">
+		{{with .Tree.Value}}
+			{{.Body}}
+			<br />
+			<div class="active_messages" id="message_{{.Id}}"></div>
+			<ul class="inline">
+				<li>▲ By {{.AuthorHandle}} ▼</li>
+				<li>&nbsp;</li>
+				<li><a class="reply">Reply</a></li>
+				<li><a href="/thread/{{.Id}}">Permalink</a></li>
+				{{/* TODO(james)
+				<li><a href="edit">Edit</a></li>
+				<li>&nbsp;</li>
+				<li><a href="delete">Delete</a></li>
+				*/}}
+			</ul>
+			{{/* 
+				Messages holds things of which there can only be one.
+				For example, you can only get one 'reply' box when 
+				you click Reply; you can't get several to stack up.
+			*/}} 
+			<div class="active_controls" id="active_{{.Id}}"></div>
+		{{end}}
+		<div class="children" id="children_{{.Tree.Value.Id}}">
+	        {{template "tree" mapfn "User" .User "Tree" .Tree.Left "Color" (.Color | not) }}
+		</div>
+	</div>
+    {{template "tree" mapfn "User" .User "Tree" .Tree.Right "Color" .Color }}
+{{end}}
+{{end}}
