@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strconv"
 
 	"github.com/carbocation/go.forum"
@@ -193,6 +194,12 @@ func forumHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	return
 }
 
+func newThreadHandler(w http.ResponseWriter, r *http.Request) (err error) {
+	fmt.Fprint(w, "New thread form will go here.")
+
+	return
+}
+
 func postLoginHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	r.ParseForm()
 
@@ -261,16 +268,65 @@ func postRegisterHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	return
 }
 
-func postThreadHandler(w http.ResponseWriter, r *http.Request) (err error) {
-	r.ParseForm()
+func postThreadHandler(w http.ResponseWriter, r *http.Request) error {
+	var pid int64 //parent ID
+	var err error
+	var parent, entry *forum.Entry
 	
+	entry = new(forum.Entry)
+	r.ParseForm()
+	decoder.Decode(entry, r.Form)
+	
+	fmt.Printf("%+v", entry)
+
 	//Don't let guests post (currently)
-	if !context.Get(r, ThisUser).(*user.User).Guest() {
-		http.Error(w, "NowayBro!", http.StatusInternalServerError)
-		//http.Redirect(w, r, reverse("index"), http.StatusSeeOther)
-		return
+	//TODO(james) automatically create accounts for guests who try to post
+	if context.Get(r, ThisUser).(*user.User).Guest() {
+		http.Error(w, "NowayBro!", http.StatusUnauthorized)
+
+		return errors.New("Unauthorized")
 	}
 	
-	fmt.Fprint(w, "Successfully tried to create a thread.")
-	return
+	//TODO(james) stop relying on the existence of a user ID here
+	user := context.Get(r, ThisUser).(*user.User)
+	entry.AuthorId = user.Id
+
+	//Make sure the parent_id is valid
+	if pid, err = strconv.ParseInt(r.FormValue("parent_id"), 10, 64); err != nil {
+		return err
+	}
+
+	//Make sure the parent post exists
+	if parent, err = forum.OneEntry(pid); err != nil {
+		return err
+	}
+
+	//If posting to a forum, must have a title and body or URL.
+	if parent.Forum {
+		//Min length
+		if len(entry.Body) < 5{
+			if u, err := url.Parse(entry.Url); err != nil {
+				return errors.New("Either free-text or a URL must be provided.")
+			} else {
+				//The URL is valid
+				entry.Url = u.String()
+			}
+		}
+		//entry.Body is therefore valid
+	} else {
+		//Thread reply
+		entry.Url = ""
+		if len(entry.Body) < 5{
+			return errors.New("Please craft a longer reply.")
+		}
+		//entry.Body is therefore valid
+	}
+	
+	err = entry.Persist(parent.Id)
+	if err != nil {
+		return err
+	}
+
+	fmt.Fprintf(w, "Successfully tried to create a thread. %+v\n", entry)
+	return nil
 }

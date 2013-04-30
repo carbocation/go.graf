@@ -9,7 +9,7 @@ $(document).ready(function(){
 	};
 	
 	$(".reply").on("click", function(event){
-		app.replaceTemplate("ReplyTemplate", {id: "id", title: "name"}, "active_"+getParentId(this));
+		app.replaceTemplate("ReplyTemplate", {parent_id: getParentId(this)}, "active_"+getParentId(this));
 	});
 	
 	$(document).on("click", ".clear_active_controls", {}, function(event){
@@ -23,7 +23,6 @@ $(document).ready(function(){
 		
 		var parentId = getParentId(this);
 		var submission = $(this).serializeArray();
-		submission.push({name: "parent_id", value: getParentId(this)});
 		
 		$.ajax({
 			url: "{{ reverse "postThread" }}", 
@@ -35,17 +34,37 @@ $(document).ready(function(){
 	    	$("#children_"+parentId).append(msg)
 	    	app.replaceTemplate("BlankTemplate", {}, "active_" + parentId);
     	})
-	    .fail(function() { alert("error"); });
+	    .fail(function(msg){ console.log(msg.status + ": " + msg.responseText); });
 	    //.always(function(msg) { console.log(msg); });
 	});
 	
 	$(".appender").on("click", function(event){
-		//console.log($(this).parent())
 		parentId = $(this).closest("div.entry")[0].id
 		
 		app.appendTemplate("ItemTemplate", {id: "id", title: "name"}, parentId)
 	});
 });
+</script>
+{{end}}
+
+{{ define "jsTemplates" }}
+<script id="ReplyTemplate" type="text/html">
+<div>
+	<form class="reply" id="reply_<#= parent_id #>">
+		<div class="row">
+			<div class="span9">
+				<textarea name="Body" class="span9 inplace-compose" placeholder="Type your reply"></textarea>
+			</div>
+		</div>
+		<input type="hidden" name="parent_id" value="<#= parent_id #>">
+		<button class="btn btn-primary">Save reply</button>
+		<button class="btn clear_active_controls">Cancel</button>
+	</form>
+</div>
+</script>
+
+<script id="BlankTemplate" type="text/html">
+<div></div>
 </script>
 {{end}}
 
@@ -77,26 +96,6 @@ $(document).ready(function(){
 {{end}}
 {{end}}
 
-{{ define "jsTemplates" }}
-<script id="ReplyTemplate" type="text/html">
-<div id="<#= id #>">
-	<form class="reply" id="reply_<#= id #>">
-		<div class="row">
-			<div class="span9">
-				<textarea name="body" class="span9 inplace-compose" placeholder="Type your reply"></textarea>
-			</div>
-		</div>
-		<button class="btn btn-primary">Save reply</button>
-		<button class="btn clear_active_controls">Cancel</button>
-	</form>
-</div>
-</script>
-
-<script id="BlankTemplate" type="text/html">
-<div></div>
-</script>
-{{end}}
-
 {{ define "content" }}
 {{if .Tree}}
     <div class="entry" id="entry_{{.Value.Id}}">
@@ -106,7 +105,7 @@ $(document).ready(function(){
 			<br />
 			<ul class="inline">
 				<li>By {{.AuthorHandle}}</li>
-				<li><a href="reply">Reply</a></li>
+				<li><a class="reply">Reply</a></li>
 				<li><a href="edit">Edit</a></li>
 				<li>&nbsp;</li>
 				<li><a href="delete">Delete</a></li>
