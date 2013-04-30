@@ -49,7 +49,6 @@ func main() {
 	g := router.Methods("GET").Subrouter()
 	g.Handle("/", handler(indexHandler)).Name("index")
 	g.Handle("/forum/{id:[0-9]+}", handler(forumHandler)).Name("forum")
-	g.Handle("/thread", handler(newThreadHandler)).Name("newThread")
 	g.Handle("/thread/{id:[0-9]+}", handler(threadHandler)).Name("thread")
 	g.Handle("/login", handler(loginHandler)).Name("login")
 	g.Handle("/logout", handler(logoutHandler)).Name("logout")

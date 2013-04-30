@@ -34,6 +34,22 @@ func reverse(name string, things ...interface{}) string {
 	return u.Path
 }
 
+func safeHTML(input string) template.HTML {
+	return template.HTML(input)
+}
+
+func safeURL(input string) template.URL {
+	return template.URL(input)
+}
+
+func safeJS(input string) template.JS {
+	return template.JS(input)
+}
+
+func safeJSStr(input string) template.JSStr {
+	return template.JSStr(input)
+}
+
 // From Russ Cox on the go-nuts mailing list
 // https://groups.google.com/d/msg/golang-nuts/OEdSDgEC7js/iyhU9DW_IKcJ
 // eq reports whether the first argument is equal to
@@ -79,9 +95,13 @@ func mapfn(kvs ...interface{}) (map[string]interface{}, error) {
 }
 
 var funcs = template.FuncMap{
-	"reverse": reverse,
-	"eq":      eq,
-	"mapfn":   mapfn,
+	"reverse":  reverse,
+	"eq":       eq,
+	"mapfn":    mapfn,
+	"safeHTML": safeHTML,
+	"safeURL": safeURL,
+	"safeJS": safeJS,
+	"safeJSStr": safeJSStr,
 }
 
 // Parse a template ('name') against _base.html

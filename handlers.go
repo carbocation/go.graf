@@ -146,11 +146,6 @@ func threadHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	return
 }
 
-func newThreadHandler(w http.ResponseWriter, r *http.Request) (err error) {
-	fmt.Fprint(w, "Successfully tried to create a thread.")
-	return
-}
-
 func forumHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	//If the forum ID is not parseable as an integer, stop immediately
 	id, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
@@ -267,6 +262,6 @@ func postRegisterHandler(w http.ResponseWriter, r *http.Request) (err error) {
 }
 
 func postThreadHandler(w http.ResponseWriter, r *http.Request) (err error) {
-	errors.New("Creating new threads is not yet implemented.")
+	fmt.Fprint(w, "Successfully tried to create a thread.")
 	return
 }
