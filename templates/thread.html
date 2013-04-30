@@ -32,7 +32,7 @@ $(document).ready(function(){
 		}).done(function(msg) {
 			{{/*TODO(james) create a new child entry from the data in this successful response*/}}
 	    	console.log(msg);
-	    	$("#children_"+parentId).append(msg);
+	    	$("#children_"+parentId).append(msg)
 	    	app.replaceTemplate("BlankTemplate", {}, "active_" + parentId);
     	})
 	    .fail(function() { alert("error"); });
