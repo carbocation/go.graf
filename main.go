@@ -71,7 +71,7 @@ func main() {
 }
 
 func initdb() *sql.DB {
-	db, err := sql.Open("postgres", "dbname=projects user=askbitcoin password=xnkxglie sslmode=disable")
+	db, err := sql.Open("postgres", "dbname=projects user=askbitcoin password=xnkxglie port=5432 sslmode=disable")
 	if err != nil {
 		fmt.Println("Panic: " + err.Error())
 		panic(err)
