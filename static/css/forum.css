@@ -32,25 +32,9 @@ Navbar>
 
 .navbar-inverse .brand,
 .navbar-inverse .navbar-link,
-.navbar-inverse .nav-collapse .nav>li>a, .navbar-inverse .nav-collapse .dropdown-menu a {
+.navbar-inverse .nav-collapse .nav>li>a, 
+.navbar-inverse .nav-collapse .dropdown-menu a {
 	color: #ffffff;
-}
-/*
-<Navbar
-*/
-
-/*
- In-place form elements>
-*/
-textarea.inplace-compose {
-	min-height: 200px;
-}
-/*
- <In-place form elements
-*/
-
-.sidebar-nav {
-	padding: 9px 0;
 }
 
 @media ( max-width : 980px) {
@@ -61,7 +45,34 @@ textarea.inplace-compose {
 		padding-right: 5px;
 	}
 }
+/*
+<Navbar
+*/
 
-.nested {
-	padding-left: 40px;
+.sidebar-nav {
+	padding: 9px 0;
 }
+
+
+/* In-place form elements> */
+textarea.inplace-compose {
+	min-height: 200px;
+}
+/* <In-place form elements */
+
+
+/* Entries> */
+.nested {
+	margin-left: 10px;
+	margin-bottom: 5px;
+	border: 1px solid #f0f0f0;
+}
+
+.nested.colorfalse {
+	background-color: #ffffff;
+}
+
+.nested.colortrue {
+	background-color: #f9f9f9;
+}
+/* <Entries */

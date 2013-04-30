@@ -74,13 +74,13 @@ $(document).ready(function(){
 
 {{define "tree"}}
 {{if .Tree}}
-	<div class="entry nested" id="entry_{{.Tree.Value.Id}}">
+	<div class="entry nested color{{.Color}}" id="entry_{{.Tree.Value.Id}}">
 		{{with .Tree.Value}}
-			▲ {{.Body}} ▼
+			{{.Body}}
 			<br />
 			<div class="active_messages" id="message_{{.Id}}"></div>
 			<ul class="inline">
-				<li>By {{.AuthorHandle}}</li>
+				<li>▲ By {{.AuthorHandle}} ▼</li>
 				<li><a class="reply">Reply</a></li>
 				<li><a href="/thread/{{.Id}}">Permalink</a></li>
 				<li><a href="edit">Edit</a></li>
@@ -95,10 +95,10 @@ $(document).ready(function(){
 			<div class="active_controls" id="active_{{.Id}}"></div>
 		{{end}}
 		<div class="children" id="children_{{.Tree.Value.Id}}">
-	        {{template "tree" mapfn "User" .User "Tree" .Tree.Left}}
+	        {{template "tree" mapfn "User" .User "Tree" .Tree.Left "Color" (.Color | not) }}
 		</div>
 	</div>
-    {{template "tree" mapfn "User" .User "Tree" .Tree.Right}}
+    {{template "tree" mapfn "User" .User "Tree" .Tree.Right "Color" .Color }}
 {{end}}
 {{end}}
 
@@ -119,9 +119,8 @@ $(document).ready(function(){
 			</ul>
 			<div class="active_controls" id="active_{{.Id}}"></div>
 		{{end}}
-		<div id="active_{{.Value.Id}}"></div>
-		<div class="children" id="children_{{.Value.Id}}">
-			{{template "tree" mapfn "User" .User "Tree" .Tree.Left}}
+		<div class="children" id="children_{{.Tree.Value.Id}}">
+			{{template "tree" mapfn "User" .User "Tree" .Tree.Left "Color" false}}
 		</div>
     </div>
     {{template "jsTemplates" .}}
