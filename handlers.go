@@ -159,7 +159,6 @@ func forumHandler(w http.ResponseWriter, r *http.Request) (err error) {
 
 	// Pull down the closuretable from the root requested id
 	ct, err := forum.DepthOneClosureTable(id)
-	fmt.Printf("%+v\n", ct)
 	if err != nil {
 		return errors.New("The requested forum's ancestry map could not be found.")
 	}
