@@ -110,12 +110,14 @@ func threadHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	// Pull down the closuretable from the root requested id
 	ct, err := forum.ClosureTable(id)
 	if err != nil {
-		return errors.New("The requested thread could not be found.")
+		fmt.Printf("main.threadHandler: %s", err)
+		return errors.New("The requested thread's ancestry map could not be found.")
 	}
 
 	entries, err := forum.DescendantEntries(id)
 	if err != nil {
-		return errors.New("The requested thread could not be found.")
+		fmt.Printf("main.threadHandler: %s", err)
+		return errors.New("The requested thread's neighbor entries could not be found.")
 	}
 
 	//Make sure this not a forum
@@ -132,6 +134,7 @@ func threadHandler(w http.ResponseWriter, r *http.Request) (err error) {
 
 	tree, err := ct.TableToTree(interfaceEntries)
 	if err != nil {
+		fmt.Printf("main.threadHandler: Error converting closure table to tree: %s", err)
 		return errors.New("The requested data structure could not be built.")
 	}
 
@@ -156,13 +159,17 @@ func forumHandler(w http.ResponseWriter, r *http.Request) (err error) {
 
 	// Pull down the closuretable from the root requested id
 	ct, err := forum.DepthOneClosureTable(id)
+	fmt.Printf("%+v\n", ct)
 	if err != nil {
-		return errors.New("The requested thread could not be found.")
+		return errors.New("The requested forum's ancestry map could not be found.")
+	}
+	if ct.Size() < 1{
+		return errors.New("The requested forum's ancestry map had 0 entries.")
 	}
 
 	entries, err := forum.DepthOneDescendantEntries(id)
 	if err != nil {
-		return errors.New("The requested thread could not be found.")
+		return errors.New("The requested forum's neighbor entries could not be found.")
 	}
 
 	//Make sure this is a forum
@@ -179,6 +186,7 @@ func forumHandler(w http.ResponseWriter, r *http.Request) (err error) {
 
 	tree, err := ct.TableToTree(interfaceEntries)
 	if err != nil {
+		fmt.Printf("Error: %s", err)
 		return errors.New("The requested data structure could not be built.")
 	}
 
