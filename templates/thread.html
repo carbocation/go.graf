@@ -1,5 +1,6 @@
-{{ define "title" }}{{.Tree.Value.Title}}{{ end }} {{ define "scripts"
-}}
+{{ define "title" }}{{.Tree.Value.Title}}{{ end }}
+
+{{ define "scripts" }}
 <script src="/static/js/template.js"></script>
 <script>
 $(document).ready(function(){
@@ -22,22 +23,16 @@ $(document).ready(function(){
 		
 		var parentId = getParentId(this);
 		var submission = $(this).serializeArray();
-		
-		console.log(parentId);
-		console.log($(this).serializeArray());
-		console.log("submit");
-		//submission.push({name: "parent_id", value: getParentId(this)});
+		submission.push({name: "parent_id", value: getParentId(this)});
 		
 		$.ajax({
-			{{/* Note: putting quotes around {{ reverse "postThread"}} 
-			will cause incorrect escaping. Don't do it! */}}
-			url: {{ reverse "postThread" }}, 
+			url: "{{ reverse "postThread" }}", 
 			type: "POST",
 			data: submission,
 		}).done(function(msg) {
-			console.log("Succeeded");
+			{{/*TODO(james) create a new child entry from the data in this successful response*/}}
 	    	console.log(msg);
-	    	{{/* TODO(james) Take the returned JSON object and create a new thread from it. */}}
+	    	$("#children_"+parentId).append(msg);
 	    	app.replaceTemplate("BlankTemplate", {}, "active_" + parentId);
     	})
 	    .fail(function() { alert("error"); });
@@ -52,27 +47,37 @@ $(document).ready(function(){
 	});
 });
 </script>
-{{end}} {{define "tree"}} {{if .Tree}}
-<div class="entry nested" id="entry_{{.Tree.Value.Id}}">
-				{{with .Tree.Value}} ▲ {{.Body}} ▼<br />
-				<ul class="inline">
-								<li>By {{.AuthorHandle}}</li>
-								<li><a class="reply">Reply</a></li>
-								<li><a href="/thread/{{.Id}}">Permalink</a></li>
-								<li><a href="edit">Edit</a></li>
-								<li>&nbsp;</li>
-								<li><a href="delete">Delete</a></li>
-				</ul>
-				{{/* Messages holds things of which there can only be one. For
-				example, you can only get one 'reply' box when you click Reply; you
-				can't get several to stack up. */}}
-				<div class="active_controls" id="active_{{.Id}}"></div>
-				{{end}}
-				<div class="children" id="children_{{.Tree.Value.Id}}">
-								{{template "tree" mapfn "User" .User "Tree" .Tree.Left}}</div>
-</div>
-{{template "tree" mapfn "User" .User "Tree" .Tree.Right}} {{end}}
-{{end}} {{ define "jsTemplates" }}
+{{end}}
+
+{{define "tree"}}
+{{if .Tree}}
+	<div class="entry nested" id="entry_{{.Tree.Value.Id}}">
+		{{with .Tree.Value}}
+			▲ {{.Body}} ▼<br />
+			<ul class="inline">
+				<li>By {{.AuthorHandle}}</li>
+				<li><a class="reply">Reply</a></li>
+				<li><a href="/thread/{{.Id}}">Permalink</a></li>
+				<li><a href="edit">Edit</a></li>
+				<li>&nbsp;</li>
+				<li><a href="delete">Delete</a></li>
+			</ul>
+			{{/* 
+				Messages holds things of which there can only be one.
+				For example, you can only get one 'reply' box when 
+				you click Reply; you can't get several to stack up.
+			*/}} 
+			<div class="active_controls" id="active_{{.Id}}"></div>
+		{{end}}
+		<div class="children" id="children_{{.Tree.Value.Id}}">
+	        {{template "tree" mapfn "User" .User "Tree" .Tree.Left}}
+		</div>
+	</div>
+    {{template "tree" mapfn "User" .User "Tree" .Tree.Right}}
+{{end}}
+{{end}}
+
+{{ define "jsTemplates" }}
 <script id="ReplyTemplate" type="text/html">
 <div id="<#= id #>">
 	<form class="reply" id="reply_<#= id #>">
@@ -90,25 +95,31 @@ $(document).ready(function(){
 <script id="BlankTemplate" type="text/html">
 <div></div>
 </script>
-{{end}} {{ define "content" }} {{if .Tree}}
-<div class="entry" id="entry_{{.Value.Id}}">
-				{{with .Tree.Value}}
-				<h1>△ {{.Id}} {{.Title}} ▽</h1>
-				<p class="lead">{{.Body}}</p>
-				<br />
-				<ul class="inline">
-								<li>By {{.AuthorHandle}}</li>
-								<li><a href="reply">Reply</a></li>
-								<li><a href="edit">Edit</a></li>
-								<li>&nbsp;</li>
-								<li><a href="delete">Delete</a></li>
-				</ul>
-				<div class="active_controls" id="active_{{.Id}}"></div>
-				{{end}}
-				<div id="active_{{.Value.Id}}"></div>
-				<div class="children" id="children_{{.Value.Id}}">{{template
-								"tree" mapfn "User" .User "Tree" .Tree.Left}}</div>
-</div>
-{{template "jsTemplates" .}} {{ else }}
-<p class="text-error">The requested post is unavailable.</p>
-{{end}} {{end}}
+{{end}}
+
+{{ define "content" }}
+{{if .Tree}}
+    <div class="entry" id="entry_{{.Value.Id}}">
+		{{with .Tree.Value}}
+			<h1>△ {{.Id}} {{.Title}} ▽</h1>
+			<p class="lead">{{.Body}}</p>
+			<br />
+			<ul class="inline">
+				<li>By {{.AuthorHandle}}</li>
+				<li><a href="reply">Reply</a></li>
+				<li><a href="edit">Edit</a></li>
+				<li>&nbsp;</li>
+				<li><a href="delete">Delete</a></li>
+			</ul>
+			<div class="active_controls" id="active_{{.Id}}"></div>
+		{{end}}
+		<div id="active_{{.Value.Id}}"></div>
+		<div class="children" id="children_{{.Value.Id}}">
+			{{template "tree" mapfn "User" .User "Tree" .Tree.Left}}
+		</div>
+    </div>
+    {{template "jsTemplates" .}}
+{{ else }}
+	<p class="text-error">The requested post is unavailable.</p>
+{{end}}
+{{end}}

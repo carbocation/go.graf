@@ -262,6 +262,15 @@ func postRegisterHandler(w http.ResponseWriter, r *http.Request) (err error) {
 }
 
 func postThreadHandler(w http.ResponseWriter, r *http.Request) (err error) {
+	r.ParseForm()
+	
+	//Don't let guests post (currently)
+	if !context.Get(r, ThisUser).(*user.User).Guest() {
+		http.Error(w, "NowayBro!", http.StatusInternalServerError)
+		//http.Redirect(w, r, reverse("index"), http.StatusSeeOther)
+		return
+	}
+	
 	fmt.Fprint(w, "Successfully tried to create a thread.")
 	return
 }
