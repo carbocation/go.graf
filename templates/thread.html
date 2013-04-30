@@ -24,13 +24,17 @@ $(document).ready(function(){
 		var parentId = getParentId(this);
 		var submission = $(this).serializeArray();
 		
+		console.log("Parent id is: "+parentId)
+		
 		$.ajax({
 			url: "{{ reverse "postThread" }}", 
 			type: "POST",
 			data: submission,
 		}).done(function(msg) {
-			{{/*TODO(james) create a new child entry from the data in this successful response*/}}
+			$("#message_"+parentId).append("<p class=\"text-info\">"+msg+"</p>")
 	    	console.log(msg);
+			
+			{{/*TODO(james) ignore the response and let websockets kick the message back*/}}
 	    	$("#children_"+parentId).append(msg)
 	    	app.replaceTemplate("BlankTemplate", {}, "active_" + parentId);
     	})
@@ -72,7 +76,9 @@ $(document).ready(function(){
 {{if .Tree}}
 	<div class="entry nested" id="entry_{{.Tree.Value.Id}}">
 		{{with .Tree.Value}}
-			▲ {{.Body}} ▼<br />
+			▲ {{.Body}} ▼
+			<br />
+			<div class="active_messages" id="message_{{.Id}}"></div>
 			<ul class="inline">
 				<li>By {{.AuthorHandle}}</li>
 				<li><a class="reply">Reply</a></li>
@@ -98,11 +104,12 @@ $(document).ready(function(){
 
 {{ define "content" }}
 {{if .Tree}}
-    <div class="entry" id="entry_{{.Value.Id}}">
+    <div class="entry" id="entry_{{.Tree.Value.Id}}">
 		{{with .Tree.Value}}
 			<h1>△ {{.Id}} {{.Title}} ▽</h1>
 			<p class="lead">{{.Body}}</p>
 			<br />
+			<div class="active_messages" id="message_{{.Id}}"></div>
 			<ul class="inline">
 				<li>By {{.AuthorHandle}}</li>
 				<li><a class="reply">Reply</a></li>

@@ -272,11 +272,11 @@ func postThreadHandler(w http.ResponseWriter, r *http.Request) error {
 	var pid int64 //parent ID
 	var err error
 	var parent, entry *forum.Entry
-	
+
 	entry = new(forum.Entry)
 	r.ParseForm()
 	decoder.Decode(entry, r.Form)
-	
+
 	fmt.Printf("%+v", entry)
 
 	//Don't let guests post (currently)
@@ -286,7 +286,7 @@ func postThreadHandler(w http.ResponseWriter, r *http.Request) error {
 
 		return errors.New("Unauthorized")
 	}
-	
+
 	//TODO(james) stop relying on the existence of a user ID here
 	user := context.Get(r, ThisUser).(*user.User)
 	entry.AuthorId = user.Id
@@ -304,7 +304,7 @@ func postThreadHandler(w http.ResponseWriter, r *http.Request) error {
 	//If posting to a forum, must have a title and body or URL.
 	if parent.Forum {
 		//Min length
-		if len(entry.Body) < 5{
+		if len(entry.Body) < 5 {
 			if u, err := url.Parse(entry.Url); err != nil {
 				return errors.New("Either free-text or a URL must be provided.")
 			} else {
@@ -316,17 +316,16 @@ func postThreadHandler(w http.ResponseWriter, r *http.Request) error {
 	} else {
 		//Thread reply
 		entry.Url = ""
-		if len(entry.Body) < 5{
+		if len(entry.Body) < 5 {
 			return errors.New("Please craft a longer reply.")
 		}
 		//entry.Body is therefore valid
 	}
-	
+
 	err = entry.Persist(parent.Id)
 	if err != nil {
 		return err
 	}
 
-	fmt.Fprintf(w, "Successfully tried to create a thread. %+v\n", entry)
 	return nil
 }
