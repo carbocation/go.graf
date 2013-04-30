@@ -72,6 +72,36 @@ $(document).ready(function(){
 </script>
 {{end}}
 
+{{ define "content" }}
+{{if .Tree}}
+    <div class="entry" id="entry_{{.Tree.Value.Id}}">
+		{{with .Tree.Value}}
+			<h1>△ {{.Id}} {{.Title}} ▽</h1>
+			<p class="lead">{{.Body}}</p>
+			<br />
+			<div class="active_messages" id="message_{{.Id}}"></div>
+			<ul class="inline">
+				<li>By {{.AuthorHandle}}</li>
+				<li><a class="reply">Reply</a></li>
+				{{/* TODO(james)
+				<li><a href="edit">Edit</a></li>
+				<li>&nbsp;</li>
+				<li><a href="delete">Delete</a></li>
+				*/}}
+			</ul>
+			<div class="active_controls" id="active_{{.Id}}"></div>
+		{{end}}
+		<div class="children" id="children_{{.Tree.Value.Id}}">
+			{{template "tree" mapfn "User" .User "Tree" .Tree.Left "Color" false}}
+		</div>
+    </div>
+    {{template "jsTemplates" .}}
+{{ else }}
+	<p class="text-error">The requested post is unavailable.</p>
+{{end}}
+{{end}}
+
+
 {{define "tree"}}
 {{if .Tree}}
 	<div class="entry nested color{{.Color}}" id="entry_{{.Tree.Value.Id}}">
@@ -81,11 +111,14 @@ $(document).ready(function(){
 			<div class="active_messages" id="message_{{.Id}}"></div>
 			<ul class="inline">
 				<li>▲ By {{.AuthorHandle}} ▼</li>
+				<li>&nbsp;</li>
 				<li><a class="reply">Reply</a></li>
 				<li><a href="/thread/{{.Id}}">Permalink</a></li>
+				{{/* TODO(james)
 				<li><a href="edit">Edit</a></li>
 				<li>&nbsp;</li>
 				<li><a href="delete">Delete</a></li>
+				*/}}
 			</ul>
 			{{/* 
 				Messages holds things of which there can only be one.
@@ -99,32 +132,5 @@ $(document).ready(function(){
 		</div>
 	</div>
     {{template "tree" mapfn "User" .User "Tree" .Tree.Right "Color" .Color }}
-{{end}}
-{{end}}
-
-{{ define "content" }}
-{{if .Tree}}
-    <div class="entry" id="entry_{{.Tree.Value.Id}}">
-		{{with .Tree.Value}}
-			<h1>△ {{.Id}} {{.Title}} ▽</h1>
-			<p class="lead">{{.Body}}</p>
-			<br />
-			<div class="active_messages" id="message_{{.Id}}"></div>
-			<ul class="inline">
-				<li>By {{.AuthorHandle}}</li>
-				<li><a class="reply">Reply</a></li>
-				<li><a href="edit">Edit</a></li>
-				<li>&nbsp;</li>
-				<li><a href="delete">Delete</a></li>
-			</ul>
-			<div class="active_controls" id="active_{{.Id}}"></div>
-		{{end}}
-		<div class="children" id="children_{{.Tree.Value.Id}}">
-			{{template "tree" mapfn "User" .User "Tree" .Tree.Left "Color" false}}
-		</div>
-    </div>
-    {{template "jsTemplates" .}}
-{{ else }}
-	<p class="text-error">The requested post is unavailable.</p>
 {{end}}
 {{end}}
