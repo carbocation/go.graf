@@ -41,14 +41,19 @@ func (h handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 func loginHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	//execute the template
 	data := struct {
-		G    GlobalValues
+		G    *ConfigPublic
 		User *user.User
 	}{
-		globals,
+		Config.Public,
 		context.Get(r, ThisUser).(*user.User),
 	}
 	//T("login.html").Execute(w, map[string]interface{}{})
-	T("login.html").Execute(w, data)
+	err = T("login.html").Execute(w, data)
+	if err != nil {
+		fmt.Printf("main.loginHandler: Template error: %s\n", err)
+		return errors.New("Our template appears to be malformed so we cannot process your request.")
+	}
+
 	return
 }
 
@@ -62,25 +67,29 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) (err error) {
 
 func indexHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	data := struct {
-		G    GlobalValues
+		G    *ConfigPublic
 		User *user.User
 	}{
-		globals,
+		Config.Public,
 		context.Get(r, ThisUser).(*user.User),
 	}
 
-	T("index.html").Execute(w, data)
+	err = T("index.html").Execute(w, data)
+	if err != nil {
+		fmt.Printf("main.indexHandler: Template error: %s\n", err)
+		return errors.New("Our template appears to be malformed so we cannot process your request.")
+	}
 
 	return
 }
 
 func registerHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	data := struct {
-		G        GlobalValues
+		G        *ConfigPublic
 		User     *user.User
 		Messages []interface{}
 	}{
-		globals,
+		Config.Public,
 		context.Get(r, ThisUser).(*user.User),
 		[]interface{}{},
 	}
@@ -96,7 +105,11 @@ func registerHandler(w http.ResponseWriter, r *http.Request) (err error) {
 		data.Messages = flashes
 	}
 
-	T("register.html").Execute(w, data)
+	err = T("register.html").Execute(w, data)
+	if err != nil {
+		fmt.Printf("main.registerHandler: Template error: %s\n", err)
+		return errors.New("Our template appears to be malformed so we cannot process your request.")
+	}
 	return
 }
 
@@ -110,13 +123,13 @@ func threadHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	// Pull down the closuretable from the root requested id
 	ct, err := forum.ClosureTable(id)
 	if err != nil {
-		fmt.Printf("main.threadHandler: %s", err)
+		fmt.Printf("main.threadHandler: %s\n", err)
 		return errors.New("The requested thread's ancestry map could not be found.")
 	}
 
 	entries, err := forum.DescendantEntries(id)
 	if err != nil {
-		fmt.Printf("main.threadHandler: %s", err)
+		fmt.Printf("main.threadHandler: %s\n", err)
 		return errors.New("The requested thread's neighbor entries could not be found.")
 	}
 
@@ -134,18 +147,22 @@ func threadHandler(w http.ResponseWriter, r *http.Request) (err error) {
 
 	tree, err := ct.TableToTree(interfaceEntries)
 	if err != nil {
-		fmt.Printf("main.threadHandler: Error converting closure table to tree: %s", err)
+		fmt.Printf("main.threadHandler: Error converting closure table to tree: %s\n", err)
 		return errors.New("The requested data structure could not be built.")
 	}
 
 	data := map[string]interface{}{
-		"G":    globals,
+		"G":    Config.Public,
 		"User": context.Get(r, ThisUser).(*user.User),
 		"Tree": tree,
 	}
 
 	//execute the template
-	T("thread.html").Execute(w, data)
+	err = T("thread.html").Execute(w, data)
+	if err != nil {
+		fmt.Printf("main.threadHandler: Template error: %s\n", err)
+		return errors.New("Our template appears to be malformed so we cannot process your request.")
+	}
 
 	return
 }
@@ -162,7 +179,7 @@ func forumHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	if err != nil {
 		return errors.New("The requested forum's ancestry map could not be found.")
 	}
-	if ct.Size() < 1{
+	if ct.Size() < 1 {
 		return errors.New("The requested forum's ancestry map had 0 entries.")
 	}
 
@@ -185,25 +202,29 @@ func forumHandler(w http.ResponseWriter, r *http.Request) (err error) {
 
 	tree, err := ct.TableToTree(interfaceEntries)
 	if err != nil {
-		fmt.Printf("Error: %s", err)
+		fmt.Printf("Error: %s\n", err)
 		return errors.New("The requested data structure could not be built.")
 	}
 
 	data := map[string]interface{}{
-		"G":    globals,
+		"G":    Config.Public,
 		"User": context.Get(r, ThisUser).(*user.User),
 		"Tree": tree,
 	}
 
 	//execute the template
-	T("forum.html").Execute(w, data)
+	err = T("forum.html").Execute(w, data)
+	if err != nil {
+		fmt.Printf("main.forumHandler: Template error: %s\n", err)
+		return errors.New("Our template appears to be malformed so we cannot process your request.")
+	}
 
 	return
 }
 
 func newThreadHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	fmt.Fprint(w, "New thread form will go here.")
-
+	err = errors.New("The new thread form hasn't been created yet.")
 	return
 }
 
