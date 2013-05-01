@@ -14,35 +14,41 @@ import (
 	_ "github.com/lib/pq"
 )
 
-// A config file is an object that nests various 
-// public and other config structures
-type ConfigFile struct {
-	Public *ConfigPublic
-}
+// Master config, exported so it can be overrided
+var Config *ConfigFile = &ConfigFile{
+	//These are passed to templates
+	Public: &ConfigPublic{
+		Site:         "Ask Bitcoin",
+		ContactEmail: "james@askbitcoin.com",
+	},
 
-type ConfigPublic struct {
-	Site         string //Site name
-	ContactEmail string //Webmaster email address
+	DB: &ConfigDB{
+		User:     "askbitcoin",
+		Password: "xnkxglie",
+		DBName:   "projects",
+		Port:     "5432",
+	},
+
+	App: &ConfigApp{
+		//Port that nginx (for reverse proxy) or the browser has to be pointed at 
+		Port: "9999",
+
+		//64 bit random string generated with `openssl rand -base64 64`
+		Secret: `75Oop7MSN88WstKJSTyu9ALiO0Nbeckv/4/eDLDJcpXn0Ny1H9PdpzXDqApie77tZ04GFsdHehmzcMkAqh16Dg==`,
+	},
 }
 
 var (
-	// Exported so it can be overrided
-	Config *ConfigFile = &ConfigFile{
-		Public: &ConfigPublic{
-			Site:         "Ask Bitcoin",
-			ContactEmail: "james@carbocation.com",
-		},
-	}
-
-	db        *sql.DB     = initdb()                                                                                   //db maintains a pool of connections to our database of choice 
-	appsecret             = `75Oop7MSN88WstKJSTyu9ALiO0Nbeckv/4/eDLDJcpXn0Ny1H9PdpzXDqApie77tZ04GFsdHehmzcMkAqh16Dg==` //64 bit random string generated with `openssl rand -base64 64`
-	store                 = sessions.NewFilesystemStore("", []byte(appsecret))                                         //With an empty first argument, this will put session files in os.TempDir() (/tmp)
-	router    *mux.Router = mux.NewRouter()                                                                            //Dynamic content is managed by handlers pointed at by the router 
+	db     *sql.DB                                     //db maintains a pool of connections to our database of choice 
+	store  *sessions.FilesystemStore                   //With an empty first argument, this will put session files in os.TempDir() (/tmp)
+	router *mux.Router               = mux.NewRouter() //Dynamic content is managed by handlers pointed at by the router 
 )
 
 // For exporting
 func main() {
-	//Only if we're running this package as the main package do we need to configure the maxprocs here
+	//Only if we're running this package as the main package do we need to 
+	//configure the maxprocs here. Otherwise it should be done by the actual
+	//main package.
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	//Call the main process
@@ -50,8 +56,16 @@ func main() {
 }
 
 func Main() {
+	//
+	//After user has had opportunity to change config: 
+	//
+	//1 init the db
+	db = initdb()
 	// Defer the close of the DB in the main function so we'll have a pool of connections maintained until the program exits
 	defer db.Close()
+
+	//2 setup our session store
+	store = sessions.NewFilesystemStore("", []byte(Config.App.Secret))
 
 	//Initialize the ancillary packages
 	forum.Initialize(db)
@@ -80,13 +94,17 @@ func Main() {
 	http.Handle("/", router)
 
 	//Launch the server
-	if err := http.ListenAndServe("localhost:9999", nil); err != nil {
+	if err := http.ListenAndServe(fmt.Sprintf("localhost:%s", Config.App.Port), nil); err != nil {
 		panic(err)
 	}
 }
 
 func initdb() *sql.DB {
-	db, err := sql.Open("postgres", "dbname=projects user=askbitcoin password=xnkxglie port=5432 sslmode=disable")
+	db, err := sql.Open("postgres", fmt.Sprintf("dbname=%s user=%s password=%s port=%s sslmode=disable",
+		Config.DB.DBName,
+		Config.DB.User,
+		Config.DB.Password,
+		Config.DB.Port))
 	if err != nil {
 		fmt.Println("Panic: " + err.Error())
 		panic(err)
