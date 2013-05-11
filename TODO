@@ -1,3 +1,14 @@
+== MUST HAVE ==
+# Voting
+
+# Submit new stories
+
+# Count replies
+
+# Show parent forum
+
+== LIKE TO HAVE ==
+
 Cache threads that are requested. Come up with a low-cost way to 
 check to see if a tree element has been invalidated and re-load 
 only if so.
