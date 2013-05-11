@@ -11,7 +11,7 @@ import (
 	"reflect"
 	"sync"
 
-	"bitbucket.org/carbocation/nrsc"
+	"github.com/carbocation/gotogether"
 )
 
 // Note that we can't just preload and cache all of the templates
@@ -128,7 +128,7 @@ func t(base, name string) *template.Template {
 	// Create a template with the given basename and custom functions.
 	// Panic if there is any error
 	n := template.New(base).Funcs(funcs)
-	t := template.Must(nrsc.LoadTemplates(n, filepath.Join("templates", base), filepath.Join("templates", name)))
+	t := template.Must(gotogether.LoadTemplates(n, filepath.Join("templates", base), filepath.Join("templates", name)))
 
 	// Add the newly compiled template to our global cache
 	cachedTemplates[name] = t

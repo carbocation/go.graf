@@ -6,7 +6,9 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	//"html/template"
 
+	//"github.com/carbocation/gotogether"
 	"github.com/carbocation/go.forum"
 	"github.com/carbocation/go.user"
 	"github.com/goods/httpbuf"
@@ -73,6 +75,11 @@ func indexHandler(w http.ResponseWriter, r *http.Request) (err error) {
 		Config.Public,
 		context.Get(r, ThisUser).(*user.User),
 	}
+	
+	//template.
+	//gotogether.
+	
+	//gotogether.LoadTemplates(n, filepath.Join("templates", base), filepath.Join("templates", name))
 
 	err = T("index.html").Execute(w, data)
 	if err != nil {
