@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"runtime"
 
-	"bitbucket.org/carbocation/nrsc"
+	"github.com/carbocation/gotogether"
 	"github.com/carbocation/go.forum"
 	"github.com/carbocation/go.user"
 	"github.com/gorilla/mux"
@@ -71,8 +71,8 @@ func Main() {
 	forum.Initialize(db)
 	user.Initialize(db)
 
-	//Bundled static assets are handled by nrsc
-	nrsc.Handle("/static/")
+	//Bundled static assets are handled by gotogether
+	gotogether.Handle("/static/")
 
 	//Create a subrouter for GET requests
 	g := router.Methods("GET").Subrouter()
