@@ -83,6 +83,22 @@
 </div>
 </script>
 
+<script id="NewThreadTemplate" type="text/html">
+<div>
+	<form class="new_thread" id="new_thread_<#= parent_id #>">
+		<div class="row">
+			<div class="span9">
+				<input name="Title" class="span9 inplace-compose" placeholder="Title">
+				<textarea name="Body" class="span9 inplace-compose" placeholder="Text or URL (This tool will automatically determine whether you typed text or just a plain URL.)"></textarea>
+			</div>
+		</div>
+		<input type="hidden" name="parent_id" value="<#= parent_id #>">
+		<button class="btn btn-primary">Create new thread</button>
+		<button class="btn clear_active_controls">Cancel</button>
+	</form>
+</div>
+</script>
+
 <script id="BlankTemplate" type="text/html">
 <div></div>
 </script>
