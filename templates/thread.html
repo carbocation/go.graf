@@ -51,26 +51,6 @@ $(document).ready(function(){
 </script>
 {{end}}
 
-{{ define "jsTemplates" }}
-<script id="ReplyTemplate" type="text/html">
-<div>
-	<form class="reply" id="reply_<#= parent_id #>">
-		<div class="row">
-			<div class="span9">
-				<textarea name="Body" class="span9 inplace-compose" placeholder="Type your reply"></textarea>
-			</div>
-		</div>
-		<input type="hidden" name="parent_id" value="<#= parent_id #>">
-		<button class="btn btn-primary">Save reply</button>
-		<button class="btn clear_active_controls">Cancel</button>
-	</form>
-</div>
-</script>
-
-<script id="BlankTemplate" type="text/html">
-<div></div>
-</script>
-{{end}}
 
 {{ define "content" }}
 {{if .Tree}}
@@ -95,7 +75,7 @@ $(document).ready(function(){
 			{{template "tree" mapfn "User" .User "Tree" .Tree.Left "Color" false}}
 		</div>
     </div>
-    {{template "jsTemplates" .}}
+    {{template "_jsTemplates" .}}
 {{ else }}
 	<p class="text-error">The requested post is unavailable.</p>
 {{end}}
