@@ -1,5 +1,56 @@
 {{ define "title" }}{{.Tree.Value.Title}}{{ end }}
 
+{{ define "scripts" }}
+<script src="/static/js/template.js"></script>
+<script>
+$(document).ready(function(){
+	var getParentId = function(item){
+		return ($(item).closest("div.entry")[0].id).split(/_/)[1]
+	};
+	
+	$(".new_thread").on("click", function(event){
+		app.replaceTemplate("NewThreadTemplate", {parent_id: getParentId(this)}, "active_"+getParentId(this));
+	});
+	
+	$(document).on("click", ".clear_active_controls", {}, function(event){
+		event.preventDefault();
+		
+		app.replaceTemplate("BlankTemplate", {}, "active_" + getParentId(this));
+	});
+	
+	$(document).on("submit", "form.new_thread", {}, function(event){
+		event.preventDefault();
+		
+		var parentId = getParentId(this);
+		var submission = $(this).serializeArray();
+		
+		console.log("Parent id is: "+parentId)
+		
+		$.ajax({
+			url: "{{ reverse "postThread" }}", 
+			type: "POST",
+			data: submission,
+		}).done(function(msg) {
+			$("#message_"+parentId).append("<p class=\"text-info\">"+msg+"</p>")
+	    	console.log(msg);
+			
+			{{/*TODO(james) ignore the response and let websockets kick the message back*/}}
+	    	$("#children_"+parentId).append(msg)
+	    	app.replaceTemplate("BlankTemplate", {}, "active_" + parentId);
+    	})
+	    .fail(function(msg){ console.log(msg.status + ": " + msg.responseText); });
+	    //.always(function(msg) { console.log(msg); });
+	});
+	
+	$(".appender").on("click", function(event){
+		parentId = $(this).closest("div.entry")[0].id
+		
+		app.appendTemplate("ItemTemplate", {id: "id", title: "name"}, parentId)
+	});
+});
+</script>
+{{ end }}
+
 {{ define "tree" }}
 {{if .Tree}}
 	<div>
@@ -18,16 +69,22 @@
 
 {{ define "content" }}
 {{if .Tree}}
-    <div>
-	{{with .Tree.Value}}
-		<h1>Forum {{.Title}}</h1>
-		{{.Body}}<br />
-		<ul class="inline">
-			<li><a href="{{reverse "newThread"}}">Submit a new story</a></li>
-		</ul>
-	{{end}}
-	{{template "tree" mapfn "User" .User "Tree" .Tree.Left}}
+    <div class="entry" id="forum_{{.Tree.Value.Id}}">
+		{{with .Tree.Value}}
+			<h1>Forum {{.Title}}</h1>
+			<p class="lead">{{.Body}}</p>
+			<br />
+			<div class="active_messages" id="message_{{.Id}}"></div>
+			<ul class="inline">
+				<li><a class="new_thread">Submit a new story</a></li>
+			</ul>
+			<div class="active_controls" id="active_{{.Id}}"></div>
+		{{end}}
+		<div class="children" id="children_{{.Tree.Value.Id}}">
+			{{template "tree" mapfn "User" .User "Tree" .Tree.Left}}
+		</div>
     </div>
+    {{template "_jsTemplates" .}}
 {{else}}
 	<p class="text-error">The requested forum is unavailable.</p>
 {{end}}

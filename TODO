@@ -8,6 +8,7 @@
 # Show parent forum
 
 == LIKE TO HAVE ==
+Move $.document.ready() stuff into its own file.
 
 Cache threads that are requested. Come up with a low-cost way to 
 check to see if a tree element has been invalidated and re-load 
