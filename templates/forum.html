@@ -31,12 +31,20 @@ $(document).ready(function(){
 			type: "POST",
 			data: submission,
 		}).done(function(msg) {
-			$("#message_"+parentId).append("<p class=\"text-info\">"+msg+"</p>")
+			
+			$("#message_"+parentId).append("<p class=\"text-info\">Your new post was created successfully. \
+					You will be redirected shortly. "+msg.Title+" "+msg.Body+"</p>")
 	    	console.log(msg);
 			
 			{{/*TODO(james) ignore the response and let websockets kick the message back*/}}
 	    	$("#children_"+parentId).append(msg)
 	    	app.replaceTemplate("BlankTemplate", {}, "active_" + parentId);
+	    	
+	    	newUrl = {{ reverse "thread" "id" 0 }}
+	    	newUrl = newUrl.replace("/0", "/"+msg.Id)
+	    	console.log(newUrl)
+	    	
+	    	window.location.href = newUrl
     	})
 	    .fail(function(msg){ console.log(msg.status + ": " + msg.responseText); });
 	    //.always(function(msg) { console.log(msg); });
@@ -54,7 +62,7 @@ $(document).ready(function(){
 {{ define "tree" }}
 {{if .Tree}}
 	<div>
-		▲ <a href="{{reverse "thread" "id" .Tree.Value.Id}}">{{.Tree.Value.Title}}</a> ▼<br />
+		▲ <a href="{{reverse "thread" "id" .Tree.Value.Id}}" class="lead">{{.Tree.Value.Title}}</a> ▼<br />
 			<ul class="inline">
 				<li>By {{.Tree.Value.AuthorHandle}}</li>
 				{{if eq .Tree.Value.AuthorId .User.Id}}
@@ -73,12 +81,10 @@ $(document).ready(function(){
 		{{with .Tree.Value}}
 			<h1>Forum {{.Title}}</h1>
 			<p class="lead">{{.Body}}</p>
-			<br />
 			<div class="active_messages" id="message_{{.Id}}"></div>
-			<ul class="inline">
-				<li><a class="new_thread">Submit a new story</a></li>
-			</ul>
+			<button class="btn btn-primary new_thread">Submit a new story</button>
 			<div class="active_controls" id="active_{{.Id}}"></div>
+			<br />
 		{{end}}
 		<div class="children" id="children_{{.Tree.Value.Id}}">
 			{{template "tree" mapfn "User" .User "Tree" .Tree.Left}}

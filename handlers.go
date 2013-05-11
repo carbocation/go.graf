@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -19,13 +20,13 @@ import (
 type handler func(http.ResponseWriter, *http.Request) error
 
 func (h handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	//Load session values into req	
+	//Load session values into req
 	OpenContext(req)
 
 	//For now, print the user's info to the console all the time
 	fmt.Printf("User object: %+v\n", context.Get(req, ThisUser))
 
-	//Run the handler and grab the error, and report it. We buffer the 
+	//Run the handler and grab the error, and report it. We buffer the
 	// output so that handlers can modify session data at any point.
 	buf := new(httpbuf.Buffer)
 	if err := h(buf, req); err != nil {
@@ -75,11 +76,6 @@ func indexHandler(w http.ResponseWriter, r *http.Request) (err error) {
 		Config.Public,
 		context.Get(r, ThisUser).(*user.User),
 	}
-	
-	//template.
-	//gotogether.
-	
-	//gotogether.LoadTemplates(n, filepath.Join("templates", base), filepath.Join("templates", name))
 
 	err = T("index.html").Execute(w, data)
 	if err != nil {
@@ -361,6 +357,18 @@ func postThreadHandler(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
+	
+	jsondata, err := json.Marshal(entry)
+	
+	integer, err := w.Write(jsondata)
+	if err != nil {
+		return err
+	}
+	
+	fmt.Printf("Integer from posting the new entry was %d\n", integer)
+	//We can set the content type after sending the jsondata because 
+	// we're actually using buffered output
+	w.Header().Set("Content-type", "application/json")
 
 	return nil
 }
