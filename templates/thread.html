@@ -18,6 +18,41 @@ $(document).ready(function(){
 		app.replaceTemplate("BlankTemplate", {}, "active_" + getParentId(this));
 	});
 	
+	$(document).on("click", ".vote:not(.active)", {}, function(event){
+		event.preventDefault();
+		
+		parentId = getParentId(this)
+		
+		var submission = {entryId: parentId};
+		
+		//Send the right kind of vote
+		if ($(this).hasClass('upvote')) {
+			console.log("Upvote for " + submission.entryId);
+			submission.vote = 'upvote';
+		} else {
+			console.log("Downvote for " + submission.entryId);
+			submission.vote = 'downvote';
+		}
+		
+		$.ajax({
+			url: "{{ reverse "postVote" }}", 
+			type: "POST",
+			data: submission,
+		}).done(function(msg) {
+			$("#message_"+parentId).append("<p class=\"text-info\">"+msg+"</p>")
+	    	console.log(msg);
+			
+	    	$("#children_"+parentId).append(msg)
+	    	app.replaceTemplate("BlankTemplate", {}, "active_" + parentId);
+	    	
+	    	//Update coloring
+			$(this).siblings().removeClass("active");
+			$(this).addClass("active");
+    	})
+	    .fail(function(msg){ console.log(msg.status + ": " + msg.responseText); });
+		
+	});
+	
 	$(document).on("submit", "form.reply", {}, function(event){
 		event.preventDefault();
 		
@@ -56,7 +91,7 @@ $(document).ready(function(){
 {{if .Tree}}
     <div class="entry" id="entry_{{.Tree.Value.Id}}">
 		{{with .Tree.Value}}
-			<h1>△ {{.Id}} {{.Title}} ▽</h1>
+			<h1><span class="vote upvote">△</span> {{.Id}} {{.Title}} <span class="vote downvote">▽</span></h1>
 			<p class="lead">{{.Body}}</p>
 			<br />
 			<div class="active_messages" id="message_{{.Id}}"></div>
@@ -90,7 +125,7 @@ $(document).ready(function(){
 			<br />
 			<div class="active_messages" id="message_{{.Id}}"></div>
 			<ul class="inline">
-				<li>▲ By {{.AuthorHandle}} ▼</li>
+				<li><span class="vote upvote">▲</span> By {{.AuthorHandle}} <span class="vote downvote">▼</span></li>
 				<li>&nbsp;</li>
 				<li><a class="reply">Reply</a></li>
 				<li><a href="/thread/{{.Id}}">Permalink</a></li>

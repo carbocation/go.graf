@@ -372,3 +372,58 @@ func postThreadHandler(w http.ResponseWriter, r *http.Request) error {
 
 	return nil
 }
+
+func postVoteHandler(w http.ResponseWriter, r *http.Request) error {
+	r.ParseForm()
+	
+	//Make sure the target entry is valid
+	entryId, err := strconv.ParseInt(r.FormValue("entryId"), 10, 64)
+	if err != nil {
+		return err
+	}
+	
+	entry, err := forum.OneEntry(entryId)
+	if err != nil {
+		return err
+	}
+
+	//Don't let guests post (currently)
+	//TODO(james) automatically create accounts for guests who try to post
+	if context.Get(r, ThisUser).(*user.User).Guest() {
+		http.Error(w, "NowayBro!", http.StatusUnauthorized)
+
+		return errors.New("Unauthorized")
+	}
+
+	//TODO(james) stop relying on the existence of a user ID here
+	user := context.Get(r, ThisUser).(*user.User)
+
+	vote := &forum.Vote{EntryId: entry.Id, UserId: user.Id}
+	
+	if r.FormValue("vote") == "upvote" {
+		vote.Upvote, vote.Downvote = true, false
+	} else if r.FormValue("vote") == "downvote" {
+		vote.Upvote, vote.Downvote = false, true
+	} else {
+		vote.Upvote, vote.Downvote = false, false
+	}
+	
+	err = vote.Persist()
+	if err != nil {
+		return err
+	}
+	
+	jsondata, err := json.Marshal(vote)
+	
+	integer, err := w.Write(jsondata)
+	if err != nil {
+		return err
+	}
+	
+	fmt.Printf("Integer from posting the new entry was %d\n", integer)
+	//We can set the content type after sending the jsondata because 
+	// we're actually using buffered output
+	w.Header().Set("Content-type", "application/json")
+
+	return nil
+}
