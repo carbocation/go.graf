@@ -101,6 +101,7 @@ $(document).ready(function(){
 			<div class="active_messages" id="message_{{.Id}}"></div>
 			<ul class="inline">
 				<li>By {{.AuthorHandle}}</li>
+				<li>{{.Points}} {{if eq .Points 1}}Point{{else}}Points{{end}}</li>
 				<li><a class="reply">Reply</a></li>
 				{{/* TODO(james)
 				<li><a href="edit">Edit</a></li>

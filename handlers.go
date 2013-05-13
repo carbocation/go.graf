@@ -12,6 +12,7 @@ import (
 	//"github.com/carbocation/gotogether"
 	"github.com/carbocation/go.forum"
 	"github.com/carbocation/go.user"
+	"github.com/carbocation/go.util/datatypes/binarytree"
 	"github.com/goods/httpbuf"
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
@@ -143,7 +144,7 @@ func threadHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	}
 
 	//Obligatory boxing step
-	interfaceEntries := map[int64]interface{}{}
+	interfaceEntries := make(map[int64]interface{}, len(entries))
 	for k, v := range entries {
 		interfaceEntries[k] = v
 	}
@@ -154,10 +155,14 @@ func threadHandler(w http.ResponseWriter, r *http.Request) (err error) {
 		return errors.New("The requested data structure could not be built.")
 	}
 
-	data := map[string]interface{}{
-		"G":    Config.Public,
-		"User": context.Get(r, ThisUser).(*user.User),
-		"Tree": tree,
+	data := struct {
+		G    *ConfigPublic
+		User *user.User
+		Tree *binarytree.Tree
+	}{
+		G:    Config.Public,
+		User: context.Get(r, ThisUser).(*user.User),
+		Tree: tree,
 	}
 
 	//execute the template
@@ -198,7 +203,7 @@ func forumHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	}
 
 	//Obligatory boxing step
-	interfaceEntries := map[int64]interface{}{}
+	interfaceEntries := make(map[int64]interface{}, len(entries))
 	for k, v := range entries {
 		interfaceEntries[k] = v
 	}
@@ -209,10 +214,14 @@ func forumHandler(w http.ResponseWriter, r *http.Request) (err error) {
 		return errors.New("The requested data structure could not be built.")
 	}
 
-	data := map[string]interface{}{
-		"G":    Config.Public,
-		"User": context.Get(r, ThisUser).(*user.User),
-		"Tree": tree,
+	data := struct {
+		G    *ConfigPublic
+		User *user.User
+		Tree *binarytree.Tree
+	}{
+		G:    Config.Public,
+		User: context.Get(r, ThisUser).(*user.User),
+		Tree: tree,
 	}
 
 	//execute the template
@@ -357,16 +366,16 @@ func postThreadHandler(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
-	
+
 	jsondata, err := json.Marshal(entry)
-	
+
 	integer, err := w.Write(jsondata)
 	if err != nil {
 		return err
 	}
-	
+
 	fmt.Printf("Integer from posting the new entry was %d\n", integer)
-	//We can set the content type after sending the jsondata because 
+	//We can set the content type after sending the jsondata because
 	// we're actually using buffered output
 	w.Header().Set("Content-type", "application/json")
 
@@ -375,13 +384,13 @@ func postThreadHandler(w http.ResponseWriter, r *http.Request) error {
 
 func postVoteHandler(w http.ResponseWriter, r *http.Request) error {
 	r.ParseForm()
-	
+
 	//Make sure the target entry is valid
 	entryId, err := strconv.ParseInt(r.FormValue("entryId"), 10, 64)
 	if err != nil {
 		return err
 	}
-	
+
 	entry, err := forum.OneEntry(entryId)
 	if err != nil {
 		return err
@@ -399,7 +408,7 @@ func postVoteHandler(w http.ResponseWriter, r *http.Request) error {
 	user := context.Get(r, ThisUser).(*user.User)
 
 	vote := &forum.Vote{EntryId: entry.Id, UserId: user.Id}
-	
+
 	if r.FormValue("vote") == "upvote" {
 		vote.Upvote, vote.Downvote = true, false
 	} else if r.FormValue("vote") == "downvote" {
@@ -407,21 +416,21 @@ func postVoteHandler(w http.ResponseWriter, r *http.Request) error {
 	} else {
 		vote.Upvote, vote.Downvote = false, false
 	}
-	
+
 	err = vote.Persist()
 	if err != nil {
 		return err
 	}
-	
+
 	jsondata, err := json.Marshal(vote)
-	
+
 	integer, err := w.Write(jsondata)
 	if err != nil {
 		return err
 	}
-	
+
 	fmt.Printf("Integer from posting the new entry was %d\n", integer)
-	//We can set the content type after sending the jsondata because 
+	//We can set the content type after sending the jsondata because
 	// we're actually using buffered output
 	w.Header().Set("Content-type", "application/json")
 

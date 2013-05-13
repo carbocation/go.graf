@@ -19,7 +19,7 @@ import (
 var cachedTemplates = map[string]*template.Template{}
 var cachedMutex sync.RWMutex
 
-//reverse builds a URL based on route information and paramaters with their arguments 
+//reverse builds a URL based on route information and paramaters with their arguments
 func reverse(name string, things ...interface{}) string {
 	//convert the things to strings
 	strs := make([]string, len(things))
@@ -50,7 +50,12 @@ func safeJSStr(input string) template.JSStr {
 	return template.JSStr(input)
 }
 
+func toInt64(input int) int64 {
+	return int64(input)
+}
+
 // From Russ Cox on the go-nuts mailing list
+// Modified to treat int and int64 equally, as well as float32 and float64
 // https://groups.google.com/d/msg/golang-nuts/OEdSDgEC7js/iyhU9DW_IKcJ
 // eq reports whether the first argument is equal to
 // any of the remaining arguments.
@@ -60,7 +65,67 @@ func eq(args ...interface{}) bool {
 	}
 	x := args[0]
 	switch x := x.(type) {
-	case string, int, int64, byte, float32, float64:
+	case int:
+		for _, y := range args[1:] {
+			switch y := y.(type) {
+			case int:
+				if int64(x) == int64(y) {
+					return true
+				}
+			case int64:
+				if int64(x) == int64(y) {
+					return true
+				}
+			}
+		}
+		return false
+	
+	case int64:
+		for _, y := range args[1:] {
+			switch y := y.(type) {
+			case int:
+				if int64(x) == int64(y) {
+					return true
+				}
+			case int64:
+				if int64(x) == int64(y) {
+					return true
+				}
+			}
+		}
+		return false
+
+	case float32:
+		for _, y := range args[1:] {
+			switch y := y.(type) {
+			case float32:
+				if float64(x) == float64(y) {
+					return true
+				}
+			case float64:
+				if float64(x) == float64(y) {
+					return true
+				}
+			}
+		}
+		return false
+	
+	case float64:
+		for _, y := range args[1:] {
+			switch y := y.(type) {
+			case float32:
+				if float64(x) == float64(y) {
+					return true
+				}
+			case float64:
+				if float64(x) == float64(y) {
+					return true
+				}
+			}
+		}
+		return false
+
+	case string, byte:
 		for _, y := range args[1:] {
 			if x == y {
 				return true
@@ -95,13 +160,14 @@ func mapfn(kvs ...interface{}) (map[string]interface{}, error) {
 }
 
 var funcs = template.FuncMap{
-	"reverse":  reverse,
-	"eq":       eq,
-	"mapfn":    mapfn,
-	"safeHTML": safeHTML,
-	"safeURL": safeURL,
-	"safeJS": safeJS,
+	"reverse":   reverse,
+	"eq":        eq,
+	"mapfn":     mapfn,
+	"safeHTML":  safeHTML,
+	"safeURL":   safeURL,
+	"safeJS":    safeJS,
 	"safeJSStr": safeJSStr,
+	"toInt64":   toInt64,
 }
 
 // Parse a template ('name') against _base.html
@@ -119,7 +185,7 @@ func t(base, name string) *template.Template {
 		return t
 	}
 
-	// There is no cached version available. Remove the read lock and get a full RW lock, 
+	// There is no cached version available. Remove the read lock and get a full RW lock,
 	// compile the template, and return it
 	cachedMutex.RUnlock()
 	cachedMutex.Lock()
