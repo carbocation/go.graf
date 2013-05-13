@@ -131,6 +131,7 @@ $(document).ready(function(){
 			<div class="active_messages" id="message_{{.Id}}"></div>
 			<ul class="inline">
 				<li><span class="vote upvote">▲</span> By {{.AuthorHandle}} <span class="vote downvote">▼</span></li>
+				<li>{{.Points}} {{if eq .Points 1 -1}}Point{{else}}Points{{end}}</li>
 				<li>&nbsp;</li>
 				<li><a class="reply">Reply</a></li>
 				<li><a href="/thread/{{.Id}}">Permalink</a></li>

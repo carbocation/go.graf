@@ -65,6 +65,7 @@ $(document).ready(function(){
 		▲ <a href="{{reverse "thread" "id" .Tree.Value.Id}}" class="lead">{{.Tree.Value.Title}}</a> ▼<br />
 			<ul class="inline">
 				<li>By {{.Tree.Value.AuthorHandle}}</li>
+				<li>{{.Tree.Value.Points}} {{if eq .Tree.Value.Points 1}}Point{{else}}Points{{end}}</li>
 				{{if eq .Tree.Value.AuthorId .User.Id}}
 				<li><a href="#">Edit</a></li>
 				{{end}}
