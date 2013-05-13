@@ -18,15 +18,19 @@ $(document).ready(function(){
 		app.replaceTemplate("BlankTemplate", {}, "active_" + getParentId(this));
 	});
 	
-	$(document).on("click", ".vote:not(.active)", {}, function(event){
+	$(document).on("click", ".vote", {}, function(event){
 		event.preventDefault();
 		
-		parentId = getParentId(this)
+		var parentId = getParentId(this);
+		var voteEl = this
 		
 		var submission = {entryId: parentId};
 		
 		//Send the right kind of vote
-		if ($(this).hasClass('upvote')) {
+		if ($(this).hasClass('active')) {
+			console.log("Un-vote for " + submission.entryId);
+			submission.vote = 'unvote';
+		} else if ($(this).hasClass('upvote')) {
 			console.log("Upvote for " + submission.entryId);
 			submission.vote = 'upvote';
 		} else {
@@ -39,15 +43,15 @@ $(document).ready(function(){
 			type: "POST",
 			data: submission,
 		}).done(function(msg) {
-			$("#message_"+parentId).append("<p class=\"text-info\">"+msg+"</p>")
 	    	console.log(msg);
-			
-	    	$("#children_"+parentId).append(msg)
-	    	app.replaceTemplate("BlankTemplate", {}, "active_" + parentId);
 	    	
 	    	//Update coloring
-			$(this).siblings().removeClass("active");
-			$(this).addClass("active");
+			$(voteEl).siblings().removeClass("active");
+	    	if ($(voteEl).hasClass('active')) {
+	    		$(voteEl).removeClass("active");
+	    	} else {
+				$(voteEl).addClass("active");
+	    	}
     	})
 	    .fail(function(msg){ console.log(msg.status + ": " + msg.responseText); });
 		
