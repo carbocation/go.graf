@@ -122,8 +122,10 @@ func threadHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	if err != nil {
 		return errors.New("The requested thread is invalid.")
 	}
+	
+	u := context.Get(r, ThisUser).(*user.User)
 
-	tree, err := forum.DescendantEntries(id)
+	tree, err := forum.DescendantEntries(id, u)
 	if err != nil {
 		fmt.Printf("main.threadHandler: %s\n", err)
 		return errors.New("The requested thread's neighbor entries could not be found.")
@@ -141,7 +143,7 @@ func threadHandler(w http.ResponseWriter, r *http.Request) (err error) {
 		Tree *forum.Entry
 	}{
 		G:    Config.Public,
-		User: context.Get(r, ThisUser).(*user.User),
+		User: u,
 		Tree: tree,
 	}
 
@@ -161,8 +163,10 @@ func forumHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	if err != nil {
 		return errors.New("The requested forum is invalid.")
 	}
+	
+	u := context.Get(r, ThisUser).(*user.User)
 
-	tree, err := forum.DepthOneDescendantEntries(id)
+	tree, err := forum.DepthOneDescendantEntries(id, u)
 	if err != nil {
 		return errors.New("The requested forum's neighbor entries could not be found.")
 	}
@@ -179,7 +183,7 @@ func forumHandler(w http.ResponseWriter, r *http.Request) (err error) {
 		Tree *forum.Entry
 	}{
 		G:    Config.Public,
-		User: context.Get(r, ThisUser).(*user.User),
+		User: u,
 		Tree: tree,
 	}
 

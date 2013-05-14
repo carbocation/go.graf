@@ -50,6 +50,45 @@ $(document).ready(function(){
 	    //.always(function(msg) { console.log(msg); });
 	});
 	
+	$(document).on("click", ".vote", {}, function(event){
+		event.preventDefault();
+		
+		var parentId = getParentId(this);
+		var voteEl = this
+		
+		var submission = {entryId: parentId};
+		
+		//Send the right kind of vote
+		if ($(this).hasClass('active')) {
+			console.log("Un-vote for " + submission.entryId);
+			submission.vote = 'unvote';
+		} else if ($(this).hasClass('upvote')) {
+			console.log("Upvote for " + submission.entryId);
+			submission.vote = 'upvote';
+		} else {
+			console.log("Downvote for " + submission.entryId);
+			submission.vote = 'downvote';
+		}
+		
+		$.ajax({
+			url: "{{ reverse "postVote" }}", 
+			type: "POST",
+			data: submission,
+		}).done(function(msg) {
+	    	console.log(msg);
+	    	
+	    	//Update coloring
+			$(voteEl).siblings().removeClass("active");
+	    	if ($(voteEl).hasClass('active')) {
+	    		$(voteEl).removeClass("active");
+	    	} else {
+				$(voteEl).addClass("active");
+	    	}
+    	})
+	    .fail(function(msg){ console.log(msg.status + ": " + msg.responseText); });
+		
+	});
+	
 	$(".appender").on("click", function(event){
 		parentId = $(this).closest("div.entry")[0].id
 		
@@ -61,8 +100,8 @@ $(document).ready(function(){
 
 {{ define "tree" }}
 {{if .Tree}}
-	<div>
-		▲ <a href="{{reverse "thread" "id" .Tree.Id}}" class="lead">{{.Tree.Title}}</a> ▼<br />
+	<div class="entry" id="entry_{{.Tree.Id}}">
+		<span class="lead vote upvote {{if .Tree.UserVote.Upvote}}active{{end}}">▲</span> <a href="{{reverse "thread" "id" .Tree.Id}}" class="lead">{{.Tree.Title}}</a> <span class="lead vote upvote {{if .Tree.UserVote.Downvote}}active{{end}}">▼</span><br />
 			<ul class="inline">
 				<li>By {{.Tree.AuthorHandle}}</li>
 				<li>{{.Tree.Points}} {{if eq .Tree.Points 1}}Point{{else}}Points{{end}}</li>

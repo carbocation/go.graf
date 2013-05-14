@@ -95,7 +95,7 @@ $(document).ready(function(){
 {{if .Tree}}
     <div class="entry" id="entry_{{.Tree.Id}}">
 		{{with .Tree}}
-			<h1><span class="vote upvote">△</span> {{.Id}} {{.Title}} <span class="vote downvote">▽</span></h1>
+			<h1><span class="vote upvote {{if .UserVote.Upvote}}active{{end}}">△</span> {{.Id}} {{.Title}} <span class="vote downvote {{if .UserVote.Downvote}}active{{end}}">▽</span></h1>
 			<p class="lead">{{.Body}}</p>
 			<br />
 			<div class="active_messages" id="message_{{.Id}}"></div>
@@ -130,7 +130,7 @@ $(document).ready(function(){
 			<br />
 			<div class="active_messages" id="message_{{.Id}}"></div>
 			<ul class="inline">
-				<li><span class="vote upvote">▲</span> By {{.AuthorHandle}} <span class="vote downvote">▼</span></li>
+				<li><span class="vote upvote {{if .UserVote.Upvote}}active{{end}}">▲</span> By {{.AuthorHandle}} <span class="vote downvote {{if .UserVote.Downvote}}active{{end}}">▼</span></li>
 				<li>{{.Points}} {{if eq .Points 1 -1}}Point{{else}}Points{{end}}</li>
 				<li>&nbsp;</li>
 				<li><a class="reply">Reply</a></li>
