@@ -87,6 +87,32 @@ CREATE TABLE entry_closures (
 
 ALTER TABLE askbitcoin.entry_closures OWNER TO askbitcoin;
 
+-- Table: askbitcoin.vote
+
+-- DROP TABLE askbitcoin.vote;
+
+CREATE TABLE askbitcoin.vote
+(
+  entry_id integer NOT NULL,
+  user_id integer NOT NULL,
+  upvote boolean NOT NULL DEFAULT false,
+  downvote boolean NOT NULL DEFAULT false,
+  created time with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT vote_pkey PRIMARY KEY (entry_id, user_id),
+  CONSTRAINT vote_entry_id_fkey FOREIGN KEY (entry_id)
+      REFERENCES askbitcoin.entry (id) MATCH SIMPLE
+      ON UPDATE NO ACTION ON DELETE NO ACTION,
+  CONSTRAINT vote_user_id_fkey FOREIGN KEY (user_id)
+      REFERENCES askbitcoin.account (id) MATCH SIMPLE
+      ON UPDATE NO ACTION ON DELETE NO ACTION
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE askbitcoin.vote
+  OWNER TO askbitcoin;
+
+
 --
 -- Name: entry_id_seq; Type: SEQUENCE; Schema: askbitcoin; Owner: askbitcoin
 --

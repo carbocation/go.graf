@@ -1,4 +1,4 @@
-{{ define "title" }}{{.Tree.Value.Title}}{{ end }}
+{{ define "title" }}{{.Tree.Title}}{{ end }}
 
 {{ define "scripts" }}
 <script src="/static/js/template.js"></script>
@@ -62,23 +62,25 @@ $(document).ready(function(){
 {{ define "tree" }}
 {{if .Tree}}
 	<div>
-		▲ <a href="{{reverse "thread" "id" .Tree.Value.Id}}" class="lead">{{.Tree.Value.Title}}</a> ▼<br />
+		▲ <a href="{{reverse "thread" "id" .Tree.Id}}" class="lead">{{.Tree.Title}}</a> ▼<br />
 			<ul class="inline">
-				<li>By {{.Tree.Value.AuthorHandle}}</li>
-				{{if eq .Tree.Value.AuthorId .User.Id}}
+				<li>By {{.Tree.AuthorHandle}}</li>
+				<li>{{.Tree.Points}} {{if eq .Tree.Points 1}}Point{{else}}Points{{end}}</li>
+				<li><a href="{{reverse "thread" "id" .Tree.Id}}">Permalink</a></li>
+				{{if eq .Tree.AuthorId .User.Id}}
 				<li><a href="#">Edit</a></li>
 				{{end}}
 			</ul>
-        {{template "tree" mapfn "User" .User "Tree" .Tree.Left}}
+        {{template "tree" mapfn "User" .User "Tree" .Tree.Child}}
 	</div>
-        {{template "tree" mapfn "User" .User "Tree" .Tree.Right}}
+        {{template "tree" mapfn "User" .User "Tree" .Tree.Sibling}}
 {{end}}
 {{end}}
 
 {{ define "content" }}
 {{if .Tree}}
-    <div class="entry" id="forum_{{.Tree.Value.Id}}">
-		{{with .Tree.Value}}
+    <div class="entry" id="forum_{{.Tree.Id}}">
+		{{with .Tree}}
 			<h1>Forum {{.Title}}</h1>
 			<p class="lead">{{.Body}}</p>
 			<div class="active_messages" id="message_{{.Id}}"></div>
@@ -86,8 +88,8 @@ $(document).ready(function(){
 			<div class="active_controls" id="active_{{.Id}}"></div>
 			<br />
 		{{end}}
-		<div class="children" id="children_{{.Tree.Value.Id}}">
-			{{template "tree" mapfn "User" .User "Tree" .Tree.Left}}
+		<div class="children" id="children_{{.Tree.Id}}">
+			{{template "tree" mapfn "User" .User "Tree" .Tree.Child}}
 		</div>
     </div>
     {{template "_jsTemplates" .}}

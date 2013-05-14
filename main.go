@@ -89,6 +89,7 @@ func Main() {
 	p.Handle("/thread", handler(postThreadHandler)).Name("postThread")
 	p.Handle("/login", handler(postLoginHandler)).Name("postLogin")
 	p.Handle("/register", handler(postRegisterHandler)).Name("postRegister")
+	p.Handle("/vote", handler(postVoteHandler)).Name("postVote")
 
 	//Notify the http package about our router
 	http.Handle("/", router)

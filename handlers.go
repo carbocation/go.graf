@@ -123,41 +123,26 @@ func threadHandler(w http.ResponseWriter, r *http.Request) (err error) {
 		return errors.New("The requested thread is invalid.")
 	}
 
-	// Pull down the closuretable from the root requested id
-	ct, err := forum.ClosureTable(id)
-	if err != nil {
-		fmt.Printf("main.threadHandler: %s\n", err)
-		return errors.New("The requested thread's ancestry map could not be found.")
-	}
-
-	entries, err := forum.DescendantEntries(id)
+	tree, err := forum.DescendantEntries(id)
 	if err != nil {
 		fmt.Printf("main.threadHandler: %s\n", err)
 		return errors.New("The requested thread's neighbor entries could not be found.")
 	}
 
 	//Make sure this not a forum
-	if entries[id].Forum {
+	if tree.Forum {
 		http.Redirect(w, r, reverse("forum", "id", id), http.StatusSeeOther)
 		return
 	}
 
-	//Obligatory boxing step
-	interfaceEntries := map[int64]interface{}{}
-	for k, v := range entries {
-		interfaceEntries[k] = v
-	}
-
-	tree, err := ct.TableToTree(interfaceEntries)
-	if err != nil {
-		fmt.Printf("main.threadHandler: Error converting closure table to tree: %s\n", err)
-		return errors.New("The requested data structure could not be built.")
-	}
-
-	data := map[string]interface{}{
-		"G":    Config.Public,
-		"User": context.Get(r, ThisUser).(*user.User),
-		"Tree": tree,
+	data := struct {
+		G    *ConfigPublic
+		User *user.User
+		Tree *forum.Entry
+	}{
+		G:    Config.Public,
+		User: context.Get(r, ThisUser).(*user.User),
+		Tree: tree,
 	}
 
 	//execute the template
@@ -177,42 +162,25 @@ func forumHandler(w http.ResponseWriter, r *http.Request) (err error) {
 		return errors.New("The requested forum is invalid.")
 	}
 
-	// Pull down the closuretable from the root requested id
-	ct, err := forum.DepthOneClosureTable(id)
-	if err != nil {
-		return errors.New("The requested forum's ancestry map could not be found.")
-	}
-	if ct.Size() < 1 {
-		return errors.New("The requested forum's ancestry map had 0 entries.")
-	}
-
-	entries, err := forum.DepthOneDescendantEntries(id)
+	tree, err := forum.DepthOneDescendantEntries(id)
 	if err != nil {
 		return errors.New("The requested forum's neighbor entries could not be found.")
 	}
 
 	//Make sure this is a forum
-	if entries[id].Forum != true {
+	if tree.Forum != true {
 		http.Redirect(w, r, reverse("thread", "id", id), http.StatusSeeOther)
 		return
 	}
 
-	//Obligatory boxing step
-	interfaceEntries := map[int64]interface{}{}
-	for k, v := range entries {
-		interfaceEntries[k] = v
-	}
-
-	tree, err := ct.TableToTree(interfaceEntries)
-	if err != nil {
-		fmt.Printf("Error: %s\n", err)
-		return errors.New("The requested data structure could not be built.")
-	}
-
-	data := map[string]interface{}{
-		"G":    Config.Public,
-		"User": context.Get(r, ThisUser).(*user.User),
-		"Tree": tree,
+	data := struct {
+		G    *ConfigPublic
+		User *user.User
+		Tree *forum.Entry
+	}{
+		G:    Config.Public,
+		User: context.Get(r, ThisUser).(*user.User),
+		Tree: tree,
 	}
 
 	//execute the template
@@ -357,16 +325,71 @@ func postThreadHandler(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
-	
+
 	jsondata, err := json.Marshal(entry)
-	
+
 	integer, err := w.Write(jsondata)
 	if err != nil {
 		return err
 	}
-	
+
 	fmt.Printf("Integer from posting the new entry was %d\n", integer)
-	//We can set the content type after sending the jsondata because 
+	//We can set the content type after sending the jsondata because
+	// we're actually using buffered output
+	w.Header().Set("Content-type", "application/json")
+
+	return nil
+}
+
+func postVoteHandler(w http.ResponseWriter, r *http.Request) error {
+	r.ParseForm()
+
+	//Make sure the target entry is valid
+	entryId, err := strconv.ParseInt(r.FormValue("entryId"), 10, 64)
+	if err != nil {
+		return err
+	}
+
+	entry, err := forum.OneEntry(entryId)
+	if err != nil {
+		return err
+	}
+
+	//Don't let guests post (currently)
+	//TODO(james) automatically create accounts for guests who try to post
+	if context.Get(r, ThisUser).(*user.User).Guest() {
+		http.Error(w, "NowayBro!", http.StatusUnauthorized)
+
+		return errors.New("Unauthorized")
+	}
+
+	//TODO(james) stop relying on the existence of a user ID here
+	user := context.Get(r, ThisUser).(*user.User)
+
+	vote := &forum.Vote{EntryId: entry.Id, UserId: user.Id}
+
+	if r.FormValue("vote") == "upvote" {
+		vote.Upvote, vote.Downvote = true, false
+	} else if r.FormValue("vote") == "downvote" {
+		vote.Upvote, vote.Downvote = false, true
+	} else {
+		vote.Upvote, vote.Downvote = false, false
+	}
+
+	err = vote.Persist()
+	if err != nil {
+		return err
+	}
+
+	jsondata, err := json.Marshal(vote)
+
+	integer, err := w.Write(jsondata)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Integer from posting the new entry was %d\n", integer)
+	//We can set the content type after sending the jsondata because
 	// we're actually using buffered output
 	w.Header().Set("Content-type", "application/json")
 

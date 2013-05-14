@@ -62,6 +62,14 @@ textarea.inplace-compose {
 
 
 /* Entries> */
+.upvote.active {
+	color: #ff0000;
+}
+
+.downvote.active {
+	color: #0000ff;
+}
+
 .nested {
 	margin-left: 10px;
 	margin-bottom: 5px;
