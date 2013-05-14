@@ -12,7 +12,6 @@ import (
 	//"github.com/carbocation/gotogether"
 	"github.com/carbocation/go.forum"
 	"github.com/carbocation/go.user"
-	"github.com/carbocation/go.util/datatypes/binarytree"
 	"github.com/goods/httpbuf"
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
@@ -124,41 +123,22 @@ func threadHandler(w http.ResponseWriter, r *http.Request) (err error) {
 		return errors.New("The requested thread is invalid.")
 	}
 
-	// Pull down the closuretable from the root requested id
-	ct, err := forum.ClosureTable(id)
-	if err != nil {
-		fmt.Printf("main.threadHandler: %s\n", err)
-		return errors.New("The requested thread's ancestry map could not be found.")
-	}
-
-	entries, err := forum.DescendantEntries(id)
+	tree, err := forum.DescendantEntries(id)
 	if err != nil {
 		fmt.Printf("main.threadHandler: %s\n", err)
 		return errors.New("The requested thread's neighbor entries could not be found.")
 	}
 
 	//Make sure this not a forum
-	if entries[id].Forum {
+	if tree.Forum {
 		http.Redirect(w, r, reverse("forum", "id", id), http.StatusSeeOther)
 		return
-	}
-
-	//Obligatory boxing step
-	interfaceEntries := make(map[int64]interface{}, len(entries))
-	for k, v := range entries {
-		interfaceEntries[k] = v
-	}
-
-	tree, err := ct.TableToTree(interfaceEntries)
-	if err != nil {
-		fmt.Printf("main.threadHandler: Error converting closure table to tree: %s\n", err)
-		return errors.New("The requested data structure could not be built.")
 	}
 
 	data := struct {
 		G    *ConfigPublic
 		User *user.User
-		Tree *binarytree.Tree
+		Tree *forum.Entry
 	}{
 		G:    Config.Public,
 		User: context.Get(r, ThisUser).(*user.User),
@@ -182,42 +162,21 @@ func forumHandler(w http.ResponseWriter, r *http.Request) (err error) {
 		return errors.New("The requested forum is invalid.")
 	}
 
-	// Pull down the closuretable from the root requested id
-	ct, err := forum.DepthOneClosureTable(id)
-	if err != nil {
-		return errors.New("The requested forum's ancestry map could not be found.")
-	}
-	if ct.Size() < 1 {
-		return errors.New("The requested forum's ancestry map had 0 entries.")
-	}
-
-	entries, err := forum.DepthOneDescendantEntries(id)
+	tree, err := forum.DepthOneDescendantEntries(id)
 	if err != nil {
 		return errors.New("The requested forum's neighbor entries could not be found.")
 	}
 
 	//Make sure this is a forum
-	if entries[id].Forum != true {
+	if tree.Forum != true {
 		http.Redirect(w, r, reverse("thread", "id", id), http.StatusSeeOther)
 		return
-	}
-
-	//Obligatory boxing step
-	interfaceEntries := make(map[int64]interface{}, len(entries))
-	for k, v := range entries {
-		interfaceEntries[k] = v
-	}
-
-	tree, err := ct.TableToTree(interfaceEntries)
-	if err != nil {
-		fmt.Printf("Error: %s\n", err)
-		return errors.New("The requested data structure could not be built.")
 	}
 
 	data := struct {
 		G    *ConfigPublic
 		User *user.User
-		Tree *binarytree.Tree
+		Tree *forum.Entry
 	}{
 		G:    Config.Public,
 		User: context.Get(r, ThisUser).(*user.User),
