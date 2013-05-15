@@ -78,6 +78,7 @@ func Main() {
 	//Create a subrouter for GET requests
 	g := router.Methods("GET").Subrouter()
 	g.Handle("/", handler(indexHandler)).Name("index")
+	g.Handle("/about", handler(aboutHandler)).Name("about")
 	g.Handle("/forum/{id:[0-9]+}", handler(forumHandler)).Name("forum")
 	g.Handle("/thread/{id:[0-9]+}", handler(threadHandler)).Name("thread")
 	g.Handle("/thread", handler(newThreadHandler)).Name("newThread") //Form for creating new posts

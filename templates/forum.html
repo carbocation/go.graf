@@ -9,7 +9,14 @@ $(document).ready(function(){
 	};
 	
 	$(".new_thread").on("click", function(event){
-		app.replaceTemplate("NewThreadTemplate", {parent_id: getParentId(this)}, "active_"+getParentId(this));
+		var parentId = getParentId(this);
+		
+		if (!{{.User.Guest}}) {
+			app.replaceTemplate("NewThreadTemplate", {parent_id: parentId}, "active_"+parentId);
+		} else {
+			$("#message_"+parentId).html("<p class=\"text-error\">Guests cannot currently create posts. \
+					Please register an account to post.</p>")
+		}
 	});
 	
 	$(document).on("click", ".clear_active_controls", {}, function(event){

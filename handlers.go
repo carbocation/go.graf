@@ -69,7 +69,14 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	return
 }
 
+//For now, the index is actually just a hardlink to the forum with ID #1
 func indexHandler(w http.ResponseWriter, r *http.Request) (err error) {
+	mux.Vars(r)["id"] = "1"
+
+	return forumHandler(w, r)
+}
+
+func aboutHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	data := struct {
 		G    *ConfigPublic
 		User *user.User
@@ -78,7 +85,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request) (err error) {
 		context.Get(r, ThisUser).(*user.User),
 	}
 
-	err = T("index.html").Execute(w, data)
+	err = T("about.html").Execute(w, data)
 	if err != nil {
 		fmt.Printf("main.indexHandler: Template error: %s\n", err)
 		return errors.New("Our template appears to be malformed so we cannot process your request.")
