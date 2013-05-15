@@ -101,7 +101,15 @@ $(document).ready(function(){
 {{ define "tree" }}
 {{if .Tree}}
 	<div class="entry" id="entry_{{.Tree.Id}}">
-		<span class="lead vote upvote {{if .Tree.UserVote.Upvote}}active{{end}}">▲</span> <a href="{{reverse "thread" "id" .Tree.Id}}" class="lead">{{.Tree.Title}}</a> <span class="lead vote downvote {{if .Tree.UserVote.Downvote}}active{{end}}">▼</span><br />
+		<span class="lead vote upvote {{if .Tree.UserVote.Upvote}}active{{end}}">▲</span> 
+		<a href="{{if .Tree.Url}}{{.Tree.Body}}{{else}}{{reverse "thread" "id" .Tree.Id}}{{end}}" class="lead">{{.Tree.Title}}</a> 
+		<span class="lead vote downvote {{if .Tree.UserVote.Downvote}}active{{end}}">▼</span>
+		{{if .Tree.Url}}
+			<span class="lead text-info">{{urlHost .Tree.Body}}</span>
+		{{else}}
+			<span class="lead muted">{{urlHost .G.Url}}</span>
+		{{end}}
+		<br />
 			<ul class="inline">
 				<li>By {{.Tree.AuthorHandle}}</li>
 				<li>{{.Tree.Points}} {{if eq .Tree.Points 1 -1}}Point{{else}}Points{{end}}</li>
@@ -111,9 +119,9 @@ $(document).ready(function(){
 				<li><a href="#">Edit</a></li>
 				{{end}}
 			</ul>
-        {{/* {{template "tree" mapfn "User" .User "Tree" .Tree.Child}} */}}
+        {{/* {{template "tree" mapfn "User" .User "Tree" .Tree.Child "G" .G}} */}}
 	</div>
-        {{template "tree" mapfn "User" .User "Tree" .Tree.Sibling}}
+        {{template "tree" mapfn "User" .User "Tree" .Tree.Sibling "G" .G}}
 {{end}}
 {{end}}
 
@@ -129,7 +137,7 @@ $(document).ready(function(){
 			<br />
 		{{end}}
 		<div class="children" id="children_{{.Tree.Id}}">
-			{{template "tree" mapfn "User" .User "Tree" .Tree.Child}}
+			{{template "tree" mapfn "User" .User "Tree" .Tree.Child "G" .G}}
 		</div>
     </div>
     {{template "_jsTemplates" .}}

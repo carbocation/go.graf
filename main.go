@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"runtime"
 
-	"github.com/carbocation/gotogether"
 	"github.com/carbocation/go.forum"
 	"github.com/carbocation/go.user"
+	"github.com/carbocation/gotogether"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	_ "github.com/lib/pq"
@@ -19,6 +19,7 @@ var Config *ConfigFile = &ConfigFile{
 	//These are passed to templates
 	Public: &ConfigPublic{
 		Site:         "Ask Bitcoin",
+		Url:          "http://askbitcoin.com",
 		ContactEmail: "james@askbitcoin.com",
 	},
 
@@ -30,7 +31,7 @@ var Config *ConfigFile = &ConfigFile{
 	},
 
 	App: &ConfigApp{
-		//Port that nginx (for reverse proxy) or the browser has to be pointed at 
+		//Port that nginx (for reverse proxy) or the browser has to be pointed at
 		Port: "9999",
 
 		//64 bit random string generated with `openssl rand -base64 64`
@@ -39,14 +40,14 @@ var Config *ConfigFile = &ConfigFile{
 }
 
 var (
-	db     *sql.DB                                     //db maintains a pool of connections to our database of choice 
+	db     *sql.DB                                     //db maintains a pool of connections to our database of choice
 	store  *sessions.FilesystemStore                   //With an empty first argument, this will put session files in os.TempDir() (/tmp)
-	router *mux.Router               = mux.NewRouter() //Dynamic content is managed by handlers pointed at by the router 
+	router *mux.Router               = mux.NewRouter() //Dynamic content is managed by handlers pointed at by the router
 )
 
 // For exporting
 func main() {
-	//Only if we're running this package as the main package do we need to 
+	//Only if we're running this package as the main package do we need to
 	//configure the maxprocs here. Otherwise it should be done by the actual
 	//main package.
 	runtime.GOMAXPROCS(runtime.NumCPU())
@@ -57,7 +58,7 @@ func main() {
 
 func Main() {
 	//
-	//After user has had opportunity to change config: 
+	//After user has had opportunity to change config:
 	//
 	//1 init the db
 	db = initdb()
