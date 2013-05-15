@@ -104,7 +104,7 @@ $(document).ready(function(){
 		<span class="lead vote upvote {{if .Tree.UserVote.Upvote}}active{{end}}">▲</span> <a href="{{reverse "thread" "id" .Tree.Id}}" class="lead">{{.Tree.Title}}</a> <span class="lead vote downvote {{if .Tree.UserVote.Downvote}}active{{end}}">▼</span><br />
 			<ul class="inline">
 				<li>By {{.Tree.AuthorHandle}}</li>
-				<li>{{.Tree.Points}} {{if eq .Tree.Points 1}}Point{{else}}Points{{end}}</li>
+				<li>{{.Tree.Points}} {{if eq .Tree.Points 1 -1}}Point{{else}}Points{{end}}</li>
 				<li>Value: {{.Tree.Score}}</li>
 				<li><a href="{{reverse "thread" "id" .Tree.Id}}">Permalink</a></li>
 				{{if eq .Tree.AuthorId .User.Id}}
