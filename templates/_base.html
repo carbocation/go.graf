@@ -89,7 +89,9 @@
 		<div class="row">
 			<div class="span9">
 				<input name="Title" class="span9 inplace-compose" placeholder="Title">
-				<textarea name="Body" class="span9 inplace-compose" placeholder="Text or URL (This tool will automatically determine whether you typed text or just a plain URL.)"></textarea>
+				<span>Fill out <i>either</i> the URL or the Body.</span>
+				<input name="Url" class="span9 inplace-compose" placeholder="URL"></textarea>
+				<textarea name="Body" class="span9 inplace-compose" placeholder="Body (Note: if the URL field is filled out, any text in the Body will be discarded.)"></textarea>
 			</div>
 		</div>
 		<input type="hidden" name="parent_id" value="<#= parent_id #>">

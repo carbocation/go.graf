@@ -95,7 +95,17 @@ $(document).ready(function(){
 {{if .Tree}}
     <div class="entry" id="entry_{{.Tree.Id}}">
 		{{with .Tree}}
-			<h1><span class="vote upvote {{if .UserVote.Upvote}}active{{end}}">△</span> {{.Id}} {{.Title}} <span class="vote downvote {{if .UserVote.Downvote}}active{{end}}">▽</span></h1>
+			<h1>
+			
+			<span class="vote upvote {{if .UserVote.Upvote}}active{{end}}">△</span>
+			{{if .Url}}
+				<a href="{{.Body}}">{{.Title}}</a>
+			{{else}}
+				{{.Title}}
+			{{end}}
+			<span class="vote downvote {{if .UserVote.Downvote}}active{{end}}">▽</span>
+			</h1>
+			
 			<p class="lead">{{.Body}}</p>
 			<br />
 			<div class="active_messages" id="message_{{.Id}}"></div>

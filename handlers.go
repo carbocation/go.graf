@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	//"html/template"
 
 	//"github.com/carbocation/gotogether"
@@ -275,25 +276,15 @@ func postThreadHandler(w http.ResponseWriter, r *http.Request) error {
 	var pid int64 //parent ID
 	var err error
 	var parent, entry *forum.Entry
-
-	entry = new(forum.Entry)
-	r.ParseForm()
-	decoder.Decode(entry, r.Form)
-
-	fmt.Printf("%+v", entry)
-
+	
 	//Don't let guests post (currently)
 	//TODO(james) automatically create accounts for guests who try to post
-	if context.Get(r, ThisUser).(*user.User).Guest() {
-		http.Error(w, "NowayBro!", http.StatusUnauthorized)
-
-		return errors.New("Unauthorized")
+	u := context.Get(r, ThisUser).(*user.User)
+	if u.Guest() {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return errors.New("Only logged-in users can post.")
 	}
-
-	//TODO(james) stop relying on the existence of a user ID here
-	user := context.Get(r, ThisUser).(*user.User)
-	entry.AuthorId = user.Id
-
+	
 	//Make sure the parent_id is valid
 	if pid, err = strconv.ParseInt(r.FormValue("parent_id"), 10, 64); err != nil {
 		return err
@@ -304,25 +295,32 @@ func postThreadHandler(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	//If posting to a forum, must have a title and body or URL.
-	if parent.Forum {
-		//Min length
-		if len(entry.Body) < 5 {
-			if u, err := url.Parse(entry.Url); err != nil {
-				return errors.New("Either free-text or a URL must be provided.")
-			} else {
-				//The URL is valid
-				entry.Url = u.String()
-			}
-		}
-		//entry.Body is therefore valid
-	} else {
-		//Thread reply
-		entry.Url = ""
-		if len(entry.Body) < 5 {
-			return errors.New("Please craft a longer reply.")
-		}
-		//entry.Body is therefore valid
+	entry = new(forum.Entry)
+	r.ParseForm()
+	decoder.Decode(entry, r.Form)
+	
+	entry.AuthorId = u.Id
+	entry.Body = strings.TrimSpace(entry.Body)
+	
+	URL, err := url.Parse(strings.TrimSpace(r.FormValue("Url")))
+	if err != nil {
+		return err
+	}
+
+	if URL.String() == "" && entry.Body == "" {
+		//Lack of URL and Body fails in all contexts
+		http.Error(w, "Unauthorized", http.StatusExpectationFailed)
+		return errors.New("Both URL and Body were empty; please fill out either one or the other.")
+	}
+	
+	if parent.Forum && ValidUrl(URL) {
+		//We only care about whether the parent is a forum if the user submits a valid URL
+		//As promised, we replace the Body with the URL if one is given 
+		entry.Body = URL.String()
+		entry.Url = true
+	} else if len(entry.Body) < 5 {
+		//In all other cases, if the body is not valid, they need to write more.
+		return errors.New("Please craft a longer message.")
 	}
 
 	err = entry.Persist(parent.Id)
@@ -331,7 +329,6 @@ func postThreadHandler(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	jsondata, err := json.Marshal(entry)
-
 	integer, err := w.Write(jsondata)
 	if err != nil {
 		return err

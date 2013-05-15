@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
+	"net/url"
 	"path/filepath"
 	"reflect"
 	"sync"
@@ -54,6 +55,12 @@ func toInt64(input int) int64 {
 	return int64(input)
 }
 
+func urlHost(input string) string {
+	URL, _ := url.Parse(input)
+
+	return URL.Host
+}
+
 // From Russ Cox on the go-nuts mailing list
 // Modified to treat int and int64 equally, as well as float32 and float64
 // https://groups.google.com/d/msg/golang-nuts/OEdSDgEC7js/iyhU9DW_IKcJ
@@ -79,7 +86,7 @@ func eq(args ...interface{}) bool {
 			}
 		}
 		return false
-	
+
 	case int64:
 		for _, y := range args[1:] {
 			switch y := y.(type) {
@@ -109,7 +116,7 @@ func eq(args ...interface{}) bool {
 			}
 		}
 		return false
-	
+
 	case float64:
 		for _, y := range args[1:] {
 			switch y := y.(type) {
@@ -168,6 +175,7 @@ var funcs = template.FuncMap{
 	"safeJS":    safeJS,
 	"safeJSStr": safeJSStr,
 	"toInt64":   toInt64,
+	"urlHost":   urlHost,
 }
 
 // Parse a template ('name') against _base.html
