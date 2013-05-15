@@ -74,7 +74,9 @@ $(document).ready(function(){
 	    	console.log(msg);
 			
 			{{/*TODO(james) ignore the response and let websockets kick the message back*/}}
-	    	$("#children_"+parentId).append(msg)
+	    	{{/* $("#children_"+parentId).append(msg) */}}
+			//For now, reload the page.
+			window.location.href = window.location.href;
 	    	app.replaceTemplate("BlankTemplate", {}, "active_" + parentId);
     	})
 	    .fail(function(msg){ console.log(msg.status + ": " + msg.responseText); });

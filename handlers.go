@@ -313,6 +313,13 @@ func postThreadHandler(w http.ResponseWriter, r *http.Request) error {
 		return errors.New("Both URL and Body were empty; please fill out either one or the other.")
 	}
 	
+	//When creating new posts, we set their parent to their true parent (we don't use 
+	// LCRS at that stage), so checking for Parent().Forum is sufficient.
+	if parent.Forum && entry.Title == "" {
+		//Unacceptable to have an empty title if this is new entry within a forum
+		return errors.New("The Title must not be empty or consist solely of whitespace.")
+	} 
+	
 	if parent.Forum && ValidUrl(URL) {
 		//We only care about whether the parent is a forum if the user submits a valid URL
 		//As promised, we replace the Body with the URL if one is given 
@@ -322,6 +329,8 @@ func postThreadHandler(w http.ResponseWriter, r *http.Request) error {
 		//In all other cases, if the body is not valid, they need to write more.
 		return errors.New("Please craft a longer message.")
 	}
+	
+	fmt.Printf("Entry just before persistence: %v", entry)
 
 	err = entry.Persist(parent.Id)
 	if err != nil {
