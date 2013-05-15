@@ -166,7 +166,7 @@ func forumHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	
 	u := context.Get(r, ThisUser).(*user.User)
 
-	tree, err := forum.DepthOneDescendantEntries(id, u)
+	tree, err := forum.DescendantEntries(id, u)
 	if err != nil {
 		return errors.New("The requested forum's neighbor entries could not be found.")
 	}

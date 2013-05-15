@@ -101,16 +101,17 @@ $(document).ready(function(){
 {{ define "tree" }}
 {{if .Tree}}
 	<div class="entry" id="entry_{{.Tree.Id}}">
-		<span class="lead vote upvote {{if .Tree.UserVote.Upvote}}active{{end}}">▲</span> <a href="{{reverse "thread" "id" .Tree.Id}}" class="lead">{{.Tree.Title}}</a> <span class="lead vote upvote {{if .Tree.UserVote.Downvote}}active{{end}}">▼</span><br />
+		<span class="lead vote upvote {{if .Tree.UserVote.Upvote}}active{{end}}">▲</span> <a href="{{reverse "thread" "id" .Tree.Id}}" class="lead">{{.Tree.Title}}</a> <span class="lead vote downvote {{if .Tree.UserVote.Downvote}}active{{end}}">▼</span><br />
 			<ul class="inline">
 				<li>By {{.Tree.AuthorHandle}}</li>
-				<li>{{.Tree.Points}} {{if eq .Tree.Points 1}}Point{{else}}Points{{end}}</li>
+				<li>{{.Tree.Points}} {{if eq .Tree.Points 1 -1}}Point{{else}}Points{{end}}</li>
+				<li>Value: {{.Tree.Score}}</li>
 				<li><a href="{{reverse "thread" "id" .Tree.Id}}">Permalink</a></li>
 				{{if eq .Tree.AuthorId .User.Id}}
 				<li><a href="#">Edit</a></li>
 				{{end}}
 			</ul>
-        {{template "tree" mapfn "User" .User "Tree" .Tree.Child}}
+        {{/* {{template "tree" mapfn "User" .User "Tree" .Tree.Child}} */}}
 	</div>
         {{template "tree" mapfn "User" .User "Tree" .Tree.Sibling}}
 {{end}}

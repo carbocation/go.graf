@@ -102,6 +102,7 @@ $(document).ready(function(){
 			<ul class="inline">
 				<li>By {{.AuthorHandle}}</li>
 				<li>{{.Points}} {{if eq .Points 1}}Point{{else}}Points{{end}}</li>
+				<li>Value: {{.Score}}</li>
 				<li><a class="reply">Reply</a></li>
 				{{/* TODO(james)
 				<li><a href="edit">Edit</a></li>
@@ -132,6 +133,7 @@ $(document).ready(function(){
 			<ul class="inline">
 				<li><span class="vote upvote {{if .UserVote.Upvote}}active{{end}}">▲</span> By {{.AuthorHandle}} <span class="vote downvote {{if .UserVote.Downvote}}active{{end}}">▼</span></li>
 				<li>{{.Points}} {{if eq .Points 1 -1}}Point{{else}}Points{{end}}</li>
+				<li>Value: {{.Score}}</li>
 				<li>&nbsp;</li>
 				<li><a class="reply">Reply</a></li>
 				<li><a href="/thread/{{.Id}}">Permalink</a></li>
