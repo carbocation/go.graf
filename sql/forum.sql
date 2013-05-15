@@ -68,7 +68,9 @@ CREATE TABLE entry (
     title text NOT NULL,
     body text NOT NULL,
     created timestamp with time zone DEFAULT now() NOT NULL,
-    author_id bigint NOT NULL
+    author_id bigint NOT NULL,
+    forum boolean DEFAULT false NOT NULL,
+    url boolean DEFAULT false NOT NULL
 );
 
 
@@ -86,32 +88,6 @@ CREATE TABLE entry_closures (
 
 
 ALTER TABLE askbitcoin.entry_closures OWNER TO askbitcoin;
-
--- Table: askbitcoin.vote
-
--- DROP TABLE askbitcoin.vote;
-
-CREATE TABLE askbitcoin.vote
-(
-  entry_id integer NOT NULL,
-  user_id integer NOT NULL,
-  upvote boolean NOT NULL DEFAULT false,
-  downvote boolean NOT NULL DEFAULT false,
-  created time with time zone NOT NULL DEFAULT now(),
-  CONSTRAINT vote_pkey PRIMARY KEY (entry_id, user_id),
-  CONSTRAINT vote_entry_id_fkey FOREIGN KEY (entry_id)
-      REFERENCES askbitcoin.entry (id) MATCH SIMPLE
-      ON UPDATE NO ACTION ON DELETE NO ACTION,
-  CONSTRAINT vote_user_id_fkey FOREIGN KEY (user_id)
-      REFERENCES askbitcoin.account (id) MATCH SIMPLE
-      ON UPDATE NO ACTION ON DELETE NO ACTION
-)
-WITH (
-  OIDS=FALSE
-);
-ALTER TABLE askbitcoin.vote
-  OWNER TO askbitcoin;
-
 
 --
 -- Name: entry_id_seq; Type: SEQUENCE; Schema: askbitcoin; Owner: askbitcoin
@@ -133,6 +109,21 @@ ALTER TABLE askbitcoin.entry_id_seq OWNER TO askbitcoin;
 
 ALTER SEQUENCE entry_id_seq OWNED BY entry.id;
 
+
+--
+-- Name: vote; Type: TABLE; Schema: askbitcoin; Owner: askbitcoin; Tablespace: 
+--
+
+CREATE TABLE vote (
+    entry_id integer NOT NULL,
+    user_id integer NOT NULL,
+    upvote boolean DEFAULT false NOT NULL,
+    downvote boolean DEFAULT false NOT NULL,
+    created time with time zone DEFAULT now() NOT NULL
+);
+
+
+ALTER TABLE askbitcoin.vote OWNER TO askbitcoin;
 
 --
 -- Name: id; Type: DEFAULT; Schema: askbitcoin; Owner: askbitcoin
@@ -189,6 +180,14 @@ ALTER TABLE ONLY account
 
 
 --
+-- Name: vote_pkey; Type: CONSTRAINT; Schema: askbitcoin; Owner: askbitcoin; Tablespace: 
+--
+
+ALTER TABLE ONLY vote
+    ADD CONSTRAINT vote_pkey PRIMARY KEY (entry_id, user_id);
+
+
+--
 -- Name: entry_author_id_fkey; Type: FK CONSTRAINT; Schema: askbitcoin; Owner: askbitcoin
 --
 
@@ -210,6 +209,22 @@ ALTER TABLE ONLY entry_closures
 
 ALTER TABLE ONLY entry_closures
     ADD CONSTRAINT entry_closures_descendant_fkey FOREIGN KEY (descendant) REFERENCES entry(id);
+
+
+--
+-- Name: vote_entry_id_fkey; Type: FK CONSTRAINT; Schema: askbitcoin; Owner: askbitcoin
+--
+
+ALTER TABLE ONLY vote
+    ADD CONSTRAINT vote_entry_id_fkey FOREIGN KEY (entry_id) REFERENCES entry(id);
+
+
+--
+-- Name: vote_user_id_fkey; Type: FK CONSTRAINT; Schema: askbitcoin; Owner: askbitcoin
+--
+
+ALTER TABLE ONLY vote
+    ADD CONSTRAINT vote_user_id_fkey FOREIGN KEY (user_id) REFERENCES account(id);
 
 
 --
