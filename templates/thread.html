@@ -31,6 +31,13 @@ $(document).ready(function(){
 		var parentId = getParentId(this);
 		var voteEl = this
 		
+		if ({{.User.Guest}}) {
+			$("#message_"+parentId).html("<p class=\"text-error\">Guests cannot currently vote. \
+					Please register an account to vote.</p>");
+			
+			return;
+		}
+		
 		var submission = {entryId: parentId};
 		
 		//Send the right kind of vote

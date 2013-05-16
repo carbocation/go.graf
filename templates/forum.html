@@ -15,7 +15,7 @@ $(document).ready(function(){
 			app.replaceTemplate("NewThreadTemplate", {parent_id: parentId}, "active_"+parentId);
 		} else {
 			$("#message_"+parentId).html("<p class=\"text-error\">Guests cannot currently create posts. \
-					Please register an account to post.</p>")
+					Please register an account to post.</p>");
 		}
 	});
 	
@@ -41,7 +41,6 @@ $(document).ready(function(){
 			
 			$("#message_"+parentId).append("<p class=\"text-info\">Your new post was created successfully. \
 					You will be redirected shortly. "+msg.Title+" "+msg.Body+"</p>")
-	    	console.log(msg);
 			
 			{{/*TODO(james) ignore the response and let websockets kick the message back*/}}
 	    	$("#children_"+parentId).append(msg)
@@ -61,7 +60,14 @@ $(document).ready(function(){
 		event.preventDefault();
 		
 		var parentId = getParentId(this);
-		var voteEl = this
+		var voteEl = this;
+		
+		if ({{.User.Guest}}) {
+			$("#message_"+parentId).html("<p class=\"text-error\">Guests cannot currently vote. \
+					Please register an account to vote.</p>");
+			
+			return;
+		}
 		
 		var submission = {entryId: parentId};
 		
@@ -117,6 +123,7 @@ $(document).ready(function(){
 			<span class="lead muted">{{urlHost .G.Url}}</span>
 		{{end}}
 		<br />
+		<span id="message_{{.Tree.Id}}"></span>
 			<ul class="inline">
 				<li>By {{.Tree.AuthorHandle}} {{humanizeTime .Tree.Created}}</li>
 				<li><a href="{{reverse "thread" "id" .Tree.Id}}">
