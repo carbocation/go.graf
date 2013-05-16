@@ -148,7 +148,7 @@ $(document).ready(function(){
 {{if .Tree}}
     <div class="entry" id="forum_{{.Tree.Id}}">
 		{{with .Tree}}
-			<h1>Forum {{.Title}}</h1>
+			<h1>{{.Title}}</h1>
 			<p class="lead">{{.Body}}</p>
 			<div class="active_messages" id="message_{{.Id}}"></div>
 			<button class="btn btn-primary new_thread">Submit a new story</button>
