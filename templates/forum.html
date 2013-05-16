@@ -111,39 +111,6 @@ $(document).ready(function(){
 </script>
 {{ end }}
 
-{{ define "tree" }}
-{{if .Tree}}
-	<div class="entry" id="entry_{{.Tree.Id}}">
-		<span class="lead vote upvote {{if .Tree.UserVote.Upvote}}active{{end}}">▲</span> 
-		<a href="{{if .Tree.Url}}{{.Tree.Body}}{{else}}{{reverse "thread" "id" .Tree.Id}}{{end}}" class="lead">{{.Tree.Title}}</a> 
-		<span class="lead vote downvote {{if .Tree.UserVote.Downvote}}active{{end}}">▼</span>
-		{{if .Tree.Url}}
-			<span class="lead text-info">{{urlHost .Tree.Body}}</span>
-		{{else}}
-			<span class="lead muted">{{urlHost .G.Url}}</span>
-		{{end}}
-		<br />
-		<span id="message_{{.Tree.Id}}"></span>
-			<ul class="inline">
-				<li>By {{.Tree.AuthorHandle}} {{humanizeTime .Tree.Created}}</li>
-				<li><a href="{{reverse "thread" "id" .Tree.Id}}">
-				{{$childComments := .Tree.ChildCount}}
-				{{$childComments}} {{if eq $childComments 1}}Comment{{else}}Comments{{end}}
-				</a></li>
-				<li>{{.Tree.Points}} {{if eq .Tree.Points 1 -1}}Point{{else}}Points{{end}}</li>
-				<li>Value: {{.Tree.Score}}</li>
-				{{/*
-				{{if eq .Tree.AuthorId .User.Id}}
-				<li><a href="#">Edit</a></li>
-				{{end}}
-				*/}}
-			</ul>
-        {{/* {{template "tree" mapfn "User" .User "Tree" .Tree.Child "G" .G}} */}}
-	</div>
-        {{template "tree" mapfn "User" .User "Tree" .Tree.Sibling "G" .G}}
-{{end}}
-{{end}}
-
 {{ define "content" }}
 {{if .Tree}}
     <div class="entry" id="forum_{{.Tree.Id}}">
@@ -164,3 +131,37 @@ $(document).ready(function(){
 	<p class="text-error">The requested forum is unavailable.</p>
 {{end}}
 {{ end }}
+
+
+{{ define "tree" }}
+{{if .Tree}}
+	{{$childComments := .Tree.ChildCount}}
+	<div class="entry" id="entry_{{.Tree.Id}}">
+		<span class="lead vote upvote {{if .Tree.UserVote.Upvote}}active{{end}} {{if .User.Guest}}muted{{end}}">▲</span> 
+		<a href="{{if .Tree.Url}}{{.Tree.Body}}{{else}}{{reverse "thread" "id" .Tree.Id}}{{end}}" class="lead">{{.Tree.Title}}</a> 
+		<span class="lead vote downvote {{if .Tree.UserVote.Downvote}}active{{end}} {{if .User.Guest}}muted{{end}}">▼</span>
+		{{if .Tree.Url}}
+			<span class="lead {{/*text-info*/}}muted">{{urlHost .Tree.Body}}</span>
+		{{else}}
+			<span class="lead muted">{{urlHost .G.Url}}</span>
+		{{end}}
+			<span class="lead"><a href="{{reverse "thread" "id" .Tree.Id}}">
+				{{$childComments}} {{if eq $childComments 1}}Comment{{else}}Comments{{end}}
+			</a></span>
+		<br />
+		<span id="message_{{.Tree.Id}}"></span>
+			<ul class="inline">
+				<li>{{.Tree.AuthorHandle}} {{humanizeTime .Tree.Created}}</li>
+				<li>{{.Tree.Points}} {{if eq .Tree.Points 1 -1}}Point{{else}}Points{{end}}</li>
+				<li>Value: {{.Tree.Score}}</li>
+				{{/*
+				{{if eq .Tree.AuthorId .User.Id}}
+				<li><a href="#">Edit</a></li>
+				{{end}}
+				*/}}
+			</ul>
+        {{/* {{template "tree" mapfn "User" .User "Tree" .Tree.Child "G" .G}} */}}
+	</div>
+        {{template "tree" mapfn "User" .User "Tree" .Tree.Sibling "G" .G}}
+{{end}}
+{{end}}

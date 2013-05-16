@@ -52,7 +52,7 @@
             {{ template "content" . }}
         </section>
         <footer id="footer">
-            {{ .G.Site }}, © 2013 <a href='mailto:{{ .G.ContactEmail }}'>{{ .G.ContactEmail }}</a>
+            <a href="{{reverse "about"}}">{{ .G.Site }}</a>, © 2013 <a href='mailto:{{ .G.ContactEmail }}'>{{ .G.ContactEmail }}</a>
         </footer>
         <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
         {{/* Load JQuery and Bootstrap from local CDN if not available remotely. */}}
