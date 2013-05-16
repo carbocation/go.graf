@@ -118,13 +118,18 @@ $(document).ready(function(){
 		{{end}}
 		<br />
 			<ul class="inline">
-				<li>By {{.Tree.AuthorHandle}}</li>
+				<li>By {{.Tree.AuthorHandle}} {{humanizeTime .Tree.Created}}</li>
+				<li><a href="{{reverse "thread" "id" .Tree.Id}}">
+				{{$childComments := .Tree.ChildCount}}
+				{{$childComments}} {{if eq $childComments 1}}Comment{{else}}Comments{{end}}
+				</a></li>
 				<li>{{.Tree.Points}} {{if eq .Tree.Points 1 -1}}Point{{else}}Points{{end}}</li>
 				<li>Value: {{.Tree.Score}}</li>
-				<li><a href="{{reverse "thread" "id" .Tree.Id}}">Permalink</a></li>
+				{{/*
 				{{if eq .Tree.AuthorId .User.Id}}
 				<li><a href="#">Edit</a></li>
 				{{end}}
+				*/}}
 			</ul>
         {{/* {{template "tree" mapfn "User" .User "Tree" .Tree.Child "G" .G}} */}}
 	</div>

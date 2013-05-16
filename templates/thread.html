@@ -150,8 +150,12 @@ $(document).ready(function(){
 			<br />
 			<div class="active_messages" id="message_{{.Id}}"></div>
 			<ul class="inline">
-				<li><span class="vote upvote {{if .UserVote.Upvote}}active{{end}}">▲</span> By {{.AuthorHandle}} <span class="vote downvote {{if .UserVote.Downvote}}active{{end}}">▼</span></li>
-				<li>{{.Points}} {{if eq .Points 1 -1}}Point{{else}}Points{{end}}</li>
+				<li> By {{.AuthorHandle}} {{humanizeTime .Created}}</li>
+				<li>
+					<span class="vote upvote {{if .UserVote.Upvote}}active{{end}}">▲</span>
+					{{.Points}} {{if eq .Points 1 -1}}Point{{else}}Points{{end}}
+					<span class="vote downvote {{if .UserVote.Downvote}}active{{end}}">▼</span>
+				</li>
 				<li>Value: {{.Score}}</li>
 				<li>&nbsp;</li>
 				<li><a class="reply">Reply</a></li>

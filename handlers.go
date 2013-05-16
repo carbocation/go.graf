@@ -32,6 +32,29 @@ func (h handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	buf := new(httpbuf.Buffer)
 	if err := h(buf, req); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		
+		/*
+		Note: must properly deal with JSON/non-HTTP, but after that
+		this is an appealing way to display errors.
+		
+		fmt.Printf("%+v",buf.Header().Get("Content-Type"))
+		
+		//http.Error(w, "HTTP 404: The requested forum does not exist.", http.StatusNotFound)
+		w.WriteHeader(http.StatusInternalServerError)
+		data := struct {
+			G    *ConfigPublic
+			User *user.User
+			ShortError string
+			LongError string
+		}{
+			Config.Public,
+			context.Get(req, ThisUser).(*user.User),
+			"Error",
+			err.Error(),
+		}
+		T("error.html").Execute(w, data)
+		*/
+		
 		return
 	}
 
@@ -47,10 +70,19 @@ func loginHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	data := struct {
 		G    *ConfigPublic
 		User *user.User
+		Messages []interface{}
 	}{
 		Config.Public,
 		context.Get(r, ThisUser).(*user.User),
+		[]interface{}{},
 	}
+	
+	session, _ := store.Get(r, "app")
+	if flashes := session.Flashes(); len(flashes) > 0 {
+		// Just print the flash values.
+		data.Messages = flashes
+	}
+	
 	//T("login.html").Execute(w, map[string]interface{}{})
 	err = T("login.html").Execute(w, data)
 	if err != nil {
@@ -124,7 +156,7 @@ func registerHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	return
 }
 
-func threadHandler(w http.ResponseWriter, r *http.Request) (err error) {
+func threadHandler(w http.ResponseWriter, r *http.Request) error {
 	//If the thread ID is not parseable as an integer, stop immediately
 	id, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
 	if err != nil {
@@ -138,11 +170,30 @@ func threadHandler(w http.ResponseWriter, r *http.Request) (err error) {
 		fmt.Printf("main.threadHandler: %s\n", err)
 		return errors.New("The requested thread's neighbor entries could not be found.")
 	}
-
+	
+	if tree == nil {
+		//http.Error(w, "HTTP 404: The requested forum does not exist.", http.StatusNotFound)
+		w.WriteHeader(http.StatusNotFound)
+		data := struct {
+			G    *ConfigPublic
+			User *user.User
+			ShortError string
+			LongError string
+		}{
+			Config.Public,
+			context.Get(r, ThisUser).(*user.User),
+			"Forum not found",
+			"The forum that you requested could not be found.",
+		}
+		T("error.html").Execute(w, data)
+		
+		return nil
+	}
+	
 	//Make sure this not a forum
 	if tree.Forum {
 		http.Redirect(w, r, reverse("forum", "id", id), http.StatusSeeOther)
-		return
+		return nil
 	}
 
 	data := struct {
@@ -162,7 +213,7 @@ func threadHandler(w http.ResponseWriter, r *http.Request) (err error) {
 		return errors.New("Our template appears to be malformed so we cannot process your request.")
 	}
 
-	return
+	return nil
 }
 
 func forumHandler(w http.ResponseWriter, r *http.Request) (err error) {
@@ -177,6 +228,25 @@ func forumHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	tree, err := forum.DescendantEntries(id, u)
 	if err != nil {
 		return errors.New("The requested forum's neighbor entries could not be found.")
+	}
+	
+	if tree == nil {
+		//http.Error(w, "HTTP 404: The requested forum does not exist.", http.StatusNotFound)
+		w.WriteHeader(http.StatusNotFound)
+		data := struct {
+			G    *ConfigPublic
+			User *user.User
+			ShortError string
+			LongError string
+		}{
+			Config.Public,
+			context.Get(r, ThisUser).(*user.User),
+			"Forum not found",
+			"The forum that you requested could not be found.",
+		}
+		T("error.html").Execute(w, data)
+		
+		return nil
 	}
 
 	//Make sure this is a forum
@@ -211,8 +281,10 @@ func newThreadHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	return
 }
 
-func postLoginHandler(w http.ResponseWriter, r *http.Request) (err error) {
+func postLoginHandler(w http.ResponseWriter, r *http.Request) error {
 	r.ParseForm()
+	
+	session, _ := store.Get(r, "app")
 
 	login := new(user.User)
 	//Parse the form values into the Login object
@@ -220,19 +292,23 @@ func postLoginHandler(w http.ResponseWriter, r *http.Request) (err error) {
 
 	u, err := login.Login()
 	if err != nil {
-		u = new(user.User)
+		//u = new(user.User)
+		//fmt.Println(err)
+		session.AddFlash(fmt.Sprintf("%s", err))
+		http.Redirect(w, r, reverse("login"), http.StatusUnauthorized)
+		
+		return loginHandler(w, r)
 	}
 
 	context.Set(r, ThisUser, u)
 
 	//Add the user's struct to the session
-	session, _ := store.Get(r, "app")
 	session.Values["user"] = u
 
 	//Redirect to a GET address to prevent form resubmission
 	http.Redirect(w, r, reverse("index"), http.StatusSeeOther)
 
-	return
+	return nil
 }
 
 func postRegisterHandler(w http.ResponseWriter, r *http.Request) (err error) {
