@@ -1,7 +1,5 @@
 == MUST HAVE ==
-# Count replies
-
-# Show parent forum
+# Show parent thread (if any) and parent forum. I.e., breadcrumbs.
 
 == LIKE TO HAVE ==
 Have a weight for each user. Their votes have that weight. Offline, 
