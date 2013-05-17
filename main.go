@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
-	"runtime"
 
 	"github.com/carbocation/go.forum"
 	"github.com/carbocation/go.user"
@@ -47,18 +46,7 @@ var (
 	router *mux.Router               = mux.NewRouter() //Dynamic content is managed by handlers pointed at by the router
 )
 
-// For exporting
 func main() {
-	//Only if we're running this package as the main package do we need to
-	//configure the maxprocs here. Otherwise it should be done by the actual
-	//main package.
-	runtime.GOMAXPROCS(runtime.NumCPU())
-
-	//Call the main process
-	Main()
-}
-
-func Main() {
 	//
 	//After user has had opportunity to change config:
 	//
