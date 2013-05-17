@@ -143,23 +143,23 @@ $(document).ready(function(){
 		{{if .Tree.Url}}
 			<span class="lead {{/*text-info*/}}muted">{{urlHost .Tree.Body}}</span>
 		{{else}}
-			<span class="lead muted">{{urlHost .G.Url}}</span>
+			<span class="lead muted"> {{urlHost .G.Url}} </span>
 		{{end}}
-			<span class="lead"><a href="{{reverse "thread" "id" .Tree.Id}}">
-				{{$childComments}} {{if eq $childComments 1}}Comment{{else}}Comments{{end}}
-			</a></span>
+		<span class="lead"><a href="{{reverse "thread" "id" .Tree.Id}}">
+			{{$childComments}} {{if eq $childComments 1}}Comment{{else}}Comments{{end}}
+		</a></span>
 		<br />
 		<span id="message_{{.Tree.Id}}"></span>
-			<ul class="inline">
-				<li>{{.Tree.AuthorHandle}} {{humanizeTime .Tree.Created}}</li>
-				<li>{{.Tree.Points}} {{if eq .Tree.Points 1 -1}}Point{{else}}Points{{end}}</li>
-				<li>Value: {{.Tree.Score}}</li>
-				{{/*
-				{{if eq .Tree.AuthorId .User.Id}}
-				<li><a href="#">Edit</a></li>
-				{{end}}
-				*/}}
-			</ul>
+		<ul class="inline">
+			<li>{{.Tree.AuthorHandle}} {{humanizeTime .Tree.Created}}</li>
+			<li>{{.Tree.Points}} {{if eq .Tree.Points 1 -1}}Point{{else}}Points{{end}}</li>
+			<li>Value: {{.Tree.Score}}</li>
+			{{/*
+			{{if eq .Tree.AuthorId .User.Id}}
+			<li><a href="#">Edit</a></li>
+			{{end}}
+			*/}}
+		</ul>
         {{/* {{template "tree" mapfn "User" .User "Tree" .Tree.Child "G" .G}} */}}
 	</div>
         {{template "tree" mapfn "User" .User "Tree" .Tree.Sibling "G" .G}}

@@ -125,13 +125,13 @@ $(document).ready(function(){
 		<ul class="inline">
 			<li>{{.Tree.AuthorHandle}}</li>
 			<li>{{humanizeTime .Tree.Created}}</li>
+			<li><a class="reply">Reply</a></li>
 			<li>{{.Tree.Points}} {{if eq .Tree.Points 1}}Point{{else}}Points{{end}}</li>
 			<li>Value: {{.Tree.Score}}</li>
 			<li>
 			{{$childComments := .Tree.ChildCount}}
 			<a href="{{reverse "thread" "id" .Tree.Id}}">{{$childComments}} {{if eq $childComments 1}}Comment{{else}}Comments{{end}}</a>
 			</li>
-			<li><a class="reply">Reply</a></li>
 			{{/* TODO(james)
 			<li><a href="edit">Edit</a></li>
 			<li>&nbsp;</li>
@@ -157,13 +157,14 @@ $(document).ready(function(){
 		<br />
 		<div class="active_messages" id="message_{{.Tree.Id}}"></div>
 		<ul class="inline">
-			<li>{{.Tree.AuthorHandle}}</li>
-			<li>{{humanizeTime .Tree.Created}}</li>
 			<li>
 				<span class="vote upvote {{if .Tree.UserVote.Upvote}}active{{end}} {{if .User.Guest}}muted{{end}}">▲</span>
-				{{.Tree.Points}} {{if eq .Tree.Points 1 -1}}Point{{else}}Points{{end}}
+				{{.Tree.AuthorHandle}}
 				<span class="vote downvote {{if .Tree.UserVote.Downvote}}active{{end}} {{if .User.Guest}}muted{{end}}">▼</span>
 			</li>
+			<li>{{humanizeTime .Tree.Created}}</li>
+			<li><a class="reply">Reply</a></li>
+			<li>{{.Tree.Points}} {{if eq .Tree.Points 1 -1}}Point{{else}}Points{{end}}</li>
 			<li>Value: {{.Tree.Score}}</li>
 			<li>
 			{{$childComments := .Tree.ChildCount}}
@@ -175,7 +176,6 @@ $(document).ready(function(){
 				{{end}}
 			</a>
 			</li>
-			<li><a class="reply">Reply</a></li>
 			{{/* TODO(james)
 			<li><a href="edit">Edit</a></li>
 			<li>&nbsp;</li>
