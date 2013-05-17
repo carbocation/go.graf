@@ -34,4 +34,6 @@ type ConfigPublic struct {
 	Site         string //Site name
 	Url          string //Full URL, e.g., http://www.google.com
 	ContactEmail string //Webmaster email address
+	GACode       string //Google Analytics Code
+	GAUrl        string //URL of your site, according to Google Analytics
 }

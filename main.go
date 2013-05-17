@@ -21,6 +21,8 @@ var Config *ConfigFile = &ConfigFile{
 		Site:         "Ask Bitcoin",
 		Url:          "http://askbitcoin.com",
 		ContactEmail: "james@askbitcoin.com",
+		GACode: "UA-36655899-3",
+		GAUrl: "askbitcoin.com",
 	},
 
 	DB: &ConfigDB{
