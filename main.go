@@ -85,6 +85,9 @@ func Main() {
 	g.Handle("/login", handler(loginHandler)).Name("login")
 	g.Handle("/logout", handler(logoutHandler)).Name("logout")
 	g.Handle("/register", handler(registerHandler)).Name("register")
+	g.HandleFunc("/loaderio-3969952278183c9453e22d7f9ecfad1f/", func(w http.ResponseWriter, req *http.Request){
+		fmt.Fprintf(w, "loaderio-3969952278183c9453e22d7f9ecfad1f")
+	})
 
 	//Create a subrouter for POST requests
 	p := router.Methods("POST").Subrouter()
