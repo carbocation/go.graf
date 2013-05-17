@@ -11,8 +11,10 @@ import (
 	"path/filepath"
 	"reflect"
 	"sync"
+	"time"
 
 	"github.com/carbocation/gotogether"
+	"github.com/dustin/go-humanize"
 )
 
 // Note that we can't just preload and cache all of the templates
@@ -51,14 +53,14 @@ func safeJSStr(input string) template.JSStr {
 	return template.JSStr(input)
 }
 
-func toInt64(input int) int64 {
-	return int64(input)
-}
-
 func urlHost(input string) string {
 	URL, _ := url.Parse(input)
 
 	return URL.Host
+}
+
+func humanizeTime(input time.Time) string {
+	return humanize.Time(input)
 }
 
 // From Russ Cox on the go-nuts mailing list
@@ -174,8 +176,8 @@ var funcs = template.FuncMap{
 	"safeURL":   safeURL,
 	"safeJS":    safeJS,
 	"safeJSStr": safeJSStr,
-	"toInt64":   toInt64,
 	"urlHost":   urlHost,
+	"humanizeTime": humanizeTime,
 }
 
 // Parse a template ('name') against _base.html

@@ -1,18 +1,20 @@
 == MUST HAVE ==
-# Voting
+# Show parent thread (if any) and parent forum. I.e., breadcrumbs.
 
-# Submit new stories
-
-# Count replies
-
-# Show parent forum
+# Google Analytics
 
 == LIKE TO HAVE ==
+Have a weight for each user. Their votes have that weight. Offline, 
+calculate the value of their contributions to calculate this weight.
+When you do SUM(upvotes), you instead do SUM(upvotes * weight)
+
 Move $.document.ready() stuff into its own file.
 
 Cache threads that are requested. Come up with a low-cost way to 
 check to see if a tree element has been invalidated and re-load 
-only if so.
+only if so. Consider a global cache of posts and their votes, with 
+per-user cache of vote status on each post. Now that you pull down 
+all posts for the front page, this is even more important.
 
 Add flash cookie if your login failed. Redirect to login form on 
 failed login. Redirect to target page on successful login. 

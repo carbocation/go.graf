@@ -21,6 +21,8 @@ var Config *ConfigFile = &ConfigFile{
 		Site:         "Ask Bitcoin",
 		Url:          "http://askbitcoin.com",
 		ContactEmail: "james@askbitcoin.com",
+		GACode: "UA-36655899-3",
+		GAUrl: "askbitcoin.com",
 	},
 
 	DB: &ConfigDB{
@@ -78,12 +80,16 @@ func Main() {
 	//Create a subrouter for GET requests
 	g := router.Methods("GET").Subrouter()
 	g.Handle("/", handler(indexHandler)).Name("index")
+	g.Handle("/about", handler(aboutHandler)).Name("about")
 	g.Handle("/forum/{id:[0-9]+}", handler(forumHandler)).Name("forum")
 	g.Handle("/thread/{id:[0-9]+}", handler(threadHandler)).Name("thread")
 	g.Handle("/thread", handler(newThreadHandler)).Name("newThread") //Form for creating new posts
 	g.Handle("/login", handler(loginHandler)).Name("login")
 	g.Handle("/logout", handler(logoutHandler)).Name("logout")
 	g.Handle("/register", handler(registerHandler)).Name("register")
+	g.HandleFunc("/loaderio-3969952278183c9453e22d7f9ecfad1f/", func(w http.ResponseWriter, req *http.Request){
+		fmt.Fprintf(w, "loaderio-3969952278183c9453e22d7f9ecfad1f")
+	})
 
 	//Create a subrouter for POST requests
 	p := router.Methods("POST").Subrouter()

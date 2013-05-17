@@ -9,7 +9,14 @@ $(document).ready(function(){
 	};
 	
 	$(".reply").on("click", function(event){
-		app.replaceTemplate("ReplyTemplate", {parent_id: getParentId(this)}, "active_"+getParentId(this));
+		var parentId = getParentId(this);
+		
+		if (!{{.User.Guest}}) {
+			app.replaceTemplate("ReplyTemplate", {parent_id: parentId}, "active_"+parentId);
+		} else {
+			$("#message_"+parentId).html("<p class=\"text-error\">Guests cannot currently create posts. \
+					Please register an account to post.</p>")
+		}
 	});
 	
 	$(document).on("click", ".clear_active_controls", {}, function(event){
@@ -23,6 +30,13 @@ $(document).ready(function(){
 		
 		var parentId = getParentId(this);
 		var voteEl = this
+		
+		if ({{.User.Guest}}) {
+			$("#message_"+parentId).html("<p class=\"text-error\">Guests cannot currently vote. \
+					Please register an account to vote.</p>");
+			
+			return;
+		}
 		
 		var submission = {entryId: parentId};
 		
@@ -96,34 +110,35 @@ $(document).ready(function(){
 {{ define "content" }}
 {{if .Tree}}
     <div class="entry" id="entry_{{.Tree.Id}}">
-		{{with .Tree}}
-			<h1>
-			
-			<span class="vote upvote {{if .UserVote.Upvote}}active{{end}}">△</span>
-			{{if .Url}}
-				<a href="{{.Body}}">{{.Title}}</a>
-			{{else}}
-				{{.Title}}
-			{{end}}
-			<span class="vote downvote {{if .UserVote.Downvote}}active{{end}}">▽</span>
-			</h1>
-			
-			<p class="lead">{{.Body}}</p>
-			<br />
-			<div class="active_messages" id="message_{{.Id}}"></div>
-			<ul class="inline">
-				<li>By {{.AuthorHandle}}</li>
-				<li>{{.Points}} {{if eq .Points 1}}Point{{else}}Points{{end}}</li>
-				<li>Value: {{.Score}}</li>
-				<li><a class="reply">Reply</a></li>
-				{{/* TODO(james)
-				<li><a href="edit">Edit</a></li>
-				<li>&nbsp;</li>
-				<li><a href="delete">Delete</a></li>
-				*/}}
-			</ul>
-			<div class="active_controls" id="active_{{.Id}}"></div>
+		<h1>
+		<span class="vote upvote {{if .Tree.UserVote.Upvote}}active{{end}} {{if .User.Guest}}muted{{end}}">△</span>
+		{{if .Tree.Url}}
+			<a href="{{.Tree.Body}}">{{.Tree.Title}}</a>
+		{{else}}
+			{{.Tree.Title}}
 		{{end}}
+		<span class="vote downvote {{if .Tree.UserVote.Downvote}}active{{end}} {{if .User.Guest}}muted{{end}}">▽</span>
+		</h1>
+		
+		<p class="lead">{{.Tree.Body}}</p>
+		<div class="active_messages" id="message_{{.Tree.Id}}"></div>
+		<ul class="inline">
+			<li>{{.Tree.AuthorHandle}}</li>
+			<li>{{humanizeTime .Tree.Created}}</li>
+			<li><a class="reply">Reply</a></li>
+			<li>{{.Tree.Points}} {{if eq .Tree.Points 1}}Point{{else}}Points{{end}}</li>
+			<li>Value: {{.Tree.Score}}</li>
+			<li>
+			{{$childComments := .Tree.ChildCount}}
+			<a href="{{reverse "thread" "id" .Tree.Id}}">{{$childComments}} {{if eq $childComments 1}}Comment{{else}}Comments{{end}}</a>
+			</li>
+			{{/* TODO(james)
+			<li><a href="edit">Edit</a></li>
+			<li>&nbsp;</li>
+			<li><a href="delete">Delete</a></li>
+			*/}}
+		</ul>
+		<div class="active_controls" id="active_{{.Tree.Id}}"></div>
 		<div class="children" id="children_{{.Tree.Id}}">
 			{{template "tree" mapfn "User" .User "Tree" .Tree.Child "Color" false}}
 		</div>
@@ -138,30 +153,41 @@ $(document).ready(function(){
 {{define "tree"}}
 {{if .Tree}}
 	<div class="entry nested color{{.Color}}" id="entry_{{.Tree.Id}}">
-		{{with .Tree}}
-			{{.Body}}
-			<br />
-			<div class="active_messages" id="message_{{.Id}}"></div>
-			<ul class="inline">
-				<li><span class="vote upvote {{if .UserVote.Upvote}}active{{end}}">▲</span> By {{.AuthorHandle}} <span class="vote downvote {{if .UserVote.Downvote}}active{{end}}">▼</span></li>
-				<li>{{.Points}} {{if eq .Points 1 -1}}Point{{else}}Points{{end}}</li>
-				<li>Value: {{.Score}}</li>
-				<li>&nbsp;</li>
-				<li><a class="reply">Reply</a></li>
-				<li><a href="/thread/{{.Id}}">Permalink</a></li>
-				{{/* TODO(james)
-				<li><a href="edit">Edit</a></li>
-				<li>&nbsp;</li>
-				<li><a href="delete">Delete</a></li>
-				*/}}
-			</ul>
-			{{/* 
-				Messages holds things of which there can only be one.
-				For example, you can only get one 'reply' box when 
-				you click Reply; you can't get several to stack up.
-			*/}} 
-			<div class="active_controls" id="active_{{.Id}}"></div>
-		{{end}}
+		{{.Tree.Body}}
+		<br />
+		<div class="active_messages" id="message_{{.Tree.Id}}"></div>
+		<ul class="inline">
+			<li>
+				<span class="vote upvote {{if .Tree.UserVote.Upvote}}active{{end}} {{if .User.Guest}}muted{{end}}">▲</span>
+				{{.Tree.AuthorHandle}}
+				<span class="vote downvote {{if .Tree.UserVote.Downvote}}active{{end}} {{if .User.Guest}}muted{{end}}">▼</span>
+			</li>
+			<li>{{humanizeTime .Tree.Created}}</li>
+			<li><a class="reply">Reply</a></li>
+			<li>{{.Tree.Points}} {{if eq .Tree.Points 1 -1}}Point{{else}}Points{{end}}</li>
+			<li>Value: {{.Tree.Score}}</li>
+			<li>
+			{{$childComments := .Tree.ChildCount}}
+			<a href="{{reverse "thread" "id" .Tree.Id}}">
+				{{if eq $childComments 0}}
+					Permalink
+				{{else}}
+					{{$childComments}} {{if eq $childComments 1}}Comment{{else}}Comments{{end}}
+				{{end}}
+			</a>
+			</li>
+			{{/* TODO(james)
+			<li><a href="edit">Edit</a></li>
+			<li>&nbsp;</li>
+			<li><a href="delete">Delete</a></li>
+			*/}}
+		</ul>
+		{{/* 
+			Messages holds things of which there can only be one.
+			For example, you can only get one 'reply' box when 
+			you click Reply; you can't get several to stack up.
+		*/}} 
+		<div class="active_controls" id="active_{{.Tree.Id}}"></div>
 		<div class="children" id="children_{{.Tree.Id}}">
 	        {{template "tree" mapfn "User" .User "Tree" .Tree.Child "Color" (.Color | not) }}
 		</div>

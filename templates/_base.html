@@ -20,6 +20,17 @@
         <!--[if lt IE 9]>
           <script src="/static/js/html5shiv.js"></script>
         <![endif]-->
+        
+        <script>
+		  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+		  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+		  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+		  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+		
+		  ga('create', '{{.G.GACode}}', '{{.G.GAUrl}}');
+		  ga('send', 'pageview');
+		
+		</script>
     </head>
     <body>
         <!--  Top Nav -->
@@ -41,9 +52,7 @@
                   {{end}}
                 </p>
                 <ul class="nav">
-                  <li class="active"><a href="/">Home</a></li>
-                  <li><a href="/forum/1">Forum</a></li>
-                  <li><a href="/about">About</a></li>
+                  <li {{/*class="active"*/}}><a href="/about">About</a></li>
                 </ul>
               </div><!--/.nav-collapse -->
             </div>
@@ -54,7 +63,7 @@
             {{ template "content" . }}
         </section>
         <footer id="footer">
-            {{ .G.Site }}, © 2013 <a href='mailto:{{ .G.ContactEmail }}'>{{ .G.ContactEmail }}</a>
+            <a href="{{reverse "about"}}">{{ .G.Site }}</a>, © 2013 <a href='mailto:{{ .G.ContactEmail }}'>{{ .G.ContactEmail }}</a>
         </footer>
         <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
         {{/* Load JQuery and Bootstrap from local CDN if not available remotely. */}}
