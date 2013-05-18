@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
-	"runtime"
 
 	"github.com/carbocation/go.forum"
 	"github.com/carbocation/go.user"
@@ -30,6 +29,7 @@ var Config *ConfigFile = &ConfigFile{
 		Password: "xnkxglie",
 		DBName:   "projects",
 		Port:     "5432",
+		PoolSize: 95,
 	},
 
 	App: &ConfigApp{
@@ -47,18 +47,7 @@ var (
 	router *mux.Router               = mux.NewRouter() //Dynamic content is managed by handlers pointed at by the router
 )
 
-// For exporting
 func main() {
-	//Only if we're running this package as the main package do we need to
-	//configure the maxprocs here. Otherwise it should be done by the actual
-	//main package.
-	runtime.GOMAXPROCS(runtime.NumCPU())
-
-	//Call the main process
-	Main()
-}
-
-func Main() {
 	//
 	//After user has had opportunity to change config:
 	//
@@ -113,6 +102,7 @@ func initdb() *sql.DB {
 		Config.DB.User,
 		Config.DB.Password,
 		Config.DB.Port))
+	db.SetMaxIdleConns(Config.DB.PoolSize)
 	if err != nil {
 		fmt.Println("Panic: " + err.Error())
 		panic(err)
