@@ -125,7 +125,7 @@ $(document).ready(function(){
 		<ul class="inline">
 			<li>{{.Tree.AuthorHandle}}</li>
 			<li>{{humanizeTime .Tree.Created}}</li>
-			<li><a class="reply">Reply</a></li>
+			<li><a class="reply btn btn-primary btn-small">Reply</a></li>
 			<li>{{.Tree.Points}} {{if eq .Tree.Points 1}}Point{{else}}Points{{end}}</li>
 			<li>Value: {{.Tree.Score}}</li>
 			<li>
