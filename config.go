@@ -27,6 +27,7 @@ type ConfigDB struct {
 	Password string
 	DBName   string
 	Port     string
+	PoolSize int //Should be <= max_connections in /etc/postgresql/(version #)/main/postgresql.conf
 }
 
 // Public values that can be passed around into e.g., templates

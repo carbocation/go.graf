@@ -29,6 +29,7 @@ var Config *ConfigFile = &ConfigFile{
 		Password: "xnkxglie",
 		DBName:   "projects",
 		Port:     "5432",
+		PoolSize: 95,
 	},
 
 	App: &ConfigApp{
@@ -101,6 +102,7 @@ func initdb() *sql.DB {
 		Config.DB.User,
 		Config.DB.Password,
 		Config.DB.Port))
+	db.SetMaxIdleConns(Config.DB.PoolSize)
 	if err != nil {
 		fmt.Println("Panic: " + err.Error())
 		panic(err)
