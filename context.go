@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/carbocation/go.user"
-	"github.com/goods/httpbuf"
 	"github.com/gorilla/context"
 	"github.com/gorilla/sessions"
 )
@@ -30,7 +29,8 @@ func OpenContext(req *http.Request) {
 	}
 }
 
-func CloseContext(req *http.Request, buf *httpbuf.Buffer) (httpStatus int) {
+//Anything that satisfies the http.ResponseWriter interface is sufficient
+func CloseContext(req *http.Request, buf http.ResponseWriter) (httpStatus int) {
 	session, _ := store.Get(req, "app")
 
 	err := session.Save(req, buf)
