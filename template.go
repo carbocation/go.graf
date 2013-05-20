@@ -41,16 +41,12 @@ func safeHTML(input string) template.HTML {
 	return template.HTML(input)
 }
 
-func safeURL(input string) template.URL {
-	return template.URL(input)
-}
-
-func safeJS(input string) template.JS {
-	return template.JS(input)
-}
-
-func safeJSStr(input string) template.JSStr {
-	return template.JSStr(input)
+func substring(input string, dropafter int) string {
+	if dropafter > len(input) {
+		return input
+	} else {
+		return input[:dropafter]
+	}
 }
 
 func urlHost(input string) string {
@@ -169,15 +165,13 @@ func mapfn(kvs ...interface{}) (map[string]interface{}, error) {
 }
 
 var funcs = template.FuncMap{
-	"reverse":   reverse,
-	"eq":        eq,
-	"mapfn":     mapfn,
-	"safeHTML":  safeHTML,
-	"safeURL":   safeURL,
-	"safeJS":    safeJS,
-	"safeJSStr": safeJSStr,
-	"urlHost":   urlHost,
+	"reverse":      reverse,
+	"eq":           eq,
+	"mapfn":        mapfn,
+	"safeHTML":     safeHTML,
+	"urlHost":      urlHost,
 	"humanizeTime": humanizeTime,
+	"substring":    substring,
 }
 
 // Parse a template ('name') against _base.html

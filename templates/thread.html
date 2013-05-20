@@ -115,7 +115,11 @@ $(document).ready(function(){
 		{{if .Tree.Url}}
 			<a href="{{.Tree.Body}}">{{.Tree.Title}}</a>
 		{{else}}
-			{{.Tree.Title}}
+			{{if .Tree.Title}}
+				{{.Tree.Title}}
+			{{else}}
+				{{substring .Tree.Body 50}}
+			{{end}}
 		{{end}}
 		<span class="vote downvote {{if .Tree.UserVote.Downvote}}active{{end}} {{if .User.Guest}}muted{{end}}">▽</span>
 		</h1>
