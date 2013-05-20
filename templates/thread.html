@@ -124,7 +124,7 @@ $(document).ready(function(){
 		<span class="vote downvote {{if .Tree.UserVote.Downvote}}active{{end}} {{if .User.Guest}}muted{{end}}">▽</span>
 		</h1>
 		
-		<p class="lead">{{.Tree.Body}}</p>
+		<div class="lead">{{markDown .Tree.Body}}</div>
 		<div class="active_messages" id="message_{{.Tree.Id}}"></div>
 		<ul class="inline">
 			<li>{{.Tree.AuthorHandle}}</li>
@@ -157,8 +157,7 @@ $(document).ready(function(){
 {{define "tree"}}
 {{if .Tree}}
 	<div class="entry nested color{{.Color}}" id="entry_{{.Tree.Id}}">
-		{{.Tree.Body}}
-		<br />
+		{{markDown .Tree.Body}}
 		<div class="active_messages" id="message_{{.Tree.Id}}"></div>
 		<ul class="inline">
 			<li>

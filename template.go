@@ -15,6 +15,7 @@ import (
 
 	"github.com/carbocation/gotogether"
 	"github.com/dustin/go-humanize"
+	"github.com/rtfb/blackfriday"
 )
 
 // Note that we can't just preload and cache all of the templates
@@ -57,6 +58,10 @@ func urlHost(input string) string {
 
 func humanizeTime(input time.Time) string {
 	return humanize.Time(input)
+}
+
+func markDown(input string) template.HTML {
+	return template.HTML(blackfriday.MarkdownCommon([]byte(input)))
 }
 
 // From Russ Cox on the go-nuts mailing list
@@ -172,6 +177,7 @@ var funcs = template.FuncMap{
 	"urlHost":      urlHost,
 	"humanizeTime": humanizeTime,
 	"substring":    substring,
+	"markDown":     markDown,
 }
 
 // Parse a template ('name') against _base.html
