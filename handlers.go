@@ -4,13 +4,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 	"time"
-	"log"
-	"os"
 
 	//"github.com/carbocation/gotogether"
 	//"code.google.com/p/log4go"
@@ -28,7 +28,7 @@ func init() {
 	LogWriter = log.New(os.Stdout, "", 0)
 }
 
-type handler func(*ResponseLogger, *http.Request) error 
+type handler func(*ResponseLogger, *http.Request) error
 
 /*
 Derived from https://github.com/gorilla/handlers/blob/master/handlers.go

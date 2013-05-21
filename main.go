@@ -20,8 +20,8 @@ var Config *ConfigFile = &ConfigFile{
 		Site:         "Ask Bitcoin",
 		Url:          "http://askbitcoin.com",
 		ContactEmail: "james@askbitcoin.com",
-		GACode: "UA-36655899-3",
-		GAUrl: "askbitcoin.com",
+		GACode:       "UA-36655899-3",
+		GAUrl:        "askbitcoin.com",
 	},
 
 	DB: &ConfigDB{
@@ -76,7 +76,7 @@ func main() {
 	g.Handle("/login", handler(loginHandler)).Name("login")
 	g.Handle("/logout", handler(logoutHandler)).Name("logout")
 	g.Handle("/register", handler(registerHandler)).Name("register")
-	g.HandleFunc("/loaderio-3969952278183c9453e22d7f9ecfad1f/", func(w http.ResponseWriter, req *http.Request){
+	g.HandleFunc("/loaderio-3969952278183c9453e22d7f9ecfad1f/", func(w http.ResponseWriter, req *http.Request) {
 		fmt.Fprintf(w, "loaderio-3969952278183c9453e22d7f9ecfad1f")
 	})
 
