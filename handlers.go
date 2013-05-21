@@ -84,29 +84,11 @@ func (h handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	))
 
 	if err != nil {
+		//Errors for which there should be HTML output should be invoked by 
+		//calling and returning ErrorHTML() in the handler, rather than just 
+		//by returning an error. This should be used to catch any non-formatted 
+		//error response.
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-
-		/*
-			Note: must properly deal with JSON/non-HTTP, but after that
-			this is an appealing way to display errors.
-
-			fmt.Printf("%+v",buf.Header().Get("Content-Type"))
-
-			//http.Error(w, "HTTP 404: The requested forum does not exist.", http.StatusNotFound)
-			w.WriteHeader(http.StatusInternalServerError)
-			data := struct {
-				G    *ConfigPublic
-				User *user.User
-				ShortError string
-				LongError string
-			}{
-				Config.Public,
-				context.Get(req, ThisUser).(*user.User),
-				"Error",
-				err.Error(),
-			}
-			T("error.html").Execute(w, data)
-		*/
 
 		return
 	}
@@ -114,8 +96,33 @@ func (h handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	//Save any changed session values
 	CloseContext(req, buf)
 
-	//apply the buffered response to the writer
+	//Apply the buffered response to the actual writer
 	buf.Apply(w)
+}
+
+//Produce an HTML error page based on a title and a message, and return a desired error code.
+//It is encouraged but not mandatory to use http.StatusXXX codes instead of raw integers for errorCode
+func ErrorHTML(w *ResponseLogger, r *http.Request, errorTitle, errorMessage string, errorCode int) error {
+	w.WriteHeader(errorCode)
+	
+	data := struct {
+		G *ConfigPublic
+		User *user.User
+		ShortError string
+		LongError string
+	}{
+		Config.Public,
+		context.Get(r, ThisUser).(*user.User),
+		errorTitle,
+		errorMessage,
+	}
+	
+	err := T("error.html").Execute(w, data)
+	if err != nil {
+		return errors.New("First, there was an error. Then, there was an error in our tool that handles errors. Therefore, we doubly cannot complete your request.") 
+	}
+	
+	return err
 }
 
 func loginHandler(w *ResponseLogger, r *http.Request) (err error) {
@@ -139,29 +146,28 @@ func loginHandler(w *ResponseLogger, r *http.Request) (err error) {
 	//T("login.html").Execute(w, map[string]interface{}{})
 	err = T("login.html").Execute(w, data)
 	if err != nil {
-		fmt.Printf("main.loginHandler: Template error: %s\n", err)
-		return errors.New("Our template appears to be malformed so we cannot process your request.")
+		return ErrorHTML(w, r, "Bad template","We cannot complete your request because we are having problems with our templating engine.", http.StatusInternalServerError)
 	}
 
 	return
 }
 
-func logoutHandler(w *ResponseLogger, r *http.Request) (err error) {
+func logoutHandler(w *ResponseLogger, r *http.Request) error {
 	DeleteContext(r, w)
 
 	http.Redirect(w, r, reverse("index"), http.StatusSeeOther)
 
-	return
+	return nil
 }
 
 //For now, the index is actually just a hardlink to the forum with ID #1
-func indexHandler(w *ResponseLogger, r *http.Request) (err error) {
+func indexHandler(w *ResponseLogger, r *http.Request) error {
 	mux.Vars(r)["id"] = "1"
 
 	return forumHandler(w, r)
 }
 
-func aboutHandler(w *ResponseLogger, r *http.Request) (err error) {
+func aboutHandler(w *ResponseLogger, r *http.Request) error {
 	data := struct {
 		G    *ConfigPublic
 		User *user.User
@@ -170,13 +176,12 @@ func aboutHandler(w *ResponseLogger, r *http.Request) (err error) {
 		context.Get(r, ThisUser).(*user.User),
 	}
 
-	err = T("about.html").Execute(w, data)
+	err := T("about.html").Execute(w, data)
 	if err != nil {
-		fmt.Printf("main.indexHandler: Template error: %s\n", err)
-		return errors.New("Our template appears to be malformed so we cannot process your request.")
+		return ErrorHTML(w, r, "Bad template","We cannot complete your request because we are having problems with our templating engine.", http.StatusInternalServerError)
 	}
 
-	return
+	return err
 }
 
 func registerHandler(w *ResponseLogger, r *http.Request) (err error) {
@@ -193,18 +198,19 @@ func registerHandler(w *ResponseLogger, r *http.Request) (err error) {
 	//Don't let non-guests register again
 	if !data.User.Guest() {
 		http.Redirect(w, r, reverse("index"), http.StatusSeeOther)
+		
+		return nil
 	}
 
 	session, _ := store.Get(r, "app")
 	if flashes := session.Flashes(); len(flashes) > 0 {
-		// Just print the flash values.
+		// Just add the flash values.
 		data.Messages = flashes
 	}
 
 	err = T("register.html").Execute(w, data)
 	if err != nil {
-		fmt.Printf("main.registerHandler: Template error: %s\n", err)
-		return errors.New("Our template appears to be malformed so we cannot process your request.")
+		return ErrorHTML(w, r, "Bad template","We cannot complete your request because we are having problems with our templating engine.", http.StatusInternalServerError)
 	}
 	return
 }
@@ -213,38 +219,18 @@ func threadHandler(w *ResponseLogger, r *http.Request) error {
 	//If the thread ID is not parseable as an integer, stop immediately
 	id, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
 	if err != nil {
-		//The user messed up. It's not a 500 error.
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, "The requested thread is invalid.")
-		
-		return nil
+		return ErrorHTML(w, r, "Invalid thread","The requested thread is invalid.", http.StatusBadRequest)
 	}
 
 	u := context.Get(r, ThisUser).(*user.User)
 
 	tree, err := forum.DescendantEntries(id, u)
 	if err != nil {
-		fmt.Printf("main.threadHandler: %s\n", err)
-		return errors.New("The requested thread's neighbor entries could not be found.")
+		return ErrorHTML(w, r, "Thread error","The request could not be completed due to an internal server error.", http.StatusInternalServerError)
 	}
 
 	if tree == nil {
-		//http.Error(w, "HTTP 404: The requested forum does not exist.", http.StatusNotFound)
-		w.WriteHeader(http.StatusNotFound)
-		data := struct {
-			G          *ConfigPublic
-			User       *user.User
-			ShortError string
-			LongError  string
-		}{
-			Config.Public,
-			context.Get(r, ThisUser).(*user.User),
-			"Forum not found",
-			"The forum that you requested could not be found.",
-		}
-		T("error.html").Execute(w, data)
-
-		return nil
+		return ErrorHTML(w, r, "Thread not found","The thread that you requested could not be found.", http.StatusNotFound) 
 	}
 
 	//Make sure this not a forum
@@ -266,66 +252,28 @@ func threadHandler(w *ResponseLogger, r *http.Request) error {
 	//execute the template
 	err = T("thread.html").Execute(w, data)
 	if err != nil {
-		fmt.Printf("main.threadHandler: Template error: %s\n", err)
-		return errors.New("Our template appears to be malformed so we cannot process your request.")
+		return ErrorHTML(w, r, "Bad template","We cannot complete your request because we are having problems with our templating engine.", http.StatusInternalServerError)
 	}
 
 	return nil
 }
-
-/*
-func errorPage(w *ResponseLogger, r *http.Request, errorTitle, errorMessage string, errorCode int) error {
-	w.WriteHeader(errorCode)
-	
-	data := struct {
-		G *ConfigPublic
-		User *user.User
-		ShortError string
-		LongError string
-	}{
-		Config.Public,
-		context.Get(r, ThisUser).(*user.User),
-		errorTitle,
-		errorMessage,
-	}
-	
-	T("error.html").Execute(w, data)
-	
-	return nil
-}
-*/
 
 func forumHandler(w *ResponseLogger, r *http.Request) (err error) {
 	//If the forum ID is not parseable as an integer, stop immediately
 	id, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
 	if err != nil {
-		return errors.New("The requested forum is invalid.")
+		return ErrorHTML(w, r, "Invalid forum","The requested forum is invalid.", http.StatusBadRequest)
 	}
 
 	u := context.Get(r, ThisUser).(*user.User)
 
 	tree, err := forum.DescendantEntries(id, u)
 	if err != nil {
-		return errors.New("The requested forum's neighbor entries could not be found.")
+		return ErrorHTML(w, r, "Forum error","The request could not be completed due to an internal server error.", http.StatusInternalServerError)
 	}
 
 	if tree == nil {
-		//http.Error(w, "HTTP 404: The requested forum does not exist.", http.StatusNotFound)
-		w.WriteHeader(http.StatusNotFound)
-		data := struct {
-			G          *ConfigPublic
-			User       *user.User
-			ShortError string
-			LongError  string
-		}{
-			Config.Public,
-			context.Get(r, ThisUser).(*user.User),
-			"Forum not found",
-			"The forum that you requested could not be found.",
-		}
-		T("error.html").Execute(w, data)
-
-		return nil
+		return ErrorHTML(w, r, "Forum not found","The forum that you requested could not be found.", http.StatusNotFound) 
 	}
 
 	//Make sure this is a forum
@@ -348,7 +296,7 @@ func forumHandler(w *ResponseLogger, r *http.Request) (err error) {
 	err = T("forum.html").Execute(w, data)
 	if err != nil {
 		fmt.Printf("main.forumHandler: Template error: %s\n", err)
-		return errors.New("Our template appears to be malformed so we cannot process your request.")
+		return ErrorHTML(w, r, "Template error","We had a templating malfunction and could not serve your request.", http.StatusInternalServerError)
 	}
 
 	return
@@ -371,13 +319,17 @@ func postLoginHandler(w *ResponseLogger, r *http.Request) error {
 
 	u, err := login.Login()
 	if err != nil {
-		//u = new(user.User)
-		//fmt.Println(err)
+		//Add a flash error message stating the error
 		session.AddFlash(fmt.Sprintf("%s", err))
-		http.Redirect(w, r, reverse("login"), http.StatusUnauthorized)
-
+		
+		//Write the http error code
+		w.WriteHeader(http.StatusBadRequest)
+		
+		//Send them back to the login form
 		return loginHandler(w, r)
 	}
+	
+	//Successful login
 
 	context.Set(r, ThisUser, u)
 
@@ -390,19 +342,20 @@ func postLoginHandler(w *ResponseLogger, r *http.Request) error {
 	return nil
 }
 
-func postRegisterHandler(w *ResponseLogger, r *http.Request) (err error) {
+func postRegisterHandler(w *ResponseLogger, r *http.Request) error {
+	var err error
 	r.ParseForm()
 
 	//Don't let non-guests register again
 	if !context.Get(r, ThisUser).(*user.User).Guest() {
 		http.Redirect(w, r, reverse("index"), http.StatusSeeOther)
-		return
+		return err
 	}
 
 	//Make sure the repeat passwords match
 	if r.FormValue("PlaintextPassword") != r.FormValue("PlaintextPassword2") {
 		http.Redirect(w, r, reverse("register"), http.StatusSeeOther)
-		return
+		return err
 	}
 
 	//Locate the session
@@ -414,11 +367,13 @@ func postRegisterHandler(w *ResponseLogger, r *http.Request) (err error) {
 	err = u.Register()
 	if err != nil {
 		//If our registration fails for any reason, set a flag and show the form again
-		//http.Redirect(w, r, reverse("register"), http.StatusSeeOther)
 		context.Set(r, ThisUser, u)
 
 		//Tell the user why we failed
 		session.AddFlash(fmt.Sprintf("%s", err))
+		
+		//Tell the browser that that input was no good
+		w.WriteHeader(http.StatusBadRequest)
 
 		return registerHandler(w, r)
 	}
@@ -431,7 +386,7 @@ func postRegisterHandler(w *ResponseLogger, r *http.Request) (err error) {
 
 	http.Redirect(w, r, reverse("index"), http.StatusSeeOther)
 
-	return
+	return err
 }
 
 func postThreadHandler(w *ResponseLogger, r *http.Request) error {
@@ -443,17 +398,19 @@ func postThreadHandler(w *ResponseLogger, r *http.Request) error {
 	//TODO(james) automatically create accounts for guests who try to post
 	u := context.Get(r, ThisUser).(*user.User)
 	if u.Guest() {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		w.WriteHeader(http.StatusBadRequest)
 		return errors.New("Only logged-in users can post.")
 	}
 
 	//Make sure the parent_id is valid
 	if pid, err = strconv.ParseInt(r.FormValue("parent_id"), 10, 64); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
 		return err
 	}
 
 	//Make sure the parent post exists
 	if parent, err = forum.OneEntry(pid); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
 		return err
 	}
 
@@ -471,7 +428,7 @@ func postThreadHandler(w *ResponseLogger, r *http.Request) error {
 
 	if URL.String() == "" && entry.Body == "" {
 		//Lack of URL and Body fails in all contexts
-		http.Error(w, "Unauthorized", http.StatusExpectationFailed)
+		w.WriteHeader(http.StatusBadRequest)
 		return errors.New("Both URL and Body were empty; please fill out either one or the other.")
 	}
 
@@ -479,6 +436,7 @@ func postThreadHandler(w *ResponseLogger, r *http.Request) error {
 	// LCRS at that stage), so checking for Parent().Forum is sufficient.
 	if parent.Forum && entry.Title == "" {
 		//Unacceptable to have an empty title if this is new entry within a forum
+		w.WriteHeader(http.StatusBadRequest)
 		return errors.New("The Title must not be empty or consist solely of whitespace.")
 	}
 
@@ -489,10 +447,9 @@ func postThreadHandler(w *ResponseLogger, r *http.Request) error {
 		entry.Url = true
 	} else if len(entry.Body) < 5 {
 		//In all other cases, if the body is not valid, they need to write more.
+		w.WriteHeader(http.StatusBadRequest)
 		return errors.New("Please craft a longer message.")
 	}
-
-	fmt.Printf("Entry just before persistence: %v", entry)
 
 	err = entry.Persist(parent.Id)
 	if err != nil {
@@ -500,12 +457,11 @@ func postThreadHandler(w *ResponseLogger, r *http.Request) error {
 	}
 
 	jsondata, err := json.Marshal(entry)
-	integer, err := w.Write(jsondata)
+	_, err = w.Write(jsondata)
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf("Integer from posting the new entry was %d\n", integer)
 	//We can set the content type after sending the jsondata because
 	// we're actually using buffered output
 	w.Header().Set("Content-type", "application/json")
@@ -519,6 +475,7 @@ func postVoteHandler(w *ResponseLogger, r *http.Request) error {
 	//Make sure the target entry is valid
 	entryId, err := strconv.ParseInt(r.FormValue("entryId"), 10, 64)
 	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
 		return err
 	}
 
@@ -530,9 +487,9 @@ func postVoteHandler(w *ResponseLogger, r *http.Request) error {
 	//Don't let guests post (currently)
 	//TODO(james) automatically create accounts for guests who try to post
 	if context.Get(r, ThisUser).(*user.User).Guest() {
-		http.Error(w, "NowayBro!", http.StatusUnauthorized)
+		w.WriteHeader(http.StatusBadRequest)
 
-		return errors.New("Unauthorized")
+		return errors.New("Only logged-in users can cast votes.")
 	}
 
 	//TODO(james) stop relying on the existence of a user ID here
@@ -555,12 +512,11 @@ func postVoteHandler(w *ResponseLogger, r *http.Request) error {
 
 	jsondata, err := json.Marshal(vote)
 
-	integer, err := w.Write(jsondata)
+	_, err = w.Write(jsondata)
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf("Integer from posting the new entry was %d\n", integer)
 	//We can set the content type after sending the jsondata because
 	// we're actually using buffered output
 	w.Header().Set("Content-type", "application/json")
