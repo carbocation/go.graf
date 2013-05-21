@@ -2,6 +2,9 @@
 # Show parent thread (if any) and parent forum. I.e., breadcrumbs.
 # Fix logging setup to have the output target be configurable in config file
 
+# Fix deploy script to stop / start upstart daemon rather than killing 
+# the process (which will now be futile).
+
 == LIKE TO HAVE ==
 Have a weight for each user. Their votes have that weight. Offline, 
 calculate the value of their contributions to calculate this weight.
