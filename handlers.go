@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"log"
+	"os"
 
 	//"github.com/carbocation/gotogether"
 	//"code.google.com/p/log4go"
@@ -19,7 +21,14 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type handler func(*ResponseLogger, *http.Request) error
+var LogWriter *log.Logger
+
+func init() {
+	//TODO(james): make configurable from Config file
+	LogWriter = log.New(os.Stdout, "", 0)
+}
+
+type handler func(*ResponseLogger, *http.Request) error 
 
 /*
 Derived from https://github.com/gorilla/handlers/blob/master/handlers.go
@@ -74,7 +83,7 @@ func (h handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	fmt.Println(fmt.Sprintf("%s - %s [%s] \"%s %s %s\" %d %d",
+	LogWriter.Print(fmt.Sprintf("%s - %s [%s] \"%s %s %s\" %d %d",
 		strings.Split(req.RemoteAddr, ":")[0],
 		username,
 		time.Now().Format("02/Jan/2006:15:04:05 -0700"),
