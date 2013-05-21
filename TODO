@@ -1,7 +1,7 @@
 == MUST HAVE ==
 # Show parent thread (if any) and parent forum. I.e., breadcrumbs.
-
-# Google Analytics
+# Fix logging setup to have the output target be configurable in config file
+# Fix logging to show user's IP, not nginx's 
 
 == LIKE TO HAVE ==
 Have a weight for each user. Their votes have that weight. Offline, 

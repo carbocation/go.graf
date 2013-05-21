@@ -83,7 +83,7 @@ func (h handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	LogWriter.Print(fmt.Sprintf("%s - %s [%s] \"%s %s %s\" %d %d",
+	LogWriter.Print(fmt.Sprintf(`%s - "%s" [%s] "%s %s %s" %d %d "%s" "%s"`,
 		strings.Split(req.RemoteAddr, ":")[0],
 		username,
 		time.Now().Format("02/Jan/2006:15:04:05 -0700"),
@@ -92,6 +92,8 @@ func (h handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		req.Proto,
 		status,
 		size,
+		req.Referer(),
+		req.UserAgent(),
 	))
 
 	if err != nil {

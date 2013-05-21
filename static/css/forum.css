@@ -60,6 +60,13 @@ textarea.inplace-compose {
 }
 /* <In-place form elements */
 
+.vote {
+	cursor: pointer;
+}
+
+.reply {
+	cursor: pointer;
+}
 
 /* Entries> */
 .upvote.active {
