@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 )
 
@@ -39,13 +38,6 @@ func Environment() *ConfigFile {
 			Secret: `Qkp7F8uW/D8lXdAHKA5dmFGcsvuZkUQKLtpQcM45rUcjYHO05cG+ohr1zf0DwlRughxOEHVhgNOBtZuo5UGbnA==`,
 		},
 	}
-
-	acc, err := os.OpenFile(fmt.Sprintf(`/tmp/%s_access.log`, res.App.Identifier()), os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0640)
-	if err != nil {
-		panic(err)
-	}
-	//acc := os.Stdout
-	res.App.LogAccess = acc
 
 	return res
 }
