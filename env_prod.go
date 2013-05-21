@@ -38,13 +38,13 @@ func Environment() *ConfigFile {
 		},
 	}
 
-	al, err := os.OpenFile(fmt.Sprintf(`/data/bin/%s_access.log`, res.App.Identifier()), os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0640)
+	al, err := os.OpenFile(fmt.Sprintf(`/data/bin/log/%s_access.log`, res.App.Identifier()), os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0640)
 	if err != nil {
 		panic(err)
 	}
 	res.App.LogAccess = al
 
-	el, err := os.OpenFile(fmt.Sprintf(`/data/bin/%s_error.log`, res.App.Identifier()), os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0640)
+	el, err := os.OpenFile(fmt.Sprintf(`/data/bin/log/%s_error.log`, res.App.Identifier()), os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0640)
 	if err != nil {
 		panic(err)
 	}
