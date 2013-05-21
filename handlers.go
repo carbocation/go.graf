@@ -84,7 +84,7 @@ func (h handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 
 	LogWriter.Print(fmt.Sprintf(`%s - "%s" [%s] "%s %s %s" %d %d "%s" "%s"`,
-		strings.Split(req.RemoteAddr, ":")[0],
+		strings.Split(getIpAddress(req), ":")[0],
 		username,
 		time.Now().Format("02/Jan/2006:15:04:05 -0700"),
 		req.Method,
@@ -111,6 +111,26 @@ func (h handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	//Apply the buffered response to the actual writer
 	buf.Apply(w)
+}
+
+//From https://groups.google.com/forum/?fromgroups#!topic/golang-nuts/lomWKs0kOfE
+func getIpAddress(r *http.Request) string {
+	hdr := r.Header
+	hdrRealIp := hdr.Get("X-Real-Ip")
+	hdrForwardedFor := hdr.Get("X-Forwarded-For")
+	if hdrRealIp == "" && hdrForwardedFor == "" {
+		return r.RemoteAddr
+	}
+	if hdrForwardedFor != "" {
+		// X-Forwarded-For is potentially a list of addresses separated with ","
+		parts := strings.Split(hdrForwardedFor, ",")
+		for i, p := range parts {
+			parts[i] = strings.TrimSpace(p)
+		}
+		// TODO: should return first non-local address
+		return parts[0]
+	}
+	return hdrRealIp
 }
 
 //Produce an HTML error page based on a title and a message, and return a desired error code.
