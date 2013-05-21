@@ -11,6 +11,7 @@ import (
 	"time"
 
 	//"github.com/carbocation/gotogether"
+	//"code.google.com/p/log4go"
 	"github.com/carbocation/go.forum"
 	"github.com/carbocation/go.user"
 	"github.com/goods/httpbuf"
@@ -22,12 +23,12 @@ type handler func(*ResponseLogger, *http.Request) error
 
 /*
 Derived from https://github.com/gorilla/handlers/blob/master/handlers.go
-The main purpose here is to be able to pass around http.Status codes, which 
+The main purpose here is to be able to pass around http.Status codes, which
 the net/http package does not natively enable.
-*/ 
+*/
 type ResponseLogger struct {
 	httpbuf.Buffer
-	size int //Size of buffer
+	size   int //Size of buffer
 	status int //HTTP Status Code
 }
 
@@ -36,7 +37,7 @@ func (l ResponseLogger) Status() int {
 	return l.status
 }
 
-//Set a status code. ints are accepted, but 
+//Set a status code. ints are accepted, but
 // http.StatusXXX is easier to read. Your choice.
 func (l *ResponseLogger) WriteHeader(s int) {
 	l.status = s
@@ -62,7 +63,7 @@ func (h handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	//output so that handlers can modify session/header data at any point.
 	buf := new(ResponseLogger)
 	err := h(buf, req)
-	
+
 	//Log the request
 	size, status, username := buf.Len(), buf.Status(), "-"
 	if uifc := context.Get(req, ThisUser); uifc != nil {
@@ -72,6 +73,7 @@ func (h handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			username = u.Handle
 		}
 	}
+
 	fmt.Println(fmt.Sprintf("%s - %s [%s] \"%s %s %s\" %d %d",
 		strings.Split(req.RemoteAddr, ":")[0],
 		username,
@@ -84,9 +86,9 @@ func (h handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	))
 
 	if err != nil {
-		//Errors for which there should be HTML output should be invoked by 
-		//calling and returning ErrorHTML() in the handler, rather than just 
-		//by returning an error. This should be used to catch any non-formatted 
+		//Errors for which there should be HTML output should be invoked by
+		//calling and returning ErrorHTML() in the handler, rather than just
+		//by returning an error. This should be used to catch any non-formatted
 		//error response.
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 
@@ -104,24 +106,24 @@ func (h handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 //It is encouraged but not mandatory to use http.StatusXXX codes instead of raw integers for errorCode
 func ErrorHTML(w *ResponseLogger, r *http.Request, errorTitle, errorMessage string, errorCode int) error {
 	w.WriteHeader(errorCode)
-	
+
 	data := struct {
-		G *ConfigPublic
-		User *user.User
+		G          *ConfigPublic
+		User       *user.User
 		ShortError string
-		LongError string
+		LongError  string
 	}{
 		Config.Public,
 		context.Get(r, ThisUser).(*user.User),
 		errorTitle,
 		errorMessage,
 	}
-	
+
 	err := T("error.html").Execute(w, data)
 	if err != nil {
-		return errors.New("First, there was an error. Then, there was an error in our tool that handles errors. Therefore, we doubly cannot complete your request.") 
+		return errors.New("First, there was an error. Then, there was an error in our tool that handles errors. Therefore, we doubly cannot complete your request.")
 	}
-	
+
 	return err
 }
 
@@ -146,7 +148,7 @@ func loginHandler(w *ResponseLogger, r *http.Request) (err error) {
 	//T("login.html").Execute(w, map[string]interface{}{})
 	err = T("login.html").Execute(w, data)
 	if err != nil {
-		return ErrorHTML(w, r, "Bad template","We cannot complete your request because we are having problems with our templating engine.", http.StatusInternalServerError)
+		return ErrorHTML(w, r, "Bad template", "We cannot complete your request because we are having problems with our templating engine.", http.StatusInternalServerError)
 	}
 
 	return
@@ -178,7 +180,7 @@ func aboutHandler(w *ResponseLogger, r *http.Request) error {
 
 	err := T("about.html").Execute(w, data)
 	if err != nil {
-		return ErrorHTML(w, r, "Bad template","We cannot complete your request because we are having problems with our templating engine.", http.StatusInternalServerError)
+		return ErrorHTML(w, r, "Bad template", "We cannot complete your request because we are having problems with our templating engine.", http.StatusInternalServerError)
 	}
 
 	return err
@@ -198,7 +200,7 @@ func registerHandler(w *ResponseLogger, r *http.Request) (err error) {
 	//Don't let non-guests register again
 	if !data.User.Guest() {
 		http.Redirect(w, r, reverse("index"), http.StatusSeeOther)
-		
+
 		return nil
 	}
 
@@ -210,7 +212,7 @@ func registerHandler(w *ResponseLogger, r *http.Request) (err error) {
 
 	err = T("register.html").Execute(w, data)
 	if err != nil {
-		return ErrorHTML(w, r, "Bad template","We cannot complete your request because we are having problems with our templating engine.", http.StatusInternalServerError)
+		return ErrorHTML(w, r, "Bad template", "We cannot complete your request because we are having problems with our templating engine.", http.StatusInternalServerError)
 	}
 	return
 }
@@ -219,18 +221,18 @@ func threadHandler(w *ResponseLogger, r *http.Request) error {
 	//If the thread ID is not parseable as an integer, stop immediately
 	id, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
 	if err != nil {
-		return ErrorHTML(w, r, "Invalid thread","The requested thread is invalid.", http.StatusBadRequest)
+		return ErrorHTML(w, r, "Invalid thread", "The requested thread is invalid.", http.StatusBadRequest)
 	}
 
 	u := context.Get(r, ThisUser).(*user.User)
 
 	tree, err := forum.DescendantEntries(id, u)
 	if err != nil {
-		return ErrorHTML(w, r, "Thread error","The request could not be completed due to an internal server error.", http.StatusInternalServerError)
+		return ErrorHTML(w, r, "Thread error", "The request could not be completed due to an internal server error.", http.StatusInternalServerError)
 	}
 
 	if tree == nil {
-		return ErrorHTML(w, r, "Thread not found","The thread that you requested could not be found.", http.StatusNotFound) 
+		return ErrorHTML(w, r, "Thread not found", "The thread that you requested could not be found.", http.StatusNotFound)
 	}
 
 	//Make sure this not a forum
@@ -252,7 +254,7 @@ func threadHandler(w *ResponseLogger, r *http.Request) error {
 	//execute the template
 	err = T("thread.html").Execute(w, data)
 	if err != nil {
-		return ErrorHTML(w, r, "Bad template","We cannot complete your request because we are having problems with our templating engine.", http.StatusInternalServerError)
+		return ErrorHTML(w, r, "Bad template", "We cannot complete your request because we are having problems with our templating engine.", http.StatusInternalServerError)
 	}
 
 	return nil
@@ -262,18 +264,18 @@ func forumHandler(w *ResponseLogger, r *http.Request) (err error) {
 	//If the forum ID is not parseable as an integer, stop immediately
 	id, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
 	if err != nil {
-		return ErrorHTML(w, r, "Invalid forum","The requested forum is invalid.", http.StatusBadRequest)
+		return ErrorHTML(w, r, "Invalid forum", "The requested forum is invalid.", http.StatusBadRequest)
 	}
 
 	u := context.Get(r, ThisUser).(*user.User)
 
 	tree, err := forum.DescendantEntries(id, u)
 	if err != nil {
-		return ErrorHTML(w, r, "Forum error","The request could not be completed due to an internal server error.", http.StatusInternalServerError)
+		return ErrorHTML(w, r, "Forum error", "The request could not be completed due to an internal server error.", http.StatusInternalServerError)
 	}
 
 	if tree == nil {
-		return ErrorHTML(w, r, "Forum not found","The forum that you requested could not be found.", http.StatusNotFound) 
+		return ErrorHTML(w, r, "Forum not found", "The forum that you requested could not be found.", http.StatusNotFound)
 	}
 
 	//Make sure this is a forum
@@ -296,7 +298,7 @@ func forumHandler(w *ResponseLogger, r *http.Request) (err error) {
 	err = T("forum.html").Execute(w, data)
 	if err != nil {
 		fmt.Printf("main.forumHandler: Template error: %s\n", err)
-		return ErrorHTML(w, r, "Template error","We had a templating malfunction and could not serve your request.", http.StatusInternalServerError)
+		return ErrorHTML(w, r, "Template error", "We had a templating malfunction and could not serve your request.", http.StatusInternalServerError)
 	}
 
 	return
@@ -321,14 +323,14 @@ func postLoginHandler(w *ResponseLogger, r *http.Request) error {
 	if err != nil {
 		//Add a flash error message stating the error
 		session.AddFlash(fmt.Sprintf("%s", err))
-		
+
 		//Write the http error code
 		w.WriteHeader(http.StatusBadRequest)
-		
+
 		//Send them back to the login form
 		return loginHandler(w, r)
 	}
-	
+
 	//Successful login
 
 	context.Set(r, ThisUser, u)
@@ -371,7 +373,7 @@ func postRegisterHandler(w *ResponseLogger, r *http.Request) error {
 
 		//Tell the user why we failed
 		session.AddFlash(fmt.Sprintf("%s", err))
-		
+
 		//Tell the browser that that input was no good
 		w.WriteHeader(http.StatusBadRequest)
 
