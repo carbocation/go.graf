@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -11,7 +12,6 @@ import (
 	"time"
 
 	//"github.com/carbocation/gotogether"
-	//"code.google.com/p/log4go"
 	"github.com/carbocation/go.forum"
 	"github.com/carbocation/go.user"
 	"github.com/goods/httpbuf"
@@ -19,7 +19,14 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type handler func(*ResponseLogger, *http.Request) error
+var LogWriter *log.Logger
+
+func init() {
+	//TODO(james): make configurable from Config file
+	LogWriter = log.New(Config.App.LogAccess, "", 0)
+}
+
+type handler func(http.ResponseWriter, *http.Request) error
 
 /*
 Derived from https://github.com/gorilla/handlers/blob/master/handlers.go
@@ -74,8 +81,8 @@ func (h handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	fmt.Println(fmt.Sprintf("%s - %s [%s] \"%s %s %s\" %d %d",
-		strings.Split(req.RemoteAddr, ":")[0],
+	LogWriter.Print(fmt.Sprintf(`%s - "%s" [%s] "%s %s %s" %d %d "%s" "%s"`,
+		strings.Split(getIpAddress(req), ":")[0],
 		username,
 		time.Now().Format("02/Jan/2006:15:04:05 -0700"),
 		req.Method,
@@ -83,6 +90,8 @@ func (h handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		req.Proto,
 		status,
 		size,
+		req.Referer(),
+		req.UserAgent(),
 	))
 
 	if err != nil {
@@ -102,9 +111,29 @@ func (h handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	buf.Apply(w)
 }
 
+//From https://groups.google.com/forum/?fromgroups#!topic/golang-nuts/lomWKs0kOfE
+func getIpAddress(r *http.Request) string {
+	hdr := r.Header
+	hdrRealIp := hdr.Get("X-Real-Ip")
+	hdrForwardedFor := hdr.Get("X-Forwarded-For")
+	if hdrRealIp == "" && hdrForwardedFor == "" {
+		return r.RemoteAddr
+	}
+	if hdrForwardedFor != "" {
+		// X-Forwarded-For is potentially a list of addresses separated with ","
+		parts := strings.Split(hdrForwardedFor, ",")
+		for i, p := range parts {
+			parts[i] = strings.TrimSpace(p)
+		}
+		// TODO: should return first non-local address
+		return parts[0]
+	}
+	return hdrRealIp
+}
+
 //Produce an HTML error page based on a title and a message, and return a desired error code.
 //It is encouraged but not mandatory to use http.StatusXXX codes instead of raw integers for errorCode
-func ErrorHTML(w *ResponseLogger, r *http.Request, errorTitle, errorMessage string, errorCode int) error {
+func ErrorHTML(w http.ResponseWriter, r *http.Request, errorTitle, errorMessage string, errorCode int) error {
 	w.WriteHeader(errorCode)
 
 	data := struct {
@@ -127,7 +156,7 @@ func ErrorHTML(w *ResponseLogger, r *http.Request, errorTitle, errorMessage stri
 	return err
 }
 
-func loginHandler(w *ResponseLogger, r *http.Request) (err error) {
+func loginHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	//execute the template
 	data := struct {
 		G        *ConfigPublic
@@ -154,7 +183,7 @@ func loginHandler(w *ResponseLogger, r *http.Request) (err error) {
 	return
 }
 
-func logoutHandler(w *ResponseLogger, r *http.Request) error {
+func logoutHandler(w http.ResponseWriter, r *http.Request) error {
 	DeleteContext(r, w)
 
 	http.Redirect(w, r, reverse("index"), http.StatusSeeOther)
@@ -163,13 +192,13 @@ func logoutHandler(w *ResponseLogger, r *http.Request) error {
 }
 
 //For now, the index is actually just a hardlink to the forum with ID #1
-func indexHandler(w *ResponseLogger, r *http.Request) error {
+func indexHandler(w http.ResponseWriter, r *http.Request) error {
 	mux.Vars(r)["id"] = "1"
 
 	return forumHandler(w, r)
 }
 
-func aboutHandler(w *ResponseLogger, r *http.Request) error {
+func aboutHandler(w http.ResponseWriter, r *http.Request) error {
 	data := struct {
 		G    *ConfigPublic
 		User *user.User
@@ -186,7 +215,7 @@ func aboutHandler(w *ResponseLogger, r *http.Request) error {
 	return err
 }
 
-func registerHandler(w *ResponseLogger, r *http.Request) (err error) {
+func registerHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	data := struct {
 		G        *ConfigPublic
 		User     *user.User
@@ -217,7 +246,7 @@ func registerHandler(w *ResponseLogger, r *http.Request) (err error) {
 	return
 }
 
-func threadHandler(w *ResponseLogger, r *http.Request) error {
+func threadHandler(w http.ResponseWriter, r *http.Request) error {
 	//If the thread ID is not parseable as an integer, stop immediately
 	id, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
 	if err != nil {
@@ -260,7 +289,7 @@ func threadHandler(w *ResponseLogger, r *http.Request) error {
 	return nil
 }
 
-func forumHandler(w *ResponseLogger, r *http.Request) (err error) {
+func forumHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	//If the forum ID is not parseable as an integer, stop immediately
 	id, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
 	if err != nil {
@@ -304,13 +333,13 @@ func forumHandler(w *ResponseLogger, r *http.Request) (err error) {
 	return
 }
 
-func newThreadHandler(w *ResponseLogger, r *http.Request) (err error) {
+func newThreadHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	fmt.Fprint(w, "New thread form will go here.")
 	err = errors.New("The new thread form hasn't been created yet.")
 	return
 }
 
-func postLoginHandler(w *ResponseLogger, r *http.Request) error {
+func postLoginHandler(w http.ResponseWriter, r *http.Request) error {
 	r.ParseForm()
 
 	session, _ := store.Get(r, "app")
@@ -344,7 +373,7 @@ func postLoginHandler(w *ResponseLogger, r *http.Request) error {
 	return nil
 }
 
-func postRegisterHandler(w *ResponseLogger, r *http.Request) error {
+func postRegisterHandler(w http.ResponseWriter, r *http.Request) error {
 	var err error
 	r.ParseForm()
 
@@ -391,7 +420,7 @@ func postRegisterHandler(w *ResponseLogger, r *http.Request) error {
 	return err
 }
 
-func postThreadHandler(w *ResponseLogger, r *http.Request) error {
+func postThreadHandler(w http.ResponseWriter, r *http.Request) error {
 	var pid int64 //parent ID
 	var err error
 	var parent, entry *forum.Entry
@@ -471,7 +500,7 @@ func postThreadHandler(w *ResponseLogger, r *http.Request) error {
 	return nil
 }
 
-func postVoteHandler(w *ResponseLogger, r *http.Request) error {
+func postVoteHandler(w http.ResponseWriter, r *http.Request) error {
 	r.ParseForm()
 
 	//Make sure the target entry is valid

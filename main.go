@@ -14,32 +14,7 @@ import (
 )
 
 // Master config, exported so it can be overrided
-var Config *ConfigFile = &ConfigFile{
-	//These are passed to templates
-	Public: &ConfigPublic{
-		Site:         "Ask Bitcoin",
-		Url:          "http://askbitcoin.com",
-		ContactEmail: "james@askbitcoin.com",
-		GACode: "UA-36655899-3",
-		GAUrl: "askbitcoin.com",
-	},
-
-	DB: &ConfigDB{
-		User:     "askbitcoin",
-		Password: "xnkxglie",
-		DBName:   "projects",
-		Port:     "5432",
-		PoolSize: 95,
-	},
-
-	App: &ConfigApp{
-		//Port that nginx (for reverse proxy) or the browser has to be pointed at
-		Port: "9999",
-
-		//64 bit random string generated with `openssl rand -base64 64`
-		Secret: `75Oop7MSN88WstKJSTyu9ALiO0Nbeckv/4/eDLDJcpXn0Ny1H9PdpzXDqApie77tZ04GFsdHehmzcMkAqh16Dg==`,
-	},
-}
+var Config *ConfigFile = Environment()
 
 var (
 	db     *sql.DB                                     //db maintains a pool of connections to our database of choice
@@ -76,7 +51,7 @@ func main() {
 	g.Handle("/login", handler(loginHandler)).Name("login")
 	g.Handle("/logout", handler(logoutHandler)).Name("logout")
 	g.Handle("/register", handler(registerHandler)).Name("register")
-	g.HandleFunc("/loaderio-3969952278183c9453e22d7f9ecfad1f/", func(w http.ResponseWriter, req *http.Request){
+	g.HandleFunc("/loaderio-3969952278183c9453e22d7f9ecfad1f/", func(w http.ResponseWriter, req *http.Request) {
 		fmt.Fprintf(w, "loaderio-3969952278183c9453e22d7f9ecfad1f")
 	})
 
