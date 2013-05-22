@@ -15,7 +15,7 @@ import (
 
 	"github.com/carbocation/gotogether"
 	"github.com/dustin/go-humanize"
-	"github.com/rtfb/blackfriday"
+	"github.com/russross/blackfriday"
 )
 
 // Note that we can't just preload and cache all of the templates
