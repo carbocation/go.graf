@@ -1,9 +1,8 @@
 == MUST HAVE ==
 # Show parent thread (if any) and parent forum. I.e., breadcrumbs.
-# Fix logging setup to have the output target be configurable in config file
 
-# Fix deploy script to stop / start upstart daemon rather than killing 
-# the process (which will now be futile).
+# Remove the 'Reply' button after clicking it so people don't accidentally
+click it again and ruin their posts.
 
 == LIKE TO HAVE ==
 Have a weight for each user. Their votes have that weight. Offline, 
