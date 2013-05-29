@@ -2,13 +2,14 @@
 
 {{ define "scripts" }}
 <script src="/static/js/template.js"></script>
+<script src="/static/js/websocket.js"></script>
 <script>
 $(document).ready(function(){
 	var getParentId = function(item){
 		return ($(item).closest("div.entry")[0].id).split(/_/)[1]
 	};
 	
-	$(".reply").on("click", function(event){
+	$(document).on("click","a.reply", function(event){
 		var parentId = getParentId(this);
 		
 		if (!{{.User.Guest}}) {
@@ -84,20 +85,20 @@ $(document).ready(function(){
 			type: "POST",
 			data: submission,
 		}).done(function(msg) {
-			$("#message_"+parentId).append("<p class=\"text-info\">"+msg+"</p>")
-	    	console.log(msg);
+			//$("#message_"+parentId).append("<p class=\"text-info\">"+msg+"</p>")
+	    	//console.log(msg);
 			
 			{{/*TODO(james) ignore the response and let websockets kick the message back*/}}
 	    	{{/* $("#children_"+parentId).append(msg) */}}
 			//For now, reload the page.
-			window.location.href = window.location.href;
+			//window.location.href = window.location.href;
 	    	app.replaceTemplate("BlankTemplate", {}, "active_" + parentId);
     	})
 	    .fail(function(msg){ console.log(msg.status + ": " + msg.responseText); });
 	    //.always(function(msg) { console.log(msg); });
 	});
 	
-	$(".appender").on("click", function(event){
+	$(document).on("click",".appender", function(event){
 		parentId = $(this).closest("div.entry")[0].id
 		
 		app.appendTemplate("ItemTemplate", {id: "id", title: "name"}, parentId)

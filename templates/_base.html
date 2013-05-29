@@ -70,6 +70,8 @@
 		<script>window.jQuery || document.write('<script src="/static/js/jquery.1.9.1.min.js"><\/script>')</script>
 		<script src="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/js/bootstrap.min.js"></script>
     	<script>window.jQuery.fn.modal || document.write('<script src="/static/js/bootstrap.2.3.1.min.js"><\/script>')</script>
+    	<script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.4.4/underscore-min.js"></script>
+    	<script>window._ || document.write('<script src="/static/js/underscore.1.4.4.min.js"><\/script>')</script>
     	{{ template "scripts" . }}
     </body>
 </html>
@@ -112,6 +114,30 @@
 
 <script id="BlankTemplate" type="text/html">
 <div></div>
+</script>
+
+<script id="EntryTemplate" type="text/html">
+	<div class="entry nested colorfalse" id="entry_<#= Id #>">
+		<#= Body #>
+		<div class="active_messages" id="message_<#= Id #>"></div>
+		<ul class="inline">
+			<li>
+				<span class="vote upvote {{if .User.Guest}}muted{{end}}">▲</span>
+				<#= AuthorHandle #>
+				<span class="vote downvote {{if .User.Guest}}muted{{end}}">▼</span>
+			</li>
+			<li>Just now</li>
+			<li><a class="reply">Reply</a></li>
+			<li>0 Points</li>
+			<li>
+			<a href="/thread/<#= Id #>">
+				Permalink
+			</a>
+			</li>
+		</ul>
+		<div class="active_controls" id="active_<#= Id #>"></div>
+		<div class="children" id="children_<#= Id #>"></div>
+	</div>
 </script>
 {{end}}
 
