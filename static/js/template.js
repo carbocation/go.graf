@@ -64,6 +64,26 @@ var app = {
 	
 	// templateId is the ID of a template;
 	// data is an object containing named variables;
+	// containerId is the ID of the element to which to prepend the new element. 
+	appendTemplate : function(templateId, data, containerId) {
+		var newDiv = document.createElement("div");
+		
+		if(typeof data.id != "undefined"){
+			newDiv.id = data.id
+		}
+		
+		newDiv.innerHTML = this.parseTemplate(document.getElementById(templateId).innerHTML, data);
+		newDiv = newDiv.children[0];
+		
+		//Prepend
+		var par = document.getElementById(containerId) 
+		par.insertBefore(newDiv, par.firstChild);
+		
+		return;
+	},
+	
+	// templateId is the ID of a template;
+	// data is an object containing named variables;
 	// containerId is the ID of the element to which to append the new element. 
 	replaceTemplate : function(templateId, data, containerId) {
 		var newDiv = document.createElement("div");

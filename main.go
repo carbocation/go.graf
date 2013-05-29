@@ -4,10 +4,13 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
+	"time"
 
+	"carbocation.com/code/go.websocket-chat"
 	"github.com/carbocation/go.forum"
 	"github.com/carbocation/go.user"
 	"github.com/carbocation/gotogether"
+	//"github.com/garyburd/go-websocket/websocket"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	_ "github.com/lib/pq"
@@ -38,6 +41,12 @@ func main() {
 	forum.Initialize(db)
 	user.Initialize(db)
 
+	wshub.Initialize(10*time.Second,
+		60*time.Second,
+		60*time.Second*9/10,
+		4096,
+		256)
+
 	//Bundled static assets are handled by gotogether
 	gotogether.Handle("/static/")
 
@@ -51,6 +60,7 @@ func main() {
 	g.Handle("/login", handler(loginHandler)).Name("login")
 	g.Handle("/logout", handler(logoutHandler)).Name("logout")
 	g.Handle("/register", handler(registerHandler)).Name("register")
+	g.HandleFunc(`/ws/thread/{id:[0-9]+}`, wsHandler)
 	g.HandleFunc("/loaderio-3969952278183c9453e22d7f9ecfad1f/", func(w http.ResponseWriter, req *http.Request) {
 		fmt.Fprintf(w, "loaderio-3969952278183c9453e22d7f9ecfad1f")
 	})

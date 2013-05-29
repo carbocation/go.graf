@@ -12,8 +12,10 @@ import (
 	"time"
 
 	//"github.com/carbocation/gotogether"
+	"carbocation.com/code/go.websocket-chat"
 	"github.com/carbocation/go.forum"
 	"github.com/carbocation/go.user"
+	"github.com/garyburd/go-websocket/websocket"
 	"github.com/goods/httpbuf"
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
@@ -482,11 +484,35 @@ func postThreadHandler(w http.ResponseWriter, r *http.Request) error {
 		return errors.New("Please craft a longer message.")
 	}
 
+	//TODO(james): clean up this parent.Id and ParentId junk
 	err = entry.Persist(parent.Id)
 	if err != nil {
 		return err
 	}
 
+	//Intercept here to send the data down to websocket listeners
+	go func() {
+		//OVERWRITING ENTRY WITH THE NEWLY-MINTED VERSION FROM THE DATABASE
+		entry, err = forum.OneEntry(entry.Id)
+		if err != nil {
+			return
+		}
+		entry.ParentId = parent.Id
+		
+		e, _ := forum.AncestorEntries(entry.Id, u)
+		ids := []string{}
+		for e != nil {
+			ids = append(ids, strconv.Itoa(int(e.Id)))
+			fmt.Println(e)
+			e = e.Child()
+		}
+		
+		packet, _ := wshub.Packetize("thread_post", *entry)
+		wshub.Multicast(packet, ids)
+	}()
+	
+	//TODO(james): Delete the rest?
+	
 	jsondata, err := json.Marshal(entry)
 	_, err = w.Write(jsondata)
 	if err != nil {
@@ -553,4 +579,18 @@ func postVoteHandler(w http.ResponseWriter, r *http.Request) error {
 	w.Header().Set("Content-type", "application/json")
 
 	return nil
+}
+
+func wsHandler(w http.ResponseWriter, req *http.Request) {
+	ws, err := websocket.Upgrade(w, req.Header, nil, 1024, 1024)
+	if _, ok := err.(websocket.HandshakeError); ok {
+		http.Error(w, "Not a websocket handshake", 400)
+		return
+	} else if err != nil {
+		log.Println(err)
+		return
+	}
+	//When we try to handle this, see if the hub exists.
+	id := mux.Vars(req)["id"]
+	wshub.Launch(ws, id)
 }
