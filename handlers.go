@@ -1,4 +1,4 @@
-package main
+package asksite
 
 import (
 	"encoding/json"
@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	//"github.com/carbocation/gotogether"
 	"carbocation.com/code/go.websocket-chat"
 	"github.com/carbocation/go.forum"
 	"github.com/carbocation/go.user"
@@ -21,14 +20,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-var LogWriter *log.Logger
-
-func init() {
-	//TODO(james): make configurable from Config file
-	LogWriter = log.New(Config.App.LogAccess, "", 0)
-}
-
-type handler func(http.ResponseWriter, *http.Request) error
+type Handler func(http.ResponseWriter, *http.Request) error
 
 /*
 Derived from https://github.com/gorilla/handlers/blob/master/handlers.go
@@ -64,7 +56,7 @@ func (l *ResponseLogger) Write(b []byte) (int, error) {
 	return size, err
 }
 
-func (h handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+func (h Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	//Load any session values into req
 	OpenContext(req)
 
@@ -158,7 +150,7 @@ func ErrorHTML(w http.ResponseWriter, r *http.Request, errorTitle, errorMessage 
 	return err
 }
 
-func loginHandler(w http.ResponseWriter, r *http.Request) (err error) {
+func LoginHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	//execute the template
 	data := struct {
 		G        *ConfigPublic
@@ -185,7 +177,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	return
 }
 
-func logoutHandler(w http.ResponseWriter, r *http.Request) error {
+func LogoutHandler(w http.ResponseWriter, r *http.Request) error {
 	DeleteContext(r, w)
 
 	http.Redirect(w, r, reverse("index"), http.StatusSeeOther)
@@ -194,13 +186,13 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) error {
 }
 
 //For now, the index is actually just a hardlink to the forum with ID #1
-func indexHandler(w http.ResponseWriter, r *http.Request) error {
-	mux.Vars(r)["id"] = "1"
+func IndexHandler(w http.ResponseWriter, r *http.Request) error {
+	mux.Vars(r)["id"] = Config.App.RootForumID
 
-	return forumHandler(w, r)
+	return ForumHandler(w, r)
 }
 
-func aboutHandler(w http.ResponseWriter, r *http.Request) error {
+func AboutHandler(w http.ResponseWriter, r *http.Request) error {
 	data := struct {
 		G    *ConfigPublic
 		User *user.User
@@ -217,7 +209,7 @@ func aboutHandler(w http.ResponseWriter, r *http.Request) error {
 	return err
 }
 
-func registerHandler(w http.ResponseWriter, r *http.Request) (err error) {
+func RegisterHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	data := struct {
 		G        *ConfigPublic
 		User     *user.User
@@ -248,7 +240,7 @@ func registerHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	return
 }
 
-func threadHandler(w http.ResponseWriter, r *http.Request) error {
+func ThreadHandler(w http.ResponseWriter, r *http.Request) error {
 	//If the thread ID is not parseable as an integer, stop immediately
 	id, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
 	if err != nil {
@@ -291,7 +283,7 @@ func threadHandler(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func forumHandler(w http.ResponseWriter, r *http.Request) (err error) {
+func ForumHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	//If the forum ID is not parseable as an integer, stop immediately
 	id, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
 	if err != nil {
@@ -335,13 +327,13 @@ func forumHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	return
 }
 
-func newThreadHandler(w http.ResponseWriter, r *http.Request) (err error) {
+func NewThreadHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	fmt.Fprint(w, "New thread form will go here.")
 	err = errors.New("The new thread form hasn't been created yet.")
 	return
 }
 
-func postLoginHandler(w http.ResponseWriter, r *http.Request) error {
+func PostLoginHandler(w http.ResponseWriter, r *http.Request) error {
 	r.ParseForm()
 
 	session, _ := store.Get(r, "app")
@@ -359,7 +351,7 @@ func postLoginHandler(w http.ResponseWriter, r *http.Request) error {
 		w.WriteHeader(http.StatusBadRequest)
 
 		//Send them back to the login form
-		return loginHandler(w, r)
+		return LoginHandler(w, r)
 	}
 
 	//Successful login
@@ -375,7 +367,7 @@ func postLoginHandler(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func postRegisterHandler(w http.ResponseWriter, r *http.Request) error {
+func PostRegisterHandler(w http.ResponseWriter, r *http.Request) error {
 	var err error
 	r.ParseForm()
 
@@ -408,7 +400,7 @@ func postRegisterHandler(w http.ResponseWriter, r *http.Request) error {
 		//Tell the browser that that input was no good
 		w.WriteHeader(http.StatusBadRequest)
 
-		return registerHandler(w, r)
+		return RegisterHandler(w, r)
 	}
 
 	//They're a real user. Overwrite full object by populating from the DB
@@ -422,7 +414,7 @@ func postRegisterHandler(w http.ResponseWriter, r *http.Request) error {
 	return err
 }
 
-func postThreadHandler(w http.ResponseWriter, r *http.Request) error {
+func PostThreadHandler(w http.ResponseWriter, r *http.Request) error {
 	var pid int64 //parent ID
 	var err error
 	var parent, entry *forum.Entry
@@ -498,7 +490,7 @@ func postThreadHandler(w http.ResponseWriter, r *http.Request) error {
 			return
 		}
 		entry.ParentId = parent.Id
-		
+
 		e, _ := forum.AncestorEntries(entry.Id, u)
 		ids := []string{}
 		for e != nil {
@@ -506,13 +498,13 @@ func postThreadHandler(w http.ResponseWriter, r *http.Request) error {
 			fmt.Println(e)
 			e = e.Child()
 		}
-		
+
 		packet, _ := wshub.Packetize("thread_post", *entry)
 		wshub.Multicast(packet, ids)
 	}()
-	
+
 	//TODO(james): Delete the rest?
-	
+
 	jsondata, err := json.Marshal(entry)
 	_, err = w.Write(jsondata)
 	if err != nil {
@@ -526,7 +518,7 @@ func postThreadHandler(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func postVoteHandler(w http.ResponseWriter, r *http.Request) error {
+func PostVoteHandler(w http.ResponseWriter, r *http.Request) error {
 	r.ParseForm()
 
 	//Make sure the target entry is valid
@@ -581,7 +573,7 @@ func postVoteHandler(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func wsHandler(w http.ResponseWriter, req *http.Request) {
+func ThreadWsHandler(w http.ResponseWriter, req *http.Request) {
 	ws, err := websocket.Upgrade(w, req.Header, nil, 1024, 1024)
 	if _, ok := err.(websocket.HandshakeError); ok {
 		http.Error(w, "Not a websocket handshake", 400)

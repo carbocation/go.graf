@@ -5,7 +5,7 @@ Note that for things such as the Public config, an alternative
 strategy would be to pass the templates an interface{} so you can
 pack it with whatever fields you please.
 */
-package main
+package asksite
 
 import (
 	"io"
@@ -21,20 +21,13 @@ type ConfigFile struct {
 
 //App-level settings like HTTP ports and secret keys
 type ConfigApp struct {
-	identifier  string    //This distinguishes this app for logging and other purposes
+	Identifier  string    //This distinguishes this app for logging and other purposes
 	Environment string    //production, dev, ...
 	LogAccess   io.Writer //Log every request
 	LogError    io.Writer //Errors
 	Port        string
 	Secret      string
-}
-
-func (c ConfigApp) Identifier() string {
-	if c.identifier == "" {
-		panic("No identifier given in the app's config.")
-	}
-	
-	return c.identifier
+	RootForumID string //The numeric (but stringified) identifier for your root forum
 }
 
 //DB connection config
