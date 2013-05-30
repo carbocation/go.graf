@@ -1,7 +1,7 @@
 /*
 Derived from zeebo's https://github.com/zeebo/gostbook/blob/master/template.go
 */
-package main
+package asksite
 
 import (
 	"errors"

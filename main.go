@@ -1,4 +1,4 @@
-package main
+package asksite
 
 import (
 	"database/sql"
@@ -21,7 +21,7 @@ var Config *ConfigFile = Environment()
 var (
 	db     *sql.DB                                     //db maintains a pool of connections to our database of choice
 	store  *sessions.FilesystemStore                   //With an empty first argument, this will put session files in os.TempDir() (/tmp)
-	router *mux.Router               = mux.NewRouter() //Dynamic content is managed by handlers pointed at by the router
+	router *mux.Router               = mux.NewRouter() //Dynamic content is managed by Handlers pointed at by the router
 )
 
 func main() {
@@ -51,25 +51,22 @@ func main() {
 
 	//Create a subrouter for GET requests
 	g := router.Methods("GET").Subrouter()
-	g.Handle("/", handler(indexHandler)).Name("index")
-	g.Handle("/about", handler(aboutHandler)).Name("about")
-	g.Handle("/forum/{id:[0-9]+}", handler(forumHandler)).Name("forum")
-	g.Handle("/thread/{id:[0-9]+}", handler(threadHandler)).Name("thread")
-	g.Handle("/thread", handler(newThreadHandler)).Name("newThread") //Form for creating new posts
-	g.Handle("/login", handler(loginHandler)).Name("login")
-	g.Handle("/logout", handler(logoutHandler)).Name("logout")
-	g.Handle("/register", handler(registerHandler)).Name("register")
-	g.HandleFunc(`/ws/thread/{id:[0-9]+}`, wsHandler)
-	g.HandleFunc("/loaderio-3969952278183c9453e22d7f9ecfad1f/", func(w http.ResponseWriter, req *http.Request) {
-		fmt.Fprintf(w, "loaderio-3969952278183c9453e22d7f9ecfad1f")
-	})
+	g.Handle("/", Handler(IndexHandler)).Name("index")
+	g.Handle("/about", Handler(AboutHandler)).Name("about")
+	g.Handle("/forum/{id:[0-9]+}", Handler(ForumHandler)).Name("forum")
+	g.Handle("/thread/{id:[0-9]+}", Handler(ThreadHandler)).Name("thread")
+	g.Handle("/thread", Handler(NewThreadHandler)).Name("newThread") //Form for creating new posts
+	g.Handle("/login", Handler(LoginHandler)).Name("login")
+	g.Handle("/logout", Handler(LogoutHandler)).Name("logout")
+	g.Handle("/register", Handler(RegisterHandler)).Name("register")
+	g.HandleFunc(`/ws/thread/{id:[0-9]+}`, ThreadWsHandler)
 
 	//Create a subrouter for POST requests
 	p := router.Methods("POST").Subrouter()
-	p.Handle("/thread", handler(postThreadHandler)).Name("postThread")
-	p.Handle("/login", handler(postLoginHandler)).Name("postLogin")
-	p.Handle("/register", handler(postRegisterHandler)).Name("postRegister")
-	p.Handle("/vote", handler(postVoteHandler)).Name("postVote")
+	p.Handle("/thread", Handler(PostThreadHandler)).Name("postThread")
+	p.Handle("/login", Handler(PostLoginHandler)).Name("postLogin")
+	p.Handle("/register", Handler(PostRegisterHandler)).Name("postRegister")
+	p.Handle("/vote", Handler(PostVoteHandler)).Name("postVote")
 
 	//Notify the http package about our router
 	http.Handle("/", router)

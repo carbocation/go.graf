@@ -6,7 +6,7 @@ files (e.g., user.go). This file exists for glue code that
 allows models to be used with libraries such as the Gorilla 
 Web Toolkit's 'Schema' library.
 */
-package main
+package asksite
 
 import (
 	"reflect"
