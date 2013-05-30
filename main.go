@@ -10,7 +10,6 @@ import (
 	"github.com/carbocation/go.forum"
 	"github.com/carbocation/go.user"
 	"github.com/carbocation/gotogether"
-	//"github.com/garyburd/go-websocket/websocket"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	_ "github.com/lib/pq"
