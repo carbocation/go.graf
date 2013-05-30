@@ -187,7 +187,7 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) error {
 
 //For now, the index is actually just a hardlink to the forum with ID #1
 func IndexHandler(w http.ResponseWriter, r *http.Request) error {
-	mux.Vars(r)["id"] = "1"
+	mux.Vars(r)["id"] = Config.App.RootForumID
 
 	return ForumHandler(w, r)
 }

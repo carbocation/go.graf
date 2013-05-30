@@ -27,6 +27,7 @@ type ConfigApp struct {
 	LogError    io.Writer //Errors
 	Port        string
 	Secret      string
+	RootForumID string //The numeric (but stringified) identifier for your root forum
 }
 
 //DB connection config

@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/gorilla/mux"
+	"github.com/gorilla/schema"
 	"github.com/gorilla/sessions"
 	_ "github.com/lib/pq"
 )
@@ -15,10 +16,11 @@ var (
 	store     *sessions.FilesystemStore                   //With an empty first argument, this will put session files in os.TempDir() (/tmp)
 	router    *mux.Router               = mux.NewRouter() //Dynamic content is managed by asksite.Handlers pointed at by the router
 	LogWriter *log.Logger
+	decoder   *schema.Decoder
 )
 
-func Initialize(cfg *ConfigFile, d *sql.DB, s *sessions.FilesystemStore, r *mux.Router) {
-	Config, db, store, router = cfg, d, s, r
+func Initialize(cfg *ConfigFile, d *sql.DB, s *sessions.FilesystemStore, r *mux.Router, de *schema.Decoder) {
+	Config, db, store, router, decoder = cfg, d, s, r, de
 
 	LogWriter = log.New(Config.App.LogAccess, "", 0)
 }
