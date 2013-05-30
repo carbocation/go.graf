@@ -21,20 +21,12 @@ type ConfigFile struct {
 
 //App-level settings like HTTP ports and secret keys
 type ConfigApp struct {
-	identifier  string    //This distinguishes this app for logging and other purposes
+	Identifier  string    //This distinguishes this app for logging and other purposes
 	Environment string    //production, dev, ...
 	LogAccess   io.Writer //Log every request
 	LogError    io.Writer //Errors
 	Port        string
 	Secret      string
-}
-
-func (c ConfigApp) Identifier() string {
-	if c.identifier == "" {
-		panic("No identifier given in the app's config.")
-	}
-	
-	return c.identifier
 }
 
 //DB connection config

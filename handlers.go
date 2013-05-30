@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	//"github.com/carbocation/gotogether"
 	"carbocation.com/code/go.websocket-chat"
 	"github.com/carbocation/go.forum"
 	"github.com/carbocation/go.user"
@@ -20,13 +19,6 @@ import (
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 )
-
-var LogWriter *log.Logger
-
-func init() {
-	//TODO(james): make configurable from Config file
-	LogWriter = log.New(Config.App.LogAccess, "", 0)
-}
 
 type Handler func(http.ResponseWriter, *http.Request) error
 
@@ -114,7 +106,7 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 //From https://groups.google.com/forum/?fromgroups#!topic/golang-nuts/lomWKs0kOfE
-func GetIpAddress(r *http.Request) string {
+func getIpAddress(r *http.Request) string {
 	hdr := r.Header
 	hdrRealIp := hdr.Get("X-Real-Ip")
 	hdrForwardedFor := hdr.Get("X-Forwarded-For")
@@ -197,7 +189,7 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) error {
 func IndexHandler(w http.ResponseWriter, r *http.Request) error {
 	mux.Vars(r)["id"] = "1"
 
-	return forumHandler(w, r)
+	return ForumHandler(w, r)
 }
 
 func AboutHandler(w http.ResponseWriter, r *http.Request) error {
@@ -359,7 +351,7 @@ func PostLoginHandler(w http.ResponseWriter, r *http.Request) error {
 		w.WriteHeader(http.StatusBadRequest)
 
 		//Send them back to the login form
-		return loginHandler(w, r)
+		return LoginHandler(w, r)
 	}
 
 	//Successful login
@@ -408,7 +400,7 @@ func PostRegisterHandler(w http.ResponseWriter, r *http.Request) error {
 		//Tell the browser that that input was no good
 		w.WriteHeader(http.StatusBadRequest)
 
-		return registerHandler(w, r)
+		return RegisterHandler(w, r)
 	}
 
 	//They're a real user. Overwrite full object by populating from the DB
@@ -498,7 +490,7 @@ func PostThreadHandler(w http.ResponseWriter, r *http.Request) error {
 			return
 		}
 		entry.ParentId = parent.Id
-		
+
 		e, _ := forum.AncestorEntries(entry.Id, u)
 		ids := []string{}
 		for e != nil {
@@ -506,13 +498,13 @@ func PostThreadHandler(w http.ResponseWriter, r *http.Request) error {
 			fmt.Println(e)
 			e = e.Child()
 		}
-		
+
 		packet, _ := wshub.Packetize("thread_post", *entry)
 		wshub.Multicast(packet, ids)
 	}()
-	
+
 	//TODO(james): Delete the rest?
-	
+
 	jsondata, err := json.Marshal(entry)
 	_, err = w.Write(jsondata)
 	if err != nil {
