@@ -5,7 +5,7 @@ GTFO
 
 Golang Threaded Forum, Opensource (GTFO), is a library that contains all of the 
 necessary parts for building a threaded forum using golang and a 
-database.
+database. http://askgolang.com uses this library as its source code.
 
 To get started, take a look at the "example" directory. This example assumes
 you are using OS X for development and Postgres as your database server. If so, 
