@@ -1,4 +1,6 @@
-==GTFO==
+GTFO
+====
+
 `go get github.com/carbocation/go.gtfo`
 
 Golang Threaded Forum, Opensource (GTFO), is a library that contains all of the 
