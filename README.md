@@ -1,12 +1,15 @@
-== Recursive Points ==
-Sorting is done based on all points belonging to the post,
-as well as all children, children's children, ..., of the 
-post.
+==GTFO==
+`go get github.com/carbocation/go.gtfo`
 
-Tradeoffs include the fact that to list the forum root, 
-all posts have to be pulled down (or alternatively, 
-the DepthOne... functions could be modified to calculate 
-points based on the closure tables, which should work fine).
+Golang Threaded Forum, Opensource (GTFO), is a library that contains all of the 
+necessary parts for building a threaded forum using golang and a 
+database.
 
-To convert to a more pure SQL-based approach, GROUP BY ancestor, 
-where ancestor is each post.
+To get started, take a look at the "example" directory. This example assumes
+you are using OS X for development and Postgres as your database server. If so, 
+you can create what is needed in Postgres with "example/forum.sql", and then 
+you can compile the project from that path with ./compile.sh
+
+The LICENSE specifies the terms, but essentially this is licensed under an MIT-style license.
+
+Please report any issues to me here on Github.
