@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"os"
 
-	"carbocation.com/code/go.asksite"
+	"carbocation.com/code/go.gtfo"
 )
 
 type environment string
