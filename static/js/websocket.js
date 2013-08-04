@@ -11,8 +11,8 @@ $(document).ready(function() {
 		console.log(msg)
 	}
 
-	if (window["WebSocket"]) {
-		conn = new WebSocket("ws://" + document.location.host
+	if (window["ReconnectingWebSocket"]) {
+		conn = new ReconnectingWebSocket("ws://" + document.location.host
 				+ "/ws/thread/" + id);
 		conn.callbacks = {};
 		conn.onclose = function(evt) {
