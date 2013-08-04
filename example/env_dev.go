@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"os"
 
-	"carbocation.com/code/go.gtfo"
+	"github.com/carbocation/go.gtfo"
 )
 
 type environment string
