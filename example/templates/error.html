@@ -1,0 +1,9 @@
+{{ define "title" }}Error{{ end }}
+
+{{ define "content" }}
+<div class="hero-unit">
+    <h1>Error</h1>
+    
+    <p class="lead"><span class="label label-important">{{.ShortError}}</span> {{.LongError}}</p>
+</div>
+{{ end }}

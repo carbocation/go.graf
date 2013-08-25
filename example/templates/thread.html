@@ -1,0 +1,202 @@
+{{ define "title" }}{{.Tree.Title}}{{ end }}
+
+{{ define "scripts" }}
+<script src="/static/js/template.js"></script>
+<script src="/static/js/rws.min.js"></script>
+<script src="/static/js/websocket.js"></script>
+<script>
+$(document).ready(function(){
+	var getParentId = function(item){
+		return ($(item).closest("div.entry")[0].id).split(/_/)[1]
+	};
+	
+	$(document).on("click","a.reply", function(event){
+		var parentId = getParentId(this);
+		
+		if (!{{.User.Guest}}) {
+			app.replaceTemplate("ReplyTemplate", {parent_id: parentId}, "active_"+parentId);
+		} else {
+			$("#message_"+parentId).html("<p class=\"text-error\">Guests cannot currently create posts. \
+					Please register an account to post.</p>")
+		}
+	});
+	
+	$(document).on("click", ".clear_active_controls", {}, function(event){
+		event.preventDefault();
+		
+		app.replaceTemplate("BlankTemplate", {}, "active_" + getParentId(this));
+	});
+	
+	$(document).on("click", ".vote", {}, function(event){
+		event.preventDefault();
+		
+		var parentId = getParentId(this);
+		var voteEl = this
+		
+		if ({{.User.Guest}}) {
+			$("#message_"+parentId).html("<p class=\"text-error\">Guests cannot currently vote. \
+					Please register an account to vote.</p>");
+			
+			return;
+		}
+		
+		var submission = {entryId: parentId};
+		
+		//Send the right kind of vote
+		if ($(this).hasClass('active')) {
+			console.log("Un-vote for " + submission.entryId);
+			submission.vote = 'unvote';
+		} else if ($(this).hasClass('upvote')) {
+			console.log("Upvote for " + submission.entryId);
+			submission.vote = 'upvote';
+		} else {
+			console.log("Downvote for " + submission.entryId);
+			submission.vote = 'downvote';
+		}
+		
+		$.ajax({
+			url: "{{ reverse "postVote" }}", 
+			type: "POST",
+			data: submission,
+		}).done(function(msg) {
+	    	console.log(msg);
+	    	
+	    	//Update coloring
+			$(voteEl).siblings().removeClass("active");
+	    	if ($(voteEl).hasClass('active')) {
+	    		$(voteEl).removeClass("active");
+	    	} else {
+				$(voteEl).addClass("active");
+	    	}
+    	})
+	    .fail(function(msg){ console.log(msg.status + ": " + msg.responseText); });
+		
+	});
+	
+	$(document).on("submit", "form.reply", {}, function(event){
+		event.preventDefault();
+		
+		var parentId = getParentId(this);
+		var submission = $(this).serializeArray();
+		
+		console.log("Parent id is: "+parentId)
+		
+		$.ajax({
+			url: "{{ reverse "postThread" }}", 
+			type: "POST",
+			data: submission,
+		}).done(function(msg) {
+			//$("#message_"+parentId).append("<p class=\"text-info\">"+msg+"</p>")
+	    	//console.log(msg);
+			
+			{{/*TODO(james) ignore the response and let websockets kick the message back*/}}
+	    	{{/* $("#children_"+parentId).append(msg) */}}
+			//For now, reload the page.
+			//window.location.href = window.location.href;
+	    	app.replaceTemplate("BlankTemplate", {}, "active_" + parentId);
+    	})
+	    .fail(function(msg){ console.log(msg.status + ": " + msg.responseText); });
+	    //.always(function(msg) { console.log(msg); });
+	});
+	
+	$(document).on("click",".appender", function(event){
+		parentId = $(this).closest("div.entry")[0].id
+		
+		app.appendTemplate("ItemTemplate", {id: "id", title: "name"}, parentId)
+	});
+});
+</script>
+{{end}}
+
+
+{{ define "content" }}
+{{if .Tree}}
+    <div class="entry" id="entry_{{.Tree.Id}}">
+		<h1>
+		<span class="vote upvote {{if .Tree.UserVote.Upvote}}active{{end}} {{if .User.Guest}}muted{{end}}">△</span>
+		{{if .Tree.Url}}
+			<a href="{{.Tree.Body}}">{{.Tree.Title}}</a>
+		{{else}}
+			{{if .Tree.Title}}
+				{{.Tree.Title}}
+			{{else}}
+				{{substring .Tree.Body 50}}
+			{{end}}
+		{{end}}
+		<span class="vote downvote {{if .Tree.UserVote.Downvote}}active{{end}} {{if .User.Guest}}muted{{end}}">▽</span>
+		</h1>
+		
+		<div class="lead">{{markDown .Tree.Body}}</div>
+		<div class="active_messages" id="message_{{.Tree.Id}}"></div>
+		<ul class="inline">
+			<li>{{.Tree.AuthorHandle}}</li>
+			<li>{{humanizeTime .Tree.Created}}</li>
+			<li><a class="reply btn btn-primary btn-small">Reply</a></li>
+			<li>{{.Tree.Points}} {{if eq .Tree.Points 1}}Point{{else}}Points{{end}}</li>
+			<li>Value: {{.Tree.Score}}</li>
+			<li>
+			{{$childComments := .Tree.ChildCount}}
+			<a href="{{reverse "thread" "id" .Tree.Id}}">{{$childComments}} {{if eq $childComments 1}}Comment{{else}}Comments{{end}}</a>
+			</li>
+			{{/* TODO(james)
+			<li><a href="edit">Edit</a></li>
+			<li>&nbsp;</li>
+			<li><a href="delete">Delete</a></li>
+			*/}}
+		</ul>
+		<div class="active_controls" id="active_{{.Tree.Id}}"></div>
+		<div class="children" id="children_{{.Tree.Id}}">
+			{{template "tree" mapfn "User" .User "Tree" .Tree.Child "Color" false}}
+		</div>
+    </div>
+    {{template "_jsTemplates" .}}
+{{ else }}
+	<p class="text-error">The requested post is unavailable.</p>
+{{end}}
+{{end}}
+
+
+{{define "tree"}}
+{{if .Tree}}
+	<div class="entry nested color{{.Color}}" id="entry_{{.Tree.Id}}">
+		{{markDown .Tree.Body}}
+		<div class="active_messages" id="message_{{.Tree.Id}}"></div>
+		<ul class="inline">
+			<li>
+				<span class="vote upvote {{if .Tree.UserVote.Upvote}}active{{end}} {{if .User.Guest}}muted{{end}}">▲</span>
+				{{.Tree.AuthorHandle}}
+				<span class="vote downvote {{if .Tree.UserVote.Downvote}}active{{end}} {{if .User.Guest}}muted{{end}}">▼</span>
+			</li>
+			<li>{{humanizeTime .Tree.Created}}</li>
+			<li><a class="reply">Reply</a></li>
+			<li>{{.Tree.Points}} {{if eq .Tree.Points 1 -1}}Point{{else}}Points{{end}}</li>
+			<li>Value: {{.Tree.Score}}</li>
+			<li>
+			{{$childComments := .Tree.ChildCount}}
+			<a href="{{reverse "thread" "id" .Tree.Id}}">
+				{{if eq $childComments 0}}
+					Permalink
+				{{else}}
+					{{$childComments}} {{if eq $childComments 1}}Comment{{else}}Comments{{end}}
+				{{end}}
+			</a>
+			</li>
+			{{/* TODO(james)
+			<li><a href="edit">Edit</a></li>
+			<li>&nbsp;</li>
+			<li><a href="delete">Delete</a></li>
+			*/}}
+		</ul>
+		{{/* 
+			Messages holds things of which there can only be one.
+			For example, you can only get one 'reply' box when 
+			you click Reply; you can't get several to stack up.
+		*/}} 
+		<div class="active_controls" id="active_{{.Tree.Id}}"></div>
+		<div class="children" id="children_{{.Tree.Id}}">
+	        {{template "tree" mapfn "User" .User "Tree" .Tree.Child "Color" (.Color | not) }}
+		</div>
+	</div>
+    {{template "tree" mapfn "User" .User "Tree" .Tree.Sibling "Color" .Color }}
+{{end}}
+{{end}}

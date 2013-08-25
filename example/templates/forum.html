@@ -1,0 +1,167 @@
+{{ define "title" }}{{.Tree.Title}}{{ end }}
+
+{{ define "scripts" }}
+<script src="/static/js/template.js"></script>
+<script>
+$(document).ready(function(){
+	var getParentId = function(item){
+		return ($(item).closest("div.entry")[0].id).split(/_/)[1]
+	};
+	
+	$(".new_thread").on("click", function(event){
+		var parentId = getParentId(this);
+		
+		if (!{{.User.Guest}}) {
+			app.replaceTemplate("NewThreadTemplate", {parent_id: parentId}, "active_"+parentId);
+		} else {
+			$("#message_"+parentId).html("<p class=\"text-error\">Guests cannot currently create posts. \
+					Please register an account to post.</p>");
+		}
+	});
+	
+	$(document).on("click", ".clear_active_controls", {}, function(event){
+		event.preventDefault();
+		
+		app.replaceTemplate("BlankTemplate", {}, "active_" + getParentId(this));
+	});
+	
+	$(document).on("submit", "form.new_thread", {}, function(event){
+		event.preventDefault();
+		
+		var parentId = getParentId(this);
+		var submission = $(this).serializeArray();
+		
+		console.log("Parent id is: "+parentId)
+		
+		$.ajax({
+			url: "{{ reverse "postThread" }}", 
+			type: "POST",
+			data: submission,
+		}).done(function(msg) {
+			
+			$("#message_"+parentId).append("<p class=\"text-info\">Your new post was created successfully. \
+					You will be redirected shortly. "+msg.Title+" "+msg.Body+"</p>")
+			
+			{{/*TODO(james) ignore the response and let websockets kick the message back*/}}
+	    	$("#children_"+parentId).append(msg)
+	    	app.replaceTemplate("BlankTemplate", {}, "active_" + parentId);
+	    	
+	    	newUrl = {{ reverse "thread" "id" 0 }}
+	    	newUrl = newUrl.replace("/0", "/"+msg.Id)
+	    	console.log(newUrl)
+	    	
+	    	window.location.href = newUrl
+    	})
+	    .fail(function(msg){ console.log(msg.status + ": " + msg.responseText); });
+	    //.always(function(msg) { console.log(msg); });
+	});
+	
+	$(document).on("click", ".vote", {}, function(event){
+		event.preventDefault();
+		
+		var parentId = getParentId(this);
+		var voteEl = this;
+		
+		if ({{.User.Guest}}) {
+			$("#message_"+parentId).html("<p class=\"text-error\">Guests cannot currently vote. \
+					Please register an account to vote.</p>");
+			
+			return;
+		}
+		
+		var submission = {entryId: parentId};
+		
+		//Send the right kind of vote
+		if ($(this).hasClass('active')) {
+			console.log("Un-vote for " + submission.entryId);
+			submission.vote = 'unvote';
+		} else if ($(this).hasClass('upvote')) {
+			console.log("Upvote for " + submission.entryId);
+			submission.vote = 'upvote';
+		} else {
+			console.log("Downvote for " + submission.entryId);
+			submission.vote = 'downvote';
+		}
+		
+		$.ajax({
+			url: "{{ reverse "postVote" }}", 
+			type: "POST",
+			data: submission,
+		}).done(function(msg) {
+	    	console.log(msg);
+	    	
+	    	//Update coloring
+			$(voteEl).siblings().removeClass("active");
+	    	if ($(voteEl).hasClass('active')) {
+	    		$(voteEl).removeClass("active");
+	    	} else {
+				$(voteEl).addClass("active");
+	    	}
+    	})
+	    .fail(function(msg){ console.log(msg.status + ": " + msg.responseText); });
+		
+	});
+	
+	$(".appender").on("click", function(event){
+		parentId = $(this).closest("div.entry")[0].id
+		
+		app.appendTemplate("ItemTemplate", {id: "id", title: "name"}, parentId)
+	});
+});
+</script>
+{{ end }}
+
+{{ define "content" }}
+{{if .Tree}}
+    <div class="entry" id="forum_{{.Tree.Id}}">
+		{{with .Tree}}
+			<h1>{{.Title}}</h1>
+			<p class="lead">{{.Body}}</p>
+			<div class="active_messages" id="message_{{.Id}}"></div>
+			<button class="btn btn-primary new_thread">Submit a new story</button>
+			<div class="active_controls" id="active_{{.Id}}"></div>
+			<br />
+		{{end}}
+		<div class="children" id="children_{{.Tree.Id}}">
+			{{template "tree" mapfn "User" .User "Tree" .Tree.Child "G" .G}}
+		</div>
+    </div>
+    {{template "_jsTemplates" .}}
+{{else}}
+	<p class="text-error">The requested forum is unavailable.</p>
+{{end}}
+{{ end }}
+
+
+{{ define "tree" }}
+{{if .Tree}}
+	{{$childComments := .Tree.ChildCount}}
+	<div class="entry" id="entry_{{.Tree.Id}}">
+		<span class="lead vote upvote {{if .Tree.UserVote.Upvote}}active{{end}} {{if .User.Guest}}muted{{end}}">▲</span> 
+		<a href="{{if .Tree.Url}}{{.Tree.Body}}{{else}}{{reverse "thread" "id" .Tree.Id}}{{end}}" class="lead">{{.Tree.Title}}</a> 
+		<span class="lead vote downvote {{if .Tree.UserVote.Downvote}}active{{end}} {{if .User.Guest}}muted{{end}}">▼</span>
+		{{if .Tree.Url}}
+			<span class="lead {{/*text-info*/}}muted">{{urlHost .Tree.Body}}</span>
+		{{else}}
+			<span class="lead muted"> {{urlHost .G.Url}} </span>
+		{{end}}
+		<span class="lead"><a href="{{reverse "thread" "id" .Tree.Id}}">
+			{{$childComments}} {{if eq $childComments 1}}Comment{{else}}Comments{{end}}
+		</a></span>
+		<br />
+		<span id="message_{{.Tree.Id}}"></span>
+		<ul class="inline">
+			<li>{{.Tree.AuthorHandle}} {{humanizeTime .Tree.Created}}</li>
+			<li>{{.Tree.Points}} {{if eq .Tree.Points 1 -1}}Point{{else}}Points{{end}}</li>
+			<li>Value: {{.Tree.Score}}</li>
+			{{/*
+			{{if eq .Tree.AuthorId .User.Id}}
+			<li><a href="#">Edit</a></li>
+			{{end}}
+			*/}}
+		</ul>
+        {{/* {{template "tree" mapfn "User" .User "Tree" .Tree.Child "G" .G}} */}}
+	</div>
+        {{template "tree" mapfn "User" .User "Tree" .Tree.Sibling "G" .G}}
+{{end}}
+{{end}}

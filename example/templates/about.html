@@ -1,0 +1,34 @@
+{{ define "title" }}Welcome{{ end }}
+
+{{ define "content" }}
+<div class="hero-unit">
+    <h1>{{.G.Site}}</h1>
+    
+    <p class="lead">{{.G.Site}} is a threaded discussion forum written in <a href="http://golang.org">Go</a>.</p>
+    
+    <ul class="unstyled">
+    <li><span class="label label-info">Instant</span> New comments are loaded over WebSockets 
+    and appear as soon as they are posted.</li>
+    
+    <li><span class="label label-info">Nested</span> Comments are threaded, to allow for easy 
+    identification of which comments are in reply to one another. This fosters discussions that 
+    branch off from the main topic.</li>
+    
+    <li><span class="label label-info">Recursive</span> Post and comments are ranked based not only 
+    on the upvotes and downvotes that they have received, but also based on the score of all of of 
+    their child comments (recursively down the tree). The hypothesis is that this will surface 
+    interesting discussion, even when the discussion is sparked by low-value or even negative-value 
+    posts.</li>
+    
+    <li><span class="label label-info">Responsive</span> {{.G.Site}} is also designed with responsiveness 
+    in mind, including upvote and downvote buttons that are much larger and more widely spaced than 
+    in the typical news discussion forum.</li>
+    
+    <li><span class="label label-info">Bcrypted</span> {{.G.Site}} stores  
+    <a href="https://en.wikipedia.org/wiki/Bcrypt">bcrypted</a> passwords. If 
+    our database is ever compromised, your password is still protected by one 
+    of the best password protection mechanisms available. As always, choosing a 
+    high-entropy password is a good idea.</li>
+    </ul>
+</div>
+{{ end }}

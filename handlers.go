@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"carbocation.com/code/go.websocket-chat"
+	"github.com/carbocation/go.websocket-chat"
 	"github.com/carbocation/go.forum"
 	"github.com/carbocation/go.user"
 	"github.com/garyburd/go-websocket/websocket"

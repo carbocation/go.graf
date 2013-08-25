@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/carbocation/go.gtfo"
-	"carbocation.com/code/go.websocket-chat"
+	"github.com/carbocation/go.websocket-chat"
 	"github.com/carbocation/go.forum"
 	"github.com/carbocation/go.user"
 	"github.com/carbocation/gotogether"
@@ -82,6 +82,7 @@ func main() {
 
 	//Notify the http package about our router
 	http.Handle("/", router)
+	fmt.Println("Server launched on port ",Config.App.Port) 
 
 	//Launch the server
 	if err := http.ListenAndServe(fmt.Sprintf("localhost:%s", Config.App.Port), nil); err != nil {
