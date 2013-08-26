@@ -1,4 +1,4 @@
-package asksite
+package graf
 
 import (
 	"net/url"

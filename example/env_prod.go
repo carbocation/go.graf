@@ -10,25 +10,25 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/carbocation/go.gtfo"
+	"github.com/carbocation/go.graf"
 )
 
 type environment string
 
-func Environment() *asksite.ConfigFile {
+func Environment() *graf.ConfigFile {
 	var logdir = `/tmp`
 
-	res := &asksite.ConfigFile{
+	res := &graf.ConfigFile{
 		//These are passed to templates
-		Public: &asksite.ConfigPublic{
-			Site:         "GRAF: Golang Recursively Arranged Forum",
+		Public: &graf.ConfigPublic{
+			Site:         "GRAF Recursively Arranged Forum",
 			Url:          "http://example.com",
 			ContactEmail: "james@example.com",
 			GACode:       "UA-00000000-0",
 			GAUrl:        "example.com",
 		},
 
-		DB: &asksite.ConfigDB{
+		DB: &graf.ConfigDB{
 			User:     "asksite",
 			Password: "test",
 			DBName:   "projects",
@@ -36,7 +36,7 @@ func Environment() *asksite.ConfigFile {
 			PoolSize: 95,
 		},
 
-		App: &asksite.ConfigApp{
+		App: &graf.ConfigApp{
 			LogAccess:   os.Stdout,
 			LogError:    os.Stderr,
 			Identifier:  "askgolang",

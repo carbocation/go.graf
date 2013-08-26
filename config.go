@@ -5,7 +5,7 @@ Note that for things such as the Public config, an alternative
 strategy would be to pass the templates an interface{} so you can
 pack it with whatever fields you please.
 */
-package asksite
+package graf
 
 import (
 	"io"
