@@ -13,7 +13,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/carbocation/go.gtfo"
+	"github.com/carbocation/go.graf"
 	"github.com/carbocation/go.websocket-chat"
 	"github.com/carbocation/go.forum"
 	"github.com/carbocation/go.user"

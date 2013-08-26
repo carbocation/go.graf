@@ -21,7 +21,7 @@ func Environment() *asksite.ConfigFile {
 	res := &asksite.ConfigFile{
 		//These are passed to templates
 		Public: &asksite.ConfigPublic{
-			Site:         "GTFO: Golang Threaded Forum Opensource",
+			Site:         "GRAF: Golang Recursively Arranged Forum",
 			Url:          "http://example.com",
 			ContactEmail: "james@example.com",
 			GACode:       "UA-00000000-0",
