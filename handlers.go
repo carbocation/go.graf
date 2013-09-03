@@ -350,9 +350,11 @@ func ForumHandler(w http.ResponseWriter, r *http.Request) (err error) {
 	return
 }
 
-func NewThreadHandler(w http.ResponseWriter, r *http.Request) (err error) {
-	fmt.Fprint(w, "New thread form will go here.")
-	err = errors.New("The new thread form hasn't been created yet.")
+//Handles the specific URL /thread without any ID affixed to it
+func ThreadRootHandler(w http.ResponseWriter, r *http.Request) (err error) {
+	
+	http.Redirect(w, r, reverse("index"), http.StatusSeeOther)
+	
 	return
 }
 
@@ -504,6 +506,16 @@ func PostThreadHandler(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
+	
+	//When you post, you give yourself an upvote
+	vote := &forum.Vote{EntryId: entry.Id, UserId: u.Id, Upvote: true, Downvote: false}
+	err = vote.Persist()
+	if err != nil {
+		return err
+	}
+	entry.UserVote = vote
+	entry.Upvotes = 1
+	//End upvote
 
 	//Intercept here to send the data down to websocket listeners
 	go func() {
@@ -514,6 +526,8 @@ func PostThreadHandler(w http.ResponseWriter, r *http.Request) error {
 		}
 		entry.ParentId = parent.Id
 
+		//Identify all ancestor posts so anyone viewing them directly will get 
+		//notified of this new post via Websockets
 		e, _ := forum.AncestorEntries(entry.Id, u)
 		ids := []string{}
 		for e != nil {

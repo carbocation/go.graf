@@ -64,7 +64,7 @@ func main() {
 	g.Handle("/about", graf.Handler(graf.AboutHandler)).Name("about")
 	g.Handle("/forum/{id:[0-9]+}", graf.Handler(graf.ForumHandler)).Name("forum")
 	g.Handle("/thread/{id:[0-9]+}", graf.Handler(graf.ThreadHandler)).Name("thread")
-	g.Handle("/thread", graf.Handler(graf.NewThreadHandler)).Name("newThread") //Form for creating new posts
+	g.Handle("/thread", graf.Handler(graf.ThreadRootHandler)).Name("threadRoot") //Form for creating new posts
 	g.Handle("/login", graf.Handler(graf.LoginHandler)).Name("login")
 	g.Handle("/logout", graf.Handler(graf.LogoutHandler)).Name("logout")
 	g.Handle("/register", graf.Handler(graf.RegisterHandler)).Name("register")
